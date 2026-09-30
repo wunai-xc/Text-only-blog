@@ -6,13 +6,18 @@ import ArticlePager from "@/components/article/ArticlePager";
 import ArticleProgress from "@/components/article/ArticleProgress";
 import ArticleToc from "@/components/article/ArticleToc";
 import GiscusComments from "@/components/article/GiscusComments";
-import { ARTICLE_TEXT, articleNeighbors, parseTypographyOption } from "@/lib/article";
+import {
+  ARTICLE_TEXT,
+  EMPTY_POST_SLUG,
+  articleNeighbors,
+  parseTypographyOption,
+} from "@/lib/article";
 import { getPost, getPostWithBody, getPosts } from "@/lib/content";
 import { decorate } from "@/lib/decor";
 import { asBoolean } from "@/lib/frontmatter";
 import { LIST_TEXT, facetHref, toListPost } from "@/lib/list";
 import { renderMarkdown } from "@/lib/markdown";
-import { feedAlternatesTypes, isLang, LANGS, SITE } from "@/lib/site";
+import { feedAlternatesTypes, isLang, LANGS, SITE, type Lang } from "@/lib/site";
 
 /**
  * 文章页（第 12 项）：`/zh/posts/<slug>/`（slug 可能带目录，见 content/README.md 第 1 节）
@@ -40,9 +45,18 @@ import { feedAlternatesTypes, isLang, LANGS, SITE } from "@/lib/site";
  */
 
 export function generateStaticParams() {
-  return LANGS.flatMap((lang) =>
+  const params = LANGS.flatMap((lang) =>
     getPosts(lang).map((post) => ({ lang, slug: post.slug.split("/") })),
   );
+  if (params.length > 0) return params;
+
+  // 一篇文章都没有时**仍然要返回一条路径**：静态导出不允许动态路由一条路由都不生成，
+  // 空数组会让构建在 `Collecting page data` 阶段失败：
+  //   Error: Page "/[lang]/posts/[...slug]" returned an empty array from "generateStaticParams()".
+  // 所以保一条保留 slug（`EMPTY_POST_SLUG`，见 lib/article.ts），渲染成「还没有文章」那一页；
+  // 作者写下第一篇之后它自动消失。默认语言的那一条就够了 —— 这条路径是构建用的占位，
+  // 不是某一个语言的页面。
+  return [{ lang: SITE.defaultLang, slug: [EMPTY_POST_SLUG] }];
 }
 
 /** 静态导出：只认 `generateStaticParams` 里列出的路径，别的 slug 交给 out/404.html */
@@ -65,8 +79,21 @@ export async function generateMetadata({
   const { lang, slug } = await params;
   if (!isLang(lang)) return {};
 
-  const post = getPost(lang, slug.join("/"));
-  if (!post) return {};
+  const slugPath = slug.join("/");
+  const post = getPost(lang, slugPath);
+  if (!post) {
+    // 零文章时那条保留路径（见 generateStaticParams）：给个说得过去的标题，
+    // 并且**不让搜索引擎收** —— 它是个构建占位，不是内容
+    if (slugPath === EMPTY_POST_SLUG) {
+      const t = ARTICLE_TEXT[lang];
+      return {
+        title: t.emptyTitle,
+        description: t.emptyLead,
+        robots: { index: false, follow: false },
+      };
+    }
+    return {};
+  }
 
   const languages = languageUrls(post.slug);
   const fallback = languages[SITE.defaultLang] ?? post.href;
@@ -103,8 +130,14 @@ export default async function LangPost({
   const { lang, slug } = await params;
   if (!isLang(lang)) notFound();
 
-  const data = getPostWithBody(lang, slug.join("/"));
-  if (!data) notFound();
+  const slugPath = slug.join("/");
+  const data = getPostWithBody(lang, slugPath);
+  if (!data) {
+    // 能走到这里的只有一种情况：零文章时 `generateStaticParams` 保的那条保留路径
+    //（`dynamicParams = false`，别的未知 slug 根本不会被生成，是交给 out/404.html 的）
+    if (slugPath === EMPTY_POST_SLUG) return <EmptyArticlePage lang={lang} />;
+    notFound();
+  }
 
   const { meta, body } = data;
   const t = ARTICLE_TEXT[lang];
@@ -209,6 +242,47 @@ export default async function LangPost({
       </article>
 
       <GiscusComments lang={lang} href={meta.href} enabled={commentsEnabled} />
+    </main>
+  );
+}
+
+/**
+ * 零文章时那条保留路径（`/<lang>/posts/__empty__/`）渲染的内容，见 `EMPTY_POST_SLUG`。
+ *
+ * 刻意**不带**悬浮目录、进度条、回顶与评论区 —— 它不是一篇文章，那四样在这里没有意义；
+ * 外壳仍用文章页那一套类，所以宽度照样跟着 `--reading-*` 走（约定第 8 条）。
+ * 文案分两处取，都是复用而不是重写：标题与说明在 `ARTICLE_TEXT`（这一页的事实来源），
+ * 「还没有文章」那两句直接取列表页的 `LIST_TEXT` —— 同一句话不写第二遍。
+ */
+function EmptyArticlePage({ lang }: { lang: Lang }) {
+  const t = ARTICLE_TEXT[lang];
+  const list = LIST_TEXT[lang];
+  const href = `/${lang}/posts/${EMPTY_POST_SLUG}/`;
+
+  return (
+    <main className="page article-page">
+      <article className="article" id="article-main">
+        <header className="article-head">
+          <p className="article-kicker">
+            <span className="article-no">{decorate(href).sheet}</span>
+            {t.kicker}
+            <span className="article-rule" />
+          </p>
+          <h1 className="article-title">{t.emptyTitle}</h1>
+          <p className="article-lead">{t.emptyLead}</p>
+        </header>
+
+        <div className="panel list-empty">
+          <p>{list.empty}</p>
+          <p className="list-hint">{list.emptyHint}</p>
+        </div>
+
+        <footer className="article-foot">
+          <a className="site-tagline-link" href={`/${lang}/posts/`}>
+            {list.title} →
+          </a>
+        </footer>
+      </article>
     </main>
   );
 }

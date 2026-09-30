@@ -25,6 +25,24 @@ import type { TypographyOptions } from "./typography";
 /* ------------------------------ 常量 ------------------------------ */
 
 /**
+ * 一篇文章都没有时用的**保留 slug**：`/<lang>/posts/__empty__/`。
+ *
+ * 为什么需要它：文章页是动态路由（`[...slug]`），而静态导出（`output: export`）里
+ * **动态路由至少要生成一条路径**，`generateStaticParams()` 返回空数组会让构建直接失败：
+ *
+ *     Error: Page "/[lang]/posts/[...slug]" returned an empty array from "generateStaticParams()".
+ *
+ * 于是零文章时只生成这一条路径，它渲染的是「还没有文章」那一页（`emptyTitle` / `emptyLead`，
+ * 正文那一句复用 `LIST_TEXT` 的空状态文案）—— 与约定第 4 条「零文章时站点必须仍能构建与浏览」
+ * 是同一件事。作者写下第一篇之后，这个地址**自动消失**（那时 `generateStaticParams` 非空，
+ * 不再返回它）；它也不进 sitemap、metadata 里带 `noindex`。
+ *
+ * 名字用双下划线开头是刻意的：内容加载器跳过下划线开头的文件，双下划线一眼就能看出
+ * 「这是保留名，不是某一篇文章」。
+ */
+export const EMPTY_POST_SLUG = "__empty__";
+
+/**
  * 目录里标题的缩进档：depth 1~2 不缩进、3 缩进一档、4 及更深缩进两档。
  * 用一个函数换算而不是在 CSS 里写三种 depth（`[data-depth="4"]` 之类会跟着层级变多），
  * 同时它也是「这一条要不要渲染」的开关（见 ArticleToc）。
@@ -142,6 +160,9 @@ export function parseTypographyOption(value: unknown): TypographyOptions | false
 export interface ArticleText {
   /** 页头小字（图签编号之后那句） */
   kicker: string;
+  /** 零文章时那条保留路径（`EMPTY_POST_SLUG`）的标题与说明 */
+  emptyTitle: string;
+  emptyLead: string;
   updated: (date: string) => string;
   minutes: (n: number) => string;
   words: (n: number) => string;
@@ -170,6 +191,9 @@ export interface ArticleText {
 
 const ZH: ArticleText = {
   kicker: "正文",
+  emptyTitle: "还没有文章",
+  emptyLead:
+    "这是「一篇文章都没有」时的占位页：文章页是动态路由，静态导出要求它至少生成一条路径（空数组会让构建直接失败），所以这里暂时用这个保留地址顶着。写下第一篇、放进 content/zh/posts/ 之后，这个地址会自动消失。",
   updated: (date) => `改于 ${date}`,
   minutes: (n) => `${n} 分钟`,
   words: (n) => `${n} 字`,
@@ -198,6 +222,9 @@ const ZH: ArticleText = {
 
 const EN: ArticleText = {
   kicker: "Article",
+  emptyTitle: "No posts yet",
+  emptyLead:
+    "This is the placeholder for the zero-post case: the article route is dynamic, and a statically exported dynamic route must generate at least one path (an empty array fails the build), so this reserved URL stands in for now. It disappears on its own once the first post lands in content/en/posts/.",
   updated: (date) => `updated ${date}`,
   minutes: (n) => `${n} min`,
   words: (n) => `${n} words`,

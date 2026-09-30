@@ -54,7 +54,7 @@
 │     ├─ page.tsx            首页（第 9 项：八栏吸附，版面与文案在 lib/home.ts）
 │     └─ posts/
 │        ├─ page.tsx         文章列表页（第 10 项：构建期取数据；筛选 / 搜索 / 密度在 lib/list.ts + components/list）
-│        └─ [...slug]/page.tsx  文章正文页（第 12 项：构建期渲染全文 + 目录 / 进度 / 上下篇 / 评论）
+│        └─ [...slug]/page.tsx  文章正文页（第 12 项：构建期渲染全文 + 目录 / 进度 / 上下篇 / 评论；零文章时保一条保留路径 `__empty__`，见 lib/article.ts 的 EMPTY_POST_SLUG）
 │     ├─ tags/page.tsx       标签页（第 13 项：薄壳，本体是 components/pages/FacetIndex）
 │     ├─ categories/page.tsx 分类页（第 13 项：与标签页共用同一个组件）
 │     ├─ archives/page.tsx   归档页（第 13 项：年 → 月 → 文章的时间线）
@@ -747,8 +747,12 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
   主题一换 `ArticleBody` 会清空重画，所以不需要任何订阅逻辑。
 - **打印**：悬浮目录、进度线、百分比、回顶、评论区都不印（纸上点不动、iframe 也印不出来），
   正文转 11pt、宽度不再受限；文章末尾的上下篇留着（纸上的链接可以拿去地址栏敲）。
-- **零文章 / 少文章时**：`generateStaticParams` 返回空数组即「没有文章页」，不影响其它页面；
-  只有一篇时上下篇两边都为空 → `ArticlePager` 直接不渲染（不留空框）。
+- **零文章时**（原写法是错的，第八次构建时被证实，见第 4 节「构建失败 —— 零文章时
+  `generateStaticParams()` 返回空数组」）：这一页是**动态路由**，而静态导出要求动态路由
+  **至少生成一条路径** —— `generateStaticParams()` 返回空数组会让构建直接失败，
+  所以零文章时保一条保留路径 `/<lang>/posts/__empty__/`（`EMPTY_POST_SLUG`，lib/article.ts），
+  它渲染的是「还没有文章」那一页（`noindex`、不进 sitemap、写下第一篇后自动消失）。
+  **少文章时**：只有一篇则上下篇两边都为空 → `ArticlePager` 直接不渲染（不留空框）。
 - **入口**：`lib/site.ts` 的 `ARTICLE_ROUTE.status` 改成 `"ready"` ——
   首页第 2 栏与列表页的卡片标题一起变成真链接（约定第 8 条），**没有改任何卡片代码**。
 - ⚠️ 未在本机跑过浏览器（见第 8 节）：悬浮目录的高亮带、进度条与回顶的手感、
@@ -925,6 +929,53 @@ Failed to type check.
   随构建丢弃（仓库里没有锁文件），与第 14 项那条待办一致。
 - 仍未验证的：修完这两处之后类型检查与静态导出是否全绿、`out/` 的产物清单，
   都要等下一次构建（或本机 `npm run typecheck && npm run build`）。
+
+### 构建失败 —— 零文章时 `generateStaticParams()` 返回空数组（2026-09-30，第八次云构建）
+
+```
+✓ Compiled successfully in 29.2s
+  Running TypeScript ...
+  Finished TypeScript in 5.4s ...
+  Collecting page data using 1 worker ...
+Error: Page "/[lang]/posts/[...slug]" returned an empty array from "generateStaticParams()".
+  With "output: export", at least one route must be generated.
+  at ignore-listed frames
+> Build error occurred
+Error: Failed to collect page data for /[lang]/posts/[...slug]
+```
+
+**先记好消息**：上一轮那两处 `TS7006` **修好了** —— `Finished TypeScript in 5.4s`，类型检查这一关
+从第 12 项落地以来第一次通过；编译 29.2s 也比上一轮快（上一轮 42s）。失败点往后退了一步，
+落在「收集页面数据」。
+
+- 原因：文章页是**动态路由**（`[...slug]`），而 `output: export` 有一条硬规则 ——
+  **动态路由至少要生成一条路径**，`generateStaticParams()` 返回空数组就是构建失败。
+  本站按约定第 1 条**仓库里一篇文章都没有**，于是它必然返回空数组 → 这个站按约定必须能构建，
+  而 Next 的规则不允许 → 两者直接撞上。这是第 12 项台账里那句
+  「零文章时 `generateStaticParams` 返回空数组即没有文章页，不影响其它页面」**写错了**：
+  它只对「页面存在与否」说得通，但 Next 在构建期就把这条路堵了。本次已把那句话改掉。
+- 为什么前面几次构建没暴露：那几次（第二～六次）的「14/14 页」是**第 7~13 项落地之前**的仓库，
+  那时还没有 `[...slug]` 这个动态路由。文章页是这一轮才第一次真的进构建。
+- 修法（保一条保留路径）：
+  1. `lib/article.ts` 新增 `EMPTY_POST_SLUG = "__empty__"`，并把「为什么需要它」写在那儿
+     （双下划线开头：内容加载器本来就跳过下划线开头的文件，一眼能看出是保留名）；
+  2. `generateStaticParams()`：正常返回全部真实 slug；**空数组时**改成返回
+     `[{ lang: SITE.defaultLang, slug: [EMPTY_POST_SLUG] }]` 这一条；
+  3. 页面里这条路径渲染 `EmptyArticlePage`（同文件内的一个小组件）——
+     「还没有文章」的标题与说明取自 `ARTICLE_TEXT`（新增 `emptyTitle` / `emptyLead`），
+     正文那两句**复用列表页的 `LIST_TEXT.empty` / `emptyHint`**（同一句话不写第二遍）；
+     外壳沿用文章页的类，所以宽度照样跟着 `--reading-*` 走；
+     **不带**悬浮目录、进度条、回顶与评论区（它不是一篇文章）；
+  4. `generateMetadata()` 对这条路径给标题 + 说明，并加 `robots: { index: false, follow: false }`
+     —— 它是构建占位、不是内容，也不进 sitemap（sitemap 的 `postRoutes()` 来自真实文章）；
+  5. 作者写下第一篇之后**这个地址自动消失**（那时 `params` 非空，不再返回它），
+     不需要任何清理动作。
+- 为什么不用别的办法：`notFound()` 在静态导出下对一条 prerender 的路径会产出什么
+  （404 内容落到那个路径、还是干脆报错）**没有实测**，赌不起；可选 catch-all
+  （`[[...slug]]`）会让 `/zh/posts/` 同时匹配列表页与文章页，是路由冲突。
+  保一条保留路径是唯一「确定不会报错、也不需要作者做任何事」的做法。
+- ⚠️ 仍未验证：修完这一处之后能否一路走到 `✓ Generating static pages` 与 `out/`，
+  以及最后那步 `npx wrangler deploy`（`wrangler.toml` 的 `[assets]` 至今没被真跑过一次）。
 
 ### 部署失败 —— 命令填错与 token 权限（2026-09-30，第二～四次云构建）
 
@@ -1241,6 +1292,10 @@ curl -s -H "Authorization: Bearer $TOKEN" \
    它们的来源分别是「一篇 `about: true` 的文章」与 `lib/site.ts` 的 `LINKS`（空的时候才显示说明）。
 3. **UI 文案不算文章**，由 `lib/site.ts` 的 i18n 表统一维护（中英各一份，缺一边会出现 `undefined`）。
 4. 零文章、零配置时站点必须仍能构建与浏览，所有页面要有空状态。
+   注意静态导出的一条硬规则：**动态路由至少要生成一条路径**（`generateStaticParams()`
+   返回空数组会直接让构建失败）。文章页因此有一条**保留路径** `/<lang>/posts/__empty__/`
+   （`lib/article.ts` 的 `EMPTY_POST_SLUG`），它渲染「还没有文章」那一页，
+   `noindex`、不进 sitemap，作者写下第一篇后自动消失 —— **别把它当成死链删掉**。
 5. 动效一律尊重 `prefers-reduced-motion`，且背景/装饰层不得影响正文可读性（`aria-hidden`、`pointer-events: none`）。
 6. **开发态自检不是内容**（**第 12 项已按这条删掉它**，留档）：`components/dev/PipelineCheck.tsx`
    只为在文章页之前验证渲染器而存在，生产构建里不渲染、不进产物；文章页落地时连同
@@ -1386,6 +1441,14 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
   ⚠️ 这两处**已改但未在本机验证**（本环境无 shell），下一次构建日志见分晓。
   另一件事仍未验证：`wrangler.toml` 的 `[assets]` 写法（Workers 静态资源）到底能不能把 `out/` 传上去
   —— 这几轮构建都停在部署之前，从没跑到 `npx wrangler deploy`。
+- **2026-09-30 的第八次云构建**：`bun install`（302 个包，5.67s）→ Turbopack 编译 **29.2s 通过**
+  → **类型检查通过**（5.4s，第 12 项落地以来第一次过这一关）→ 在
+  `Collecting page data using 1 worker` 阶段失败：
+  `Page "/[lang]/posts/[...slug]" returned an empty array from "generateStaticParams()"`。
+  原因是**零文章 + 动态路由 + `output: export`**三者相撞（仓库按约定不含任何文章，
+  而静态导出要求动态路由至少生成一条路径）。修法与理由见第 4 节
+  「构建失败 —— 零文章时 `generateStaticParams()` 返回空数组」；
+  第 12 项小节里那句写错的说明已一并改掉。⚠️ 这一处改完仍未在本机验证。
 - **改用 Workers 静态资源（本次提交）**：`wrangler.toml` / `package.json` / workflow 三处已按第 7 节改完，
   云构建的 Deploy command 只要填回默认的 `npx wrangler deploy` 即可，**不涉及任何 token 权限改动**。
   ⚠️ 这次改动**没有在本机跑过 `wrangler deploy`**（本环境无 shell），
@@ -1596,6 +1659,7 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
 | 2026-09-30 | **部署目标从 Cloudflare Pages 改为 Workers 静态资源**（避开 Pages 鉴权）：`wrangler.toml` 改为 `[assets] directory = "./out"` + `not_found_handling = "404-page"` + `html_handling = "auto-trailing-slash"`；`package.json` 的 `deploy` 改成 `npx --yes wrangler deploy`；workflow 改名并把 Deploy 步骤改成 `command: deploy`，同时把必然失败的 `npm ci` / `cache: npm` 换成 `setup-bun@v2`（bun 1.2.15）+ `bun install`；两处注释里的 Pages 措辞同步。台账第 2、6、7、8 节与第 14 项待办一并更新。⚠️ 未在本机执行过 `wrangler deploy` |
 | 2026-09-30 | 第六次云构建：**构建阶段就失败**（`EJSONPARSE`）—— 上一次提交给 `package.json` 的 `deploy` 留了尾逗号（我的编辑失误，JSON 不允许尾逗号），删掉后重新触发。台账新增「构建失败 —— `package.json` 尾逗号」小节，并记下以后改 JSON 要过 `node -e "JSON.parse(...)"` 这类真正的解析器（`tsc` 不检查 JSON） |
 | 2026-09-30 | 第七次云构建：`bun install` 与 Turbopack 编译（42s）通过，**类型检查报两处 `TS7006`** —— `components/list/PostList.tsx` 两条 `return` 里的 `search: (query) => …` 形参隐式 any（第 10 项的代码）。根因是「联合返回类型 `Promise<Engine \| "error">` + 对象字面量里的函数属性」拿不到上下文类型；修法是两处形参显式标 `query: string`（最小改动、语义不变，未用 `as` 断言）。台账新增该小节，第 8 节补上这次构建的结论，并注明修法与 `[assets]` 部署路径都仍未在本机验证 |
+| 2026-09-30 | 第八次云构建：编译（29.2s）与**类型检查（5.4s）双双通过**（`TS7006` 修复确认生效），失败点退到 `Collecting page data` —— `Page "/[lang]/posts/[...slug]" returned an empty array from "generateStaticParams()"`：零文章 + 动态路由 + `output: export` 三者相撞（与约定第 1 条「仓库不含任何文章」直接冲突）。修法是**保一条保留路径**：`lib/article.ts` 新增 `EMPTY_POST_SLUG = "__empty__"`（含「为什么需要它」的注释），`generateStaticParams()` 在空数组时返回这一条，页面为它渲染 `EmptyArticlePage`（文案取 `ARTICLE_TEXT` 新增的 `emptyTitle` / `emptyLead`，空状态那两句复用 `LIST_TEXT`，不带目录 / 进度 / 回顶 / 评论），metadata 里加 `noindex`、不进 sitemap、作者写下第一篇后自动消失。台账三处同步：第 12 项那句「返回空数组即没有文章页」是错的，已改正并指向第 4 节新小节；第 4 节新增「构建失败 —— 零文章时 `generateStaticParams()` 返回空数组」；第 8 节补上这次构建的结论 |
 | 本次提交 | **第 7 项框架 UI 完成**：顶栏（品牌 / 导航 / 图签三段，对齐 wunai-blog）、页脚（联系方式 + 版权 + 左下角齿轮）、设置中心抽屉（外观 / 阅读偏好 / 语言 / 恢复默认）。新增 `lib/icons.ts`（本地打包的 24 个图标）、`lib/prefs.ts`（宽度/字号/行距三档 + 首帧脚本 + 写 `--reading-*`）；`lib/site.ts` 扩全为「路由落地状态表 ROUTES + 顶栏导航 + 联系方式 + i18n 文案表」；新组件 `RouteLink`（按 `ROUTES.status` 决定可点/不可点）、`SiteHeader`、`SiteFooter`、`ThemeSwitcher`、`LangSwitcher`、`SettingsDock`、`SettingsCenter`、`PrefsInit`。框架挂到 `app/[lang]/layout.tsx`（第 9~13 项自动带上）；`globals.css` 新增「6b. 框架 UI」一节与 `--frame-width` 令牌，`.page` 内边距收紧到 `2.5rem 1.5rem 4rem`；`THEME_LABELS.hint` 由中文一句改成 `{ zh, en }`；约定新增第 8 条（链接可用性以 `ROUTES.status` 为唯一事实来源） |
 | 本次提交 | **第 8 项装饰与动效完成**：新增 `lib/decor.ts`（路径 → 图纸的唯一事实来源：`section` / `pattern` / 两位编号 / 图签语言，纯函数 + 两张穷尽表，零依赖）；`components/BlueprintBackground.tsx` 从空 div 变成 `"use client"` 组件，用 `usePathname()` 挂 `data-decor` / `data-route`，并在换页时让纸面重铺一次（0.32s、首帧不播、尊重 `prefers-reduced-motion`）；`app/globals.css` 新增「5b. 图案随路由变」一节 —— 七套图案（sheet / columns / measure / grid / hatch / dots / plain，全是渐变，无图片、无滤镜、不动布局）+ 右下角图签（`TOB-ZH-01` 之类，窄屏不印）+ `[data-route="article"]` 的边缘淡出微调；`lib/site.ts` 新增 `isRouteId()` 与 `SITE.i18n.decor` 三条文案（图签名字复用导航文案，不重复写十二个）。这一项**未改任何颜色与令牌、未动层序**；「纸质颗粒」未做，理由见第 4 节第 8 项 |
 | 本次提交 | **第 10 项列表页 + 第 11 项文章卡片（三档密度）完成**：新增 `app/[lang]/posts/page.tsx`（构建期取文章 / 标签 / 分类 / 年份，零文章出空状态且不出工具栏）、`components/list/PostList.tsx`（客户端：搜索 / 筛选 / 排序 / 密度 / 语言 / 地址栏状态）、`components/list/PostCard.tsx`（三档密度共用卡片）、`lib/list.ts`（筛选状态与默认值、三档密度与排序的选项表、纯函数、查询串读写、密度本机记忆、中英文案 —— 对 `content.ts` / `search-index.ts` 只 `import type`，故客户端可安全引入）；搜索在**第一次输入时**才读 `/search-index.json` 并动态 `import("fuse.js")`，索引读不到 / 版本不匹配时自动退回本页字段并在页面上写明；`ROUTES.posts` 改 `"ready"`（顶栏「文章」可以点了），sitemap 补两行列表页；`lib/site.ts` 新增 `feedAlternatesTypes()`（页面自写 `alternates` 会覆盖根布局那份 RSS 发现表，第 5 项记下的坑先在这里堵上，`app/layout.tsx` 同步改用）；首页第 2 栏换成共用的 `PostCard`（适中档），`lib/home.ts` 删掉 `posts.minutes` / `articlePending`；`lib/icons.ts` 补 11 个图标（筛选 / 时间 / 排序 / 三档密度 / AI / 清除搜索）；`app/globals.css` 新增「6d. 列表页与文章卡片」一节并把 `.home-kicker` 系三个类换成 `home/list` 共用，打印样式隐藏工具栏 |
