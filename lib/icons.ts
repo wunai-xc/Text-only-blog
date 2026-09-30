@@ -45,6 +45,18 @@ import mdiEmailOutline from "@iconify/icons-mdi/email-outline";
 import mdiGithub from "@iconify/icons-mdi/github";
 import mdiSourceRepository from "@iconify/icons-mdi/source-repository";
 import mdiRss from "@iconify/icons-mdi/rss";
+/* 列表页（第 10 项：搜索 + 筛选）与文章卡片（第 11 项：三档密度） */
+import mdiFilterOutline from "@iconify/icons-mdi/filter-outline";
+import mdiFilterVariantRemove from "@iconify/icons-mdi/filter-variant-remove";
+import mdiCalendarOutline from "@iconify/icons-mdi/calendar-outline";
+import mdiSortCalendarDescending from "@iconify/icons-mdi/sort-calendar-descending";
+import mdiSortCalendarAscending from "@iconify/icons-mdi/sort-calendar-ascending";
+import mdiViewCompactOutline from "@iconify/icons-mdi/view-compact-outline";
+import mdiViewAgendaOutline from "@iconify/icons-mdi/view-agenda-outline";
+import mdiTextBoxOutline from "@iconify/icons-mdi/text-box-outline";
+import mdiRobotOutline from "@iconify/icons-mdi/robot-outline";
+import mdiMagnifyClose from "@iconify/icons-mdi/magnify-close";
+import mdiAlertCircleOutline from "@iconify/icons-mdi/alert-circle-outline";
 
 export const icons = {
   /* 导航 */
@@ -76,6 +88,18 @@ export const icons = {
   "mdi:github": mdiGithub,
   "mdi:source-repository": mdiSourceRepository,
   "mdi:rss": mdiRss,
+  /* 列表页与卡片 */
+  "mdi:filter-outline": mdiFilterOutline,
+  "mdi:filter-variant-remove": mdiFilterVariantRemove,
+  "mdi:calendar-outline": mdiCalendarOutline,
+  "mdi:sort-calendar-descending": mdiSortCalendarDescending,
+  "mdi:sort-calendar-ascending": mdiSortCalendarAscending,
+  "mdi:view-compact-outline": mdiViewCompactOutline,
+  "mdi:view-agenda-outline": mdiViewAgendaOutline,
+  "mdi:text-box-outline": mdiTextBoxOutline,
+  "mdi:robot-outline": mdiRobotOutline,
+  "mdi:magnify-close": mdiMagnifyClose,
+  "mdi:alert-circle-outline": mdiAlertCircleOutline,
 } as const;
 
 export type IconName = keyof typeof icons;

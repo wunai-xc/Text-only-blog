@@ -51,7 +51,8 @@
 │  ├─ not-found.tsx          404（导出为 out/404.html）
 │  └─ [lang]/
 │     ├─ layout.tsx          zh | en 静态参数 + 纠正 <html lang> + 全站框架（第 7 项的顶栏/页脚）
-│     └─ page.tsx            首页（第 9 项：八栏吸附，版面与文案在 lib/home.ts）+ 开发态渲染自检
+│     ├─ page.tsx            首页（第 9 项：八栏吸附，版面与文案在 lib/home.ts）+ 开发态渲染自检
+│     └─ posts/page.tsx      文章列表页（第 10 项：构建期取数据；筛选 / 搜索 / 密度在 lib/list.ts + components/list）
 ├─ components/
 │  ├─ ArticleBody.tsx        正文容器：注入 HTML 并按需动态加载五类图表
 │  ├─ charts/
@@ -77,7 +78,7 @@
 │  ├─ home/
 │  │  ├─ HomeBlockHead.tsx   栏头（栏号 + 一句小字 + 栏名；八栏共用，栏号由版面表推出）
 │  │  ├─ HomeIntro.tsx       第 1 栏 本站介绍（站名 / 自述 / 三个入口，RSS 是唯一现在可点的）
-│  │  ├─ HomePostCards.tsx   第 2 栏 文章卡片（正文页落地前渲染成不可点，见 ARTICLE_ROUTE）
+│  │  ├─ HomePostCards.tsx   第 2 栏 文章卡片（第 11 项起用共用的 PostCard「适中档」）
 │  │  ├─ HomeStats.tsx       第 3 栏 数据统计（字数 / 累计阅读 / 首末发布 / 构建日期）
 │  │  ├─ HomeChangelog.tsx   第 4 栏 更新日志（构建期读 git log，最多 5 条，有空状态）
 │  │  ├─ HomeInventory.tsx   第 5 栏 站内内容（文章 / 专题 / 标签 / 题材 / 语言）
@@ -85,6 +86,9 @@
 │  │  ├─ HomeThemes.tsx      第 7 栏 外观切换（客户端；与设置中心同一套 API 与样式）
 │  │  ├─ HomeFonts.tsx       第 8 栏 字体设置（客户端；只写 --reading-* 三个令牌）
 │  │  └─ HomeIndex.tsx       侧边指示器（客户端；IntersectionObserver 高亮，锚点可无 JS 使用）
+│  ├─ list/
+│  │  ├─ PostCard.tsx        文章卡片（第 11 项：紧凑 / 适中 / 内容 三档；首页与列表页共用）
+│  │  └─ PostList.tsx        列表页本体（第 10 项，客户端：搜索 / 筛选 / 密度 / 地址栏状态）
 │  └─ ServiceWorkerRegistrar.tsx  注册 /sw.js（生产构建才注册，dev 下只清旧 SW）
 ├─ content/
 │  ├─ README.md              写作规范
@@ -95,6 +99,7 @@
 │  ├─ prefs.ts               阅读偏好（第 7 项：宽度/字号/行距三档，写 --reading-* 令牌 + 首帧脚本）
 │  ├─ decor.ts               装饰层（第 8 项：路径 → 图纸编号 + 图案名 + 图签文字，零依赖）
 │  ├─ home.ts                首页版面与文案（第 9 项：八栏顺序 / 并排 / 栏号 / 中英文案）
+│  ├─ list.ts                列表页（第 10/11 项：筛选状态 / 三档密度 / 纯函数 / 地址栏读写 / 中英文案，零依赖）
 │  ├─ toml.ts                自写 TOML 解析器（`+++` frontmatter 用）
 │  ├─ frontmatter.ts         双格式识别与字段归一化
 │  ├─ content.ts             内容加载 / 查询 API（只读盘，不渲染）
@@ -154,8 +159,8 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 | 7 | 框架 UI | `[x]` | 顶栏（对齐 wunai-blog）、Footer（左下角设置图标）、设置中心 |
 | 8 | 装饰与动效 | `[x]` | `lib/decor.ts`：路径 → 图纸（图案 / 编号 / 图签），图案全在 CSS 里；换页纸面重铺一次 + 顶栏光标闪烁 |
 | 9 | 首页 | `[x]` | `lib/home.ts`：八栏顺序 / 并排 / 栏号 / 文案；吸附用原生 scroll-snap，侧边指示器是锚点 + IntersectionObserver |
-| 10 | 列表页 | `[ ]` | 搜索、筛选（标签/时间/分类）、语言切换、密度切换、AI 筛选默认开启 |
-| 11 | 文章卡片 | `[ ]` | 紧凑 / 适中 / 内容 三档 |
+| 10 | 列表页 | `[x]` | `app/[lang]/posts/` + `lib/list.ts`：搜索（懒读 `/search-index.json`）、筛选（标签/分类/年份/排序）、语言切换、密度切换、AI 默认隐藏 |
+| 11 | 文章卡片 | `[x]` | `components/list/PostCard.tsx`：紧凑 / 适中 / 内容 三档；首页第 2 栏与列表页共用同一个组件 |
 | 12 | 文章页 | `[ ]` | 悬浮 TOC（含上下篇）、右侧细进度条带百分比、圆形回顶、giscus 评论 |
 | 13 | 其余页面 | `[ ]` | 关于/友链/标签/分类/归档/搜索/设置/404/离线 |
 | 14 | 交付 | `[ ]` | README + 编辑指南、git 提交推送 |
@@ -289,7 +294,12 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
     `#f4f1e8` 换成了令牌；manifest 是构建期产物，只能挑一套，挑的就是「没有 JS 时的默认」）。
   - `public/sw.js`（**不打包**，浏览器直接跑，所以是普通 JS、不能 import）：
     install 预缓存外壳（`/`、`/zh/`、`/en/`、`/offline/`、manifest、favicon，逐条 try/catch，
-    单条失败不影响整体）；activate 清掉旧版本缓存并 `clients.claim()`；
+    单条失败不影响整体）；**第 10 项把 `/zh/posts/` 与 `/en/posts/` 也加进了这份清单**
+    （列表页是「翻目录」的入口，第一次访问就带走，之后离线也能挑文章），
+    `CACHE_VERSION` 随之从 1 加到 **2**；而 `/search-index.json` **故意不进清单** ——
+    它随文章数增长（每篇正文前 1200 字），装 PWA 就替读者拉一份可能几百 KB 的 JSON 不划算；
+    搜索过一次之后它自然会进缓存，离线搜索随后也能用；
+    activate 清掉旧版本缓存并 `clients.claim()`；
     fetch 策略分两类 —— 导航请求**网络优先**（失败 → 该地址缓存 → 离线页），
     同源静态资源**缓存优先 + 后台更新**（`/_next/*` 等要么带内容哈希、要么可再生）。
     跨源、非 GET、Range 请求一律不插手。改了策略或外壳清单就 +1 `CACHE_VERSION`。
@@ -578,6 +588,73 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 - 开发态自检仍然在（生产构建里不出现）：现在是首页 `</main>` 之后一块独立的 `.page`，
   不参与八栏吸附；第 12 项落地后连同 `components/dev/PipelineCheck.tsx` 一起删（约定第 6 条）。
 
+### 10. 列表页 —— 已完成 ✅
+
+**交付物**：`app/[lang]/posts/page.tsx`（服务端：构建期取数据）、`components/list/PostList.tsx`（客户端：
+搜索 / 筛选 / 密度 / 地址栏状态）、`lib/list.ts`（这一页的唯一事实来源）、`app/globals.css` 的「6d. 列表页」一节。
+
+- **数据全部在构建期取**（第 2 项的 `getPosts` / `getTaxonomy` + `lib/list.ts` 的 `yearsOf`），
+  HTML 里就有完整列表 —— 没有 JS、爬虫、离线都能读（约定第 4 条）。筛选与搜索是**增强**，不是前提。
+- **搜索**：第一次输入时才 `fetch("/search-index.json")`（第 5 项的产物）并动态 `import("fuse.js")`，
+  所以首屏包里既没有索引也没有搜索库。字段与权重来自**索引自带的那份 `fields`**
+  （唯一事实来源是 `lib/search-index.ts` 的 `SEARCH_FIELDS`），权重表在 `lib/list.ts` 的
+  `SEARCH_FIELD_WEIGHTS`（标题 3 / 标签与分类 2 / 摘要 1.5 / 摘录 1 / 正文 0.7）。
+  索引是**全语言**的（第 5 项的设计），列表页按 `doc.lang` 只取当前语言那一份。
+- **索引读不到时不会瞎**：`loadSearchIndex()` 在「HTTP 不 ok / 形状不对 / `version` 与代码期望的不一致」
+  三种情况下都返回 `null`，于是退回**本页已有的字段**（标题 / 标签 / 分类 / 摘要，`INLINE_SEARCH_FIELDS`），
+  并在搜索框下面如实写明「这一次只匹配本页字段」；`fuse.js` 加载失败则是另一种提示（红色，`data-tone="warn"`）。
+  这条兜底是有意为之：`/search-index.json` 的产物路径从第 5 项起就**没被验证过**
+  （`trailingSlash: true` 下 Route Handler 是否也被加上尾斜杠，见第 8 节），
+  兜底让这一页在两种情况下都能用，而且**你自己能一眼看出走的是哪条路**。
+- **版本号怎么过到客户端**：`SEARCH_INDEX_VERSION` 是 `lib/search-index.ts` 的**值导出**，而那个文件
+  `import` 了 `lib/content.ts`（node:fs）—— 客户端组件**不能**值导入它。所以由服务端页面当普通 props
+  传下来（`indexVersion`）。`lib/list.ts` 对 `content.ts` / `search-index.ts` 一律只用 `import type`
+  （编译后整条 import 被擦掉），文件头写明了「别改成值导入」。
+- **筛选**：标签（多选，带篇数）、分类（多选，带篇数）、时间（年份，选项从数据推出来）、排序（最新 / 最早）、
+  密度（三档）。**组内是「或」、组与组之间是「且」**（选中两个标签 = 命中任意一个，再加上年份就是还要在这一年），
+  规则只有一份实现：`lib/list.ts` 的 `matchesFilters` —— 搜索命中的结果也要过同一遍（`applyFilters`），
+  两条路不会出现「筛选只对直接渲染的那批生效」这种偏差。
+- **AI 筛选默认开启**：`DEFAULT_FILTERS.hideAI = true`，frontmatter 里 `isAI: true` 的文章默认不出现，
+  也一并从搜索命中里排除；工具条上写着「已隐藏（默认）」并给出理由，点一下变成「已显示」。
+- **密度切换记在本机**（`tob:list-density`，`lib/list.ts` 的 `readSavedDensity` / `saveDensity`）：
+  它是偏好不是筛选，所以不进地址栏；**筛选进地址栏**（`lib/list.ts` 的 `listQueryString` / `parseListQuery`，
+  只写非默认项），于是「某一类文章」可以分享，第 13 项的标签 / 分类页也能直接链到
+  `/zh/posts/?tag=xxx`。首帧一律按默认值渲染（服务端读不到 query 与 localStorage），挂载之后才应用真实状态 ——
+  与第 7 项读主题 / 阅读偏好同一个做法，不然 React 会报水合不一致。
+- **语言切换**：工具条里那一项复用第 7 项的 `components/LangSwitcher.tsx`（它自己按当前路径算出
+  `/en/posts/`），没有为此写第二个组件。
+- **零文章时**：页头 + 空状态（写明「第一篇由你亲笔写」与写作规范在哪），**不渲染工具条** ——
+  一份连文章都没有的清单上，筛选器只会让人以为点坏了。
+- **页头的图纸编号**取 `decorate("/{lang}/posts/")`（第 8 项），与右下角图签同一个来源，不手写 `02`。
+- **打印**：工具条不印（纸上是点不动的噪音），列表按当前筛选结果排成一条、宽度不再受限。
+- **离线**：`public/sw.js` 的外壳清单里加了 `/zh/posts/` 与 `/en/posts/`（`CACHE_VERSION` 1 → 2），
+  所以第一次访问就把首页与列表页带走；`/search-index.json` **故意不进清单**（理由写在 sw.js 的注释里：
+  它随文章数增长，搜索过一次之后自然进缓存，离线搜索随后也能用）。
+- ⚠️ 未在本机跑过浏览器（见第 8 节）：索引的产物路径、搜索实际命中效果、地址栏同步这三件事需要你确认。
+
+### 11. 文章卡片（三档密度）—— 已完成 ✅
+
+**交付物**：`components/list/PostCard.tsx` + `app/globals.css` 里的 `.post-card[data-density="…"]`。
+
+- **三档**（选项表在 `lib/list.ts` 的 `DENSITIES`，中英文案跟着选项走）：
+  - **紧凑**：一行一篇 —— 标题 + 日期与时长（扫得最快，适合文章多起来以后）；
+  - **适中**（默认）：再加摘要与标签 —— 与首页第 2 栏原来的样子一致；
+  - **内容**：把这一篇的元信息全展开 —— 摘要按读者的阅读度量（`--reading-*`）排、摘录、字数、
+    修改时间、所属卡组、标签与分类片，并在卡片里写明「列表只到摘要为止，正文在第 12 项落地后可读」。
+- **结构上只有两处分支**（摘要要不要渲染、内容档多渲染几句），其余全交给 CSS：
+  `.list-grid .post-card[data-density="full"] { grid-column: 1 / -1 }` 让内容档在宽屏上**一行一篇**，
+  紧凑档收内边距与字号。组件里没有按密度写的样式分支。
+- **一份实现两处使用**：列表页（客户端）与首页第 2 栏（服务端组件）用的是同一个 `PostCard` ——
+  首页把它放进 `.home-posts` 并覆盖两行（卡片贴着一块 `.panel`，改用画布色；栅格更密）。
+  第 12 项的文章页与第 13 项的标签 / 归档页复用同一个组件即可，**不要另写卡片**。
+- 卡片上的小字（几分钟 / 置顶 / 草稿 / AI / 正文页未落地）跟着卡片走（`LIST_TEXT`），
+  所以 `lib/home.ts` 里的 `posts.minutes` 与 `articlePending` 已经删掉 —— 首页不再各留一份同义文案。
+- 草稿徽章只在 dev 出现（生产构建根本不含草稿，但 dev 下容易忘记哪篇还没发布）。
+- 「内容」档**不重复正文**：列表页的意义是挑文章，正文归文章页（第 12 项）。所以这一档停在
+  「摘要 + 全部元信息」，并在卡片上如实说明。
+
+
+
 ### 构建修复 —— 首次云构建失败的两处（2026-09-30）
 
 Cloudflare 上第一次真正跑 `npm run build` 时，编译（Turbopack）通过，**类型检查**挂了两处
@@ -852,12 +929,17 @@ curl -s -H "Authorization: Bearer $TOKEN" \
   2. 栏号（01~08）由 `homeNumber()` 从版面表推出来，**别在文案里手写编号**；
   3. 吸附用 `html:has(.home-flow)` 那一条 CSS（不认 `<html>` 上的 class，也不需要 JS）；
      要加新页面而**不想**让它吸附，什么都不用做 —— `:has()` 只认领首页那个容器；
-  4. 第 11 项（文章卡片三档密度）落地后，把 `HomePostCards` 的紧凑文字卡换成那边的「紧凑档」；
+  4. ✅ 第 11 项（文章卡片三档密度）已落地：卡片是 `components/list/PostCard.tsx`，
+     `HomePostCards` 已经换成它 —— 首页用的是**适中档**（与这一栏原来的样子一致），
+     不是「紧凑档」（紧凑档只有标题 + 日期 + 时长，会把这一栏的摘要去掉，所以没那么选）。
+     卡片上的小字跟着卡片走（`lib/list.ts` 的 `LIST_TEXT`），`lib/home.ts` 里的
+     `posts.minutes` / `articlePending` 已删，别再加回来；
   5. 第 12 项（文章页）落地后，把 `lib/site.ts` 的 `ARTICLE_ROUTE.status` 改成 `"ready"`
      —— 首页与列表页的文章卡片会一起变成真链接（约定第 8 条的那套做法）；
   6. 第 13 项的 `/[lang]/settings/` 页与首页第 7/8 栏用的是同一套组件与 API，别在那边另写一份。
-- **第 10 / 13 项**：页面落地后把 `lib/site.ts` 的 `ROUTES[id].status` 从 `"pending"` 改成 `"ready"`
-  —— 顶栏、页脚、`RouteLink` 的入口会一起生效；新页面同时加进 `app/sitemap.ts` 的 `pageRoutes()`。
+- **第 13 项**：页面落地后把 `lib/site.ts` 的 `ROUTES[id].status` 从 `"pending"` 改成 `"ready"`
+  —— 顶栏、页脚、`RouteLink` 的入口会一起生效；新页面同时加进 `app/sitemap.ts` 的 `pageRoutes()`
+  （第 10 项已经按这条办过：`ROUTES.posts` 已是 `"ready"`，sitemap 里也补了列表页两行）。
 - **第 12 项（文章页）**：正文宽度一律用 `--reading-measure`（读者的阅读偏好要能生效），别写死 42rem；
   frontmatter 的 `typography` 字段接到 `renderMarkdown` 的 `RenderOptions.typography`（渲染层已支持）。
 - **第 13 项（设置页）**：`/[lang]/settings/` 直接复用 `components/SettingsCenter.tsx`（它不管容器），
@@ -880,8 +962,18 @@ curl -s -H "Authorization: Bearer $TOKEN" \
   2. 文章页如果写了 `alternates`，记得把根布局里那两条 RSS `types` 补回去（见上）；
   3. 文章页落地后，sitemap 与 RSS 里的文章 URL 才是真的可访问（在那之前它们指向 404）；
   4. 顺手删掉 `components/dev/PipelineCheck.tsx` 与 `app/[lang]/page.tsx` 里的那三行。
-- **第 10 项（列表页）**：搜索直接读 `/search-index.json` 的 `fields` / `version`
-  （`lib/search-index.ts` 的 `SEARCH_INDEX_VERSION` 与 `SEARCH_FIELDS` 是唯一事实来源）。
+- **第 10 项（列表页）—— 已完成**，留档并转成「后续项要用到的东西」：
+  1. 搜索读的是 `/search-index.json` 的 `fields` 与 `version`（唯一事实来源仍是 `lib/search-index.ts` 的
+     `SEARCH_FIELDS` / `SEARCH_INDEX_VERSION`）。**客户端不能值导入 `lib/search-index.ts`**（它 `import`
+     了 `lib/content.ts` 的 node:fs）—— 版本号由服务端页面当 props 传（`indexVersion`），
+     `lib/list.ts` 对那两个文件一律只用 `import type`；
+  2. 新页面要表达「跳到某一类文章」时，直接链 `/zh/posts/?tag=<标签>` 或 `?cat=<分类>`
+     （第 13 项的标签 / 分类页就靠这个，别自己再实现一遍筛选）；筛选项的编解码只有
+     `lib/list.ts` 的 `listQueryString` / `parseListQuery` 一处实现；
+  3. 文章卡片只有一份实现（第 11 项的 `components/list/PostCard.tsx`），复用即可；
+  4. 密度存在 localStorage 的 `tob:list-density`（偏好，不进地址栏），筛选进地址栏（可分享）；
+  5. 索引读不到时会自动退回「本页字段」并把这件事写在页面上 —— 若你本机看到的是那句提示，
+     说明 `out/` 里 `/search-index.json` 的产物路径不对，把 `ls out` 的结果发我（见第 8 节）。
 - **第 13 项（其余页面）**：新页面加到 `app/sitemap.ts` 的 `pageRoutes()`；
   离线页的文案也归这一项。
 - **第 14 项（交付）**：**把锁文件提交进仓库**（现在仓库里没有锁文件，`next build` 之外的依赖版本
@@ -917,6 +1009,10 @@ curl -s -H "Authorization: Bearer $TOKEN" \
    而它读 `lib/site.ts` 的 `ROUTES[id].status`。页面还没做就写 `"pending"`（渲染成不可点、悬停说明
    由第几项落地），做完改成 `"ready"` —— 不在页面里写死 href、也不留会 404 的死链。
    阅读偏好同理：只写 `--reading-*` 令牌（`lib/prefs.ts`），别在组件里直接改字体大小。
+9. **列表与卡片各只有一份实现**（第 10/11 项起）：文章卡片一律用 `components/list/PostCard.tsx` 的三档
+   （`data-density` 交给 CSS），新页面不要另写一份卡片；「只显示某一类文章」一律用列表页的查询串
+   （`/zh/posts/?tag=…`、`?cat=…`、`?year=…`、`?sort=…`、`?density=…`），编解码只在 `lib/list.ts`。
+   偏好与筛选分家：**筛选进地址栏**（可分享、可收藏），**偏好进 localStorage**（`tob:list-density` 等）。
 
 ---
 
@@ -948,9 +1044,9 @@ http://localhost:3000/zh/?theme=dark
 ```
 
 外观之外，第 8 项的「一张图纸」也能这样对照（对照表在 `lib/decor.ts`）：
-`/zh/` 整幅图纸 · `/zh/posts/` 分栏线 · 文章页左边缘刻度尺 · `/zh/tags/` 密格 ·
-`/zh/categories/` 剖面线 · `/zh/search/` 点阵 · `/offline/` 空纸；
-第 10~13 项落地之前，只有首页能真的看到（其余路径还不存在，敲进去会落到 404 页，
+`/zh/` 整幅图纸 · `/zh/posts/` 分栏线（图签 `TOB-ZH-02`，第 10 项已落地）· 文章页左边缘刻度尺 ·
+`/zh/tags/` 密格 · `/zh/categories/` 剖面线 · `/zh/search/` 点阵 · `/offline/` 空纸；
+第 11~13 项落地之前，只有首页与列表页能真的看到（其余路径还不存在，敲进去会落到 404 页，
 此时蓝图层按 `unknown` 画、图签印 `TOB-ZH-00` —— 这是预期行为）。
 
 除了首页占位，还会看到一块「渲染管线自检」，
@@ -1056,6 +1152,29 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
   2. **sitemap / robots / manifest 是否真的落到 `out/` 根目录**（同样只有 `ls out` 才知道）。
   3. **`app/manifest.ts` 的字段是否都在 Next 的 `MetadataRoute.Manifest` 类型里**
      （我用了 `lang` / `dir` / `id` / `categories` 这些规范里的字段；`npm run typecheck` 会直接指出哪个不在）。
+- **第 10 / 11 项（列表页与卡片）也没在本机跑过浏览器**，请按顺序看这几件事：
+  1. **产物路径（最要紧的一条）**：`npm run build` 之后 `ls out`，确认三件事 ——
+     ① `out/zh/posts/index.html` 与 `out/en/posts/index.html` 在（列表页两语言）；
+     ② `out/search-index.json` 是**文件**（这一条从第 5 项起就没被验证过：`trailingSlash: true`
+     下 Route Handler 会不会也被加上尾斜杠，变成 `out/search-index.json/index.html`）；
+     ③ `out/sitemap.xml` 里出现 `/zh/posts/` 两行。
+     ②若不对，**页面上会有明确表现**：搜索框下面写「索引没读到，这一次只匹配本页已有的标题 / 标签 / 分类 / 摘要」，
+     而搜索仍然能用（兜底路径）。把 `ls out` 的结果发我，我改成「构建期写进 `public/`」的静态文件；
+  2. **没有 JS 也能读**：禁用 JS（或直接看 `curl /zh/posts/` 的 HTML）应当看到完整列表与卡片 ——
+     工具栏是增强，不是前提；零文章时应当只有空状态、**没有**工具栏；
+  3. **搜索**：第一次输入时才应看到 Network 里出现 `/search-index.json` 与 fuse.js 的 chunk；
+     中文词、标签名、正文里的词各试一次（正常路径应提示「结果来自构建期索引，含每篇正文的前 1200 字」）；
+  4. **筛选**：标签 / 分类组内是「或」、组与组之间是「且」（选两个标签 + 一个年份 = 两个标签任一 + 那一年）；
+     地址栏应跟着变成 `?tag=…&year=…`，把地址粘到新标签页打开应当还原同一份筛选（含密度 = 偏好仍取本机）；
+  5. **密度**：切到「紧凑」或「内容」后刷新，应当记得上次选的（localStorage 的 `tob:list-density`）；
+     「内容」档在宽屏上应当一行一篇、摘要按你选的 `--reading-*` 度量排（与设置中心联动）；
+  6. **首页第 2 栏**：卡片外观应当与改造前**基本一致**（第 11 项把首页卡片换成了共用组件，
+     只由 `.home-posts .post-card` 覆盖回画布色 / 内边距 / 字号）—— 若发现首页卡片变了样，
+     说一声，我调那两行覆盖；
+  7. **打印预览**：工具栏不应出现在纸上，列表按当前筛选结果排成一条、宽度不受限。
+- **第 11 项的三档「内容」档**停在「摘要 + 全部元信息」，**不重复正文**：那是第 12 项文章页的事。
+  若你期望列表页直接给出全文（正文进列表页），说一声 —— 那要把每篇正文也传进客户端组件，
+  首屏体积会明显变大，取舍我留给你定。
 - Service Worker（`public/sw.js`）与离线页只做了「逻辑上自洽」，没在任何浏览器里跑过。
   `npm run preview` 之后确认三件事：Application → Service Workers 里注册成功；
   断网（DevTools → Network → Offline）刷新仍能看到离线页；
@@ -1139,3 +1258,4 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
 | 2026-09-30 | 第六次云构建：**构建阶段就失败**（`EJSONPARSE`）—— 上一次提交给 `package.json` 的 `deploy` 留了尾逗号（我的编辑失误，JSON 不允许尾逗号），删掉后重新触发。台账新增「构建失败 —— `package.json` 尾逗号」小节，并记下以后改 JSON 要过 `node -e "JSON.parse(...)"` 这类真正的解析器（`tsc` 不检查 JSON） |
 | 本次提交 | **第 7 项框架 UI 完成**：顶栏（品牌 / 导航 / 图签三段，对齐 wunai-blog）、页脚（联系方式 + 版权 + 左下角齿轮）、设置中心抽屉（外观 / 阅读偏好 / 语言 / 恢复默认）。新增 `lib/icons.ts`（本地打包的 24 个图标）、`lib/prefs.ts`（宽度/字号/行距三档 + 首帧脚本 + 写 `--reading-*`）；`lib/site.ts` 扩全为「路由落地状态表 ROUTES + 顶栏导航 + 联系方式 + i18n 文案表」；新组件 `RouteLink`（按 `ROUTES.status` 决定可点/不可点）、`SiteHeader`、`SiteFooter`、`ThemeSwitcher`、`LangSwitcher`、`SettingsDock`、`SettingsCenter`、`PrefsInit`。框架挂到 `app/[lang]/layout.tsx`（第 9~13 项自动带上）；`globals.css` 新增「6b. 框架 UI」一节与 `--frame-width` 令牌，`.page` 内边距收紧到 `2.5rem 1.5rem 4rem`；`THEME_LABELS.hint` 由中文一句改成 `{ zh, en }`；约定新增第 8 条（链接可用性以 `ROUTES.status` 为唯一事实来源） |
 | 本次提交 | **第 8 项装饰与动效完成**：新增 `lib/decor.ts`（路径 → 图纸的唯一事实来源：`section` / `pattern` / 两位编号 / 图签语言，纯函数 + 两张穷尽表，零依赖）；`components/BlueprintBackground.tsx` 从空 div 变成 `"use client"` 组件，用 `usePathname()` 挂 `data-decor` / `data-route`，并在换页时让纸面重铺一次（0.32s、首帧不播、尊重 `prefers-reduced-motion`）；`app/globals.css` 新增「5b. 图案随路由变」一节 —— 七套图案（sheet / columns / measure / grid / hatch / dots / plain，全是渐变，无图片、无滤镜、不动布局）+ 右下角图签（`TOB-ZH-01` 之类，窄屏不印）+ `[data-route="article"]` 的边缘淡出微调；`lib/site.ts` 新增 `isRouteId()` 与 `SITE.i18n.decor` 三条文案（图签名字复用导航文案，不重复写十二个）。这一项**未改任何颜色与令牌、未动层序**；「纸质颗粒」未做，理由见第 4 节第 8 项 |
+| 本次提交 | **第 10 项列表页 + 第 11 项文章卡片（三档密度）完成**：新增 `app/[lang]/posts/page.tsx`（构建期取文章 / 标签 / 分类 / 年份，零文章出空状态且不出工具栏）、`components/list/PostList.tsx`（客户端：搜索 / 筛选 / 排序 / 密度 / 语言 / 地址栏状态）、`components/list/PostCard.tsx`（三档密度共用卡片）、`lib/list.ts`（筛选状态与默认值、三档密度与排序的选项表、纯函数、查询串读写、密度本机记忆、中英文案 —— 对 `content.ts` / `search-index.ts` 只 `import type`，故客户端可安全引入）；搜索在**第一次输入时**才读 `/search-index.json` 并动态 `import("fuse.js")`，索引读不到 / 版本不匹配时自动退回本页字段并在页面上写明；`ROUTES.posts` 改 `"ready"`（顶栏「文章」可以点了），sitemap 补两行列表页；`lib/site.ts` 新增 `feedAlternatesTypes()`（页面自写 `alternates` 会覆盖根布局那份 RSS 发现表，第 5 项记下的坑先在这里堵上，`app/layout.tsx` 同步改用）；首页第 2 栏换成共用的 `PostCard`（适中档），`lib/home.ts` 删掉 `posts.minutes` / `articlePending`；`lib/icons.ts` 补 11 个图标（筛选 / 时间 / 排序 / 三档密度 / AI / 清除搜索）；`app/globals.css` 新增「6d. 列表页与文章卡片」一节并把 `.home-kicker` 系三个类换成 `home/list` 共用，打印样式隐藏工具栏 |

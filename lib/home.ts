@@ -85,12 +85,13 @@ export interface HomeText {
   indexLabel: string;
   /** 指示器顶部的等宽小字 */
   indexNote: string;
-  /** 文章卡片在正文页落地前的悬停说明（与 RouteLink 的 navPending 同一个口径） */
-  articlePending: (item: number) => string;
   blocks: Record<HomeBlockId, HomeBlockText>;
 
   intro: { body: string; entries: string; rss: string; note: string };
-  posts: { count: (n: number) => string; empty: string; minutes: (n: number) => string };
+  /* 卡片上的小字（几分钟 / 置顶 / 草稿 / AI / 正文页未落地）不在这里：
+     第 11 项的卡片是共用件，那句文案跟着卡片走（lib/list.ts 的 LIST_TEXT.card）。
+     这一栏只剩「显示了几篇」与空状态两句 —— 改卡片文案请去 lib/list.ts。 */
+  posts: { count: (n: number) => string; empty: string };
   stats: {
     note: string;
     analytics: string;
@@ -126,7 +127,6 @@ export interface HomeText {
 const ZH: HomeText = {
   indexLabel: "首页八栏",
   indexNote: "8 栏",
-  articlePending: (item) => `文章页还没做（第 ${item} 项落地后可点）`,
   blocks: {
     intro: { title: "本站介绍", kicker: "开场" },
     posts: { title: "文章", kicker: "先读这几篇" },
@@ -146,7 +146,6 @@ const ZH: HomeText = {
   posts: {
     count: (n) => `按时间倒序、置顶优先，本栏显示 ${n} 篇`,
     empty: "还没有文章 —— 第一篇由你亲笔写，这一栏会自动出现卡片。",
-    minutes: (m) => `${m} 分钟`,
   },
   stats: {
     note: "数字来自构建期：每次部署重新算一遍，所以这是「仓库此刻有多少字」，不是访问量。",
@@ -213,7 +212,6 @@ const ZH: HomeText = {
 const EN: HomeText = {
   indexLabel: "Home sections",
   indexNote: "8 blocks",
-  articlePending: (item) => `Article pages are not built yet (lands in item ${item})`,
   blocks: {
     intro: { title: "About this site", kicker: "Opening" },
     posts: { title: "Posts", kicker: "Start here" },
@@ -233,7 +231,6 @@ const EN: HomeText = {
   posts: {
     count: (n) => `Newest first, pinned on top — ${n} shown in this block`,
     empty: "No posts yet — the first one is yours to write; cards appear here automatically.",
-    minutes: (m) => `${m} min`,
   },
   stats: {
     note: "These numbers come from the build: they are recomputed on every deploy, so this is “how much text the repo holds right now”, not traffic.",

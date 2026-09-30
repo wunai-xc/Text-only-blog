@@ -13,9 +13,10 @@ import { LANGS, SITE, type Lang } from "@/lib/site";
  * 目前列出的页面：
  *   /                        语言分流页（app/page.tsx）
  *   /zh/、/en/               各语言首页
- *   /zh/posts/<slug>/ …      文章，URL 由 content/ 里的文章推出
+ *   /zh/posts/、/en/posts/   文章列表页（第 10 项）
+ *   /zh/posts/<slug>/ …      文章，URL 由 content/ 里的文章推出（第 12 项的文章页落地后才真的可访问）
  *
- * 第 10 / 13 项新加页面（标签、分类、归档、关于、搜索、友链）时，在 `pageRoutes` 里补一行；
+ * 第 13 项新加页面（标签、分类、归档、关于、搜索、友链）时，在 `pageRoutes` 里补一行；
  * 不要在这里写「还没有的页面」，sitemap 指向 404 是负分。
  *
  * ⚠️ 文章 URL 依赖第 12 项的文章页：在它落地之前，这些链接会指向 404（构建本身照常成功，
@@ -24,11 +25,14 @@ import { LANGS, SITE, type Lang } from "@/lib/site";
 
 export const dynamic = "force-static";
 
-/** 每语言的首页 */
+/** 每语言的固定页面（首页 + 文章列表页）。第 13 项做标签 / 分类 / 归档 / 关于 / 搜索 / 友链时在这里补 */
 function pageRoutes(): MetadataRoute.Sitemap {
-  const homeLanguages = Object.fromEntries(
-    LANGS.map((lang) => [lang, `${SITE.url}/${lang}/`]),
-  ) as Record<Lang, string>;
+  /** 同一个路径模板在各语言下的绝对地址（hreflang 用） */
+  const languageUrls = (path: string): Record<string, string> =>
+    Object.fromEntries(LANGS.map((lang) => [lang, `${SITE.url}/${lang}${path}`]));
+
+  const homeLanguages = languageUrls("/");
+  const listLanguages = languageUrls("/posts/");
 
   const routes: MetadataRoute.Sitemap = [
     {
@@ -45,6 +49,19 @@ function pageRoutes(): MetadataRoute.Sitemap {
       changeFrequency: "daily",
       priority: 1,
       alternates: { languages: { ...homeLanguages, "x-default": `${SITE.url}/` } },
+    });
+
+    // 文章列表页（第 10 项）：每语言一张，x-default 指向默认语言那一张
+    routes.push({
+      url: `${SITE.url}/${lang}/posts/`,
+      changeFrequency: "weekly",
+      priority: 0.8,
+      alternates: {
+        languages: {
+          ...listLanguages,
+          "x-default": `${SITE.url}/${SITE.defaultLang}/posts/`,
+        },
+      },
     });
   }
 

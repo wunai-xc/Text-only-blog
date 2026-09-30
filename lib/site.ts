@@ -70,7 +70,7 @@ export const ROUTES: Record<RouteId, SiteRoute> = {
   home: { path: "/{lang}/", status: "ready", item: 1, nav: true, icon: "mdi:home-outline" },
   posts: {
     path: "/{lang}/posts/",
-    status: "pending",
+    status: "ready",
     item: 10,
     nav: true,
     icon: "mdi:post-outline",
@@ -320,4 +320,23 @@ export const CONTACT: { email: string; github: string; repo: string } = {
 /** 每语言的 RSS 地址（第 5 项生成，路由见 app/[lang]/feed.xml/route.ts） */
 export function feedHref(lang: Lang): string {
   return `/${lang}/feed.xml`;
+}
+
+/**
+ * 「阅读器自动发现订阅源」用的 `alternates.types`（根布局与各页面共用一份）。
+ *
+ * ⚠️ Next 的 metadata 是**浅合并**：页面一旦自己写了 `alternates`（哪怕只写 canonical
+ * 或 languages），根布局里这一份 `types` 就被整体覆盖掉。所以自己写 alternates 的页面
+ * 要把它一起带上 —— 别在页面里手抄第二份地址（第 5 项那次记下的坑，第 10 项先按这条办，
+ * 第 12 项的文章页也要这么做）：
+ *
+ *   alternates: { canonical, languages, types: feedAlternatesTypes() }
+ */
+export function feedAlternatesTypes(): Record<string, { url: string; title: string }[]> {
+  return {
+    "application/rss+xml": [
+      { url: "/zh/feed.xml", title: `${SITE.title}（中文）` },
+      { url: "/en/feed.xml", title: `${SITE.title} (English)` },
+    ],
+  };
 }

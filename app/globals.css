@@ -1011,8 +1011,10 @@
     padding: 1.4rem 1.5rem 1.6rem;
   }
 
-  /* 栏头：栏号 + 一句小字 + 一条虚线拉到右边（图纸上那种标题栏的气质） */
-  .home-kicker {
+  /* 栏头：栏号 + 一句小字 + 一条虚线拉到右边（图纸上那种标题栏的气质）。
+     列表页页头（第 10 项）用的是同一套观感，所以三个别名共用这三条规则。 */
+  .home-kicker,
+  .list-kicker {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -1023,14 +1025,16 @@
     letter-spacing: 0.04em;
   }
 
-  .home-no {
+  .home-no,
+  .list-no {
     padding: 0.05rem 0.3rem;
     border: 1px solid var(--c-rule-strong);
     border-radius: 3px;
     color: var(--c-accent);
   }
 
-  .home-rule {
+  .home-rule,
+  .list-rule {
     flex: 1 1 auto;
     height: 0;
     border-top: 1px dashed var(--c-rule);
@@ -1198,55 +1202,24 @@
     text-underline-offset: 2px;
   }
 
-  /* 文章卡片（第 2 栏）—— 紧凑的文字卡。
-     第 11 项（文章卡片三档密度）落地后，这里换成那边的「紧凑档」。 */
+  /* 文章卡片（第 2 栏）：第 11 项的三档卡片（components/list/PostCard.tsx）的**适中档**
+     —— 与这一栏原来的样子一致（标题 / 日期 / 时长 / 摘要 / 标签）。
+     卡片自己的样式在下面的「6d. 列表页」；这里只做两处本地覆盖：
+     它贴着的是一块 .panel（面），所以改用画布色；栅格比列表页密一点。 */
   .home-posts {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
     gap: 0.7rem;
   }
 
-  .home-post-card {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
+  .home-posts .post-card {
+    gap: 0.25rem;
     padding: 0.75rem 0.85rem;
-    border: 1px solid var(--c-rule);
-    border-radius: var(--shape-radius);
     background-color: var(--c-canvas);
   }
 
-  .home-post-title {
-    margin: 0;
+  .home-posts .post-card-title {
     font-size: 0.95rem;
-    font-weight: 620;
-    line-height: 1.5;
-  }
-
-  .home-post-title a {
-    color: var(--c-ink);
-    text-decoration: none;
-  }
-
-  .home-post-title a:hover {
-    color: var(--c-accent);
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-
-  .home-post-meta,
-  .home-post-tags {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    color: var(--c-ink-subtle);
-  }
-
-  .home-post-desc {
-    margin: 0;
-    font-size: 0.82rem;
-    line-height: 1.65;
-    color: var(--c-ink-muted);
   }
 
   /* 第 8 栏的三个字段（标签 + 选项按钮） */
@@ -1340,6 +1313,327 @@
     .home-flow {
       padding-inline-end: 3.5rem;
     }
+  }
+
+  /* ==========================================================
+     6d. 列表页与文章卡片（第 10 / 11 项）
+     版面、选项与文案在 lib/list.ts；页头那行「栏号 + 小字 + 虚线」复用上面 6c 里的
+     .list-kicker / .list-no / .list-rule（与首页栏头同一套），颜色一律走令牌。
+     卡片的三档密度只改**内边距 / 字号 / 摘要要不要出现**（最后一项由组件决定结构），
+     所以 `.post-card` 只有几条 [data-density] 覆盖，没有三份排版。
+     ========================================================== */
+
+  /* 列表页比 .page 宽一档（--home-width）：这是「翻目录」不是读长文，宽屏两栏才排得开 */
+  .list-page {
+    max-width: var(--home-width);
+  }
+
+  .list-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1.4rem;
+  }
+
+  .list-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+
+  .list-lead {
+    max-width: var(--reading-measure);
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.75;
+    color: var(--c-ink-muted);
+  }
+
+  .list-meta {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--c-ink-subtle);
+  }
+
+  /* 工具栏：搜索 + 五组筛选 + 底部计数。打印时整块不印（见文件末尾的 @media print） */
+  .list-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .list-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .list-field-label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin: 0;
+    font-size: 0.76rem;
+    color: var(--c-ink-muted);
+  }
+
+  .list-search {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .list-search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--c-rule);
+    border-radius: var(--shape-radius);
+    background-color: var(--c-canvas);
+    color: var(--c-ink);
+    font-family: inherit;
+    font-size: 0.9rem;
+  }
+
+  .list-search-input::placeholder {
+    color: var(--c-ink-subtle);
+  }
+
+  .list-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.3rem;
+    margin: 0;
+    font-size: 0.72rem;
+    line-height: 1.6;
+    color: var(--c-ink-subtle);
+  }
+
+  .list-hint > svg {
+    flex: none;
+    margin-top: 0.15em;
+  }
+
+  .list-hint[data-tone="warn"] {
+    color: var(--c-danger);
+  }
+
+  /* 选项片（标签 / 分类 / 年份 / 排序 / 密度 / AI / 语言共用）。
+     按钮与链接都穿这一件：LangSwitcher 是个 <a>，其余是 <button>。 */
+  .list-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  .list-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.22rem 0.5rem;
+    border: 1px solid var(--c-rule);
+    border-radius: 999px;
+    background-color: var(--c-canvas);
+    color: var(--c-ink-muted);
+    font-family: inherit;
+    font-size: 0.78rem;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .list-chip:hover {
+    border-color: var(--c-rule-strong);
+    color: var(--c-ink);
+  }
+
+  .list-chip[aria-pressed="true"] {
+    border-color: var(--c-accent);
+    background-color: var(--c-accent-soft);
+    color: var(--c-ink);
+  }
+
+  .list-chip-count {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--c-ink-subtle);
+  }
+
+  .list-toolbar-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-top: 0.45rem;
+    border-top: 1px dashed var(--c-rule);
+  }
+
+  .list-count {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--c-ink-subtle);
+  }
+
+  .list-empty {
+    font-size: 0.9rem;
+    line-height: 1.8;
+    color: var(--c-ink-muted);
+  }
+
+  /* ---------- 文章卡片（第 11 项） ---------- */
+
+  .list-grid {
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  @media (min-width: 60rem) {
+    .list-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .post-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--c-rule);
+    border-radius: var(--shape-radius);
+    background-color: var(--c-surface);
+  }
+
+  .post-card[data-density="compact"] {
+    padding: 0.55rem 0.75rem;
+  }
+
+  .post-card[data-density="full"] {
+    gap: 0.4rem;
+    padding: 1.15rem 1.25rem;
+  }
+
+  /* 「内容」档一行到底：这一档把元信息全展开了，塞进两栏里会挤成一团 */
+  .list-grid .post-card[data-density="full"] {
+    grid-column: 1 / -1;
+  }
+
+  .post-card-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 620;
+    line-height: 1.5;
+  }
+
+  .post-card[data-density="compact"] .post-card-title {
+    font-size: 0.95rem;
+  }
+
+  .post-card[data-density="full"] .post-card-title {
+    font-size: 1.15rem;
+  }
+
+  .post-card-title a {
+    color: var(--c-ink);
+    text-decoration: none;
+  }
+
+  .post-card-title a:hover {
+    color: var(--c-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .post-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--c-ink-subtle);
+  }
+
+  .post-card-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    padding: 0.02rem 0.3rem;
+    border: 1px solid var(--c-rule-strong);
+    border-radius: 3px;
+    color: var(--c-ink-muted);
+  }
+
+  .post-card-badge[data-badge="ai"] {
+    border-color: var(--c-accent);
+    color: var(--c-accent);
+  }
+
+  /* 草稿只在 dev 里出现（生产构建根本不含草稿），样式只求「一眼看出不一样」 */
+  .post-card-badge[data-badge="draft"] {
+    border-style: dashed;
+    color: var(--c-danger);
+  }
+
+  .post-card-desc {
+    margin: 0;
+    font-size: 0.84rem;
+    line-height: 1.7;
+    color: var(--c-ink-muted);
+  }
+
+  /* 「内容」档的摘要按读者的阅读度量排（--reading-*），与正文同一套令牌 */
+  .post-card[data-density="full"] .post-card-desc {
+    max-width: var(--reading-measure);
+    font-size: var(--reading-size);
+    line-height: var(--reading-leading);
+    color: var(--c-ink);
+  }
+
+  .post-card-excerpt {
+    max-width: var(--reading-measure);
+    margin: 0;
+    padding-top: 0.1rem;
+    font-size: 0.8rem;
+    line-height: 1.75;
+    color: var(--c-ink-subtle);
+  }
+
+  .post-card-tags {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--c-ink-subtle);
+  }
+
+  .post-card-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin: 0;
+  }
+
+  .post-card-chip {
+    padding: 0.04rem 0.4rem;
+    border: 1px dashed var(--c-rule-strong);
+    border-radius: 999px;
+    font-size: 0.72rem;
+    color: var(--c-ink-muted);
+  }
+
+  .post-card-chip[data-kind="category"] {
+    border-style: solid;
+    border-color: var(--c-accent);
+    color: var(--c-accent);
+  }
+
+  .post-card-note {
+    margin: 0;
+    font-size: 0.72rem;
+    color: var(--c-ink-subtle);
   }
 
   /* ==========================================================
@@ -1653,6 +1947,20 @@
 
   .home-row {
     min-height: 0;
+  }
+
+  /* 第 10 项的列表页：工具栏（搜索框、选项片）在纸上是点不动的噪音，不印；
+     列表按当前筛选结果排成一条连续的书单，宽度也不再受屏幕宽度限制。 */
+  .list-toolbar {
+    display: none;
+  }
+
+  .list-page {
+    max-width: none;
+  }
+
+  .list-grid {
+    grid-template-columns: 1fr;
   }
 
   html,

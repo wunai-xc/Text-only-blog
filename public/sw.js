@@ -7,7 +7,7 @@
  *
  * 策略（刻意保守，纯文字博客的第一诉求是「读过的东西离线还能再看一眼」）：
  *
- *   install  预缓存「外壳」：根页、两个语言的首页、离线兜底页、manifest、favicon。
+ *   install  预缓存「外壳」：根页、两个语言的首页、两个语言的文章列表页、离线兜底页、manifest、favicon。
  *            用逐个 add + try/catch，任何一个失败都不会让整个 install 挂掉。
  *   activate 删掉旧版本缓存，然后立刻接管页面（clients.claim）。
  *
@@ -23,11 +23,28 @@
  * 改了缓存策略或外壳清单，就把 CACHE_VERSION 往上加一位 —— 否则老客户端会一直用旧缓存。
  */
 
-const CACHE_VERSION = "1";
+const CACHE_VERSION = "2";
 const CACHE_NAME = `text-only-blog-v${CACHE_VERSION}`;
 
-/** 预缓存的「外壳」：路径都必须真实存在，否则 install 时那条会失败（不影响其它条目） */
-const SHELL = ["/", "/zh/", "/en/", "/offline/", "/manifest.webmanifest", "/favicon.svg"];
+/**
+ * 预缓存的「外壳」：路径都必须真实存在，否则 install 时那条会失败（不影响其它条目）。
+ * 列表页（第 10 项）在清单里：它是「翻目录」的入口，第一次访问就把首页与列表页带走，
+ * 之后地铁里也能挑一篇再点进去（正文页打开过一次就有缓存）。
+ *
+ * **故意不预缓存 `/search-index.json`**：它随文章数增长（每篇正文前 1200 字），
+ * 装上 PWA 就替读者拉一份可能几百 KB 的 JSON 不划算 —— 搜索是「想用时才付这个代价」，
+ * 而它一旦被搜索过一次，就会进缓存，之后离线搜索也能用。
+ */
+const SHELL = [
+  "/",
+  "/zh/",
+  "/en/",
+  "/zh/posts/",
+  "/en/posts/",
+  "/offline/",
+  "/manifest.webmanifest",
+  "/favicon.svg",
+];
 
 /** 离线兜底页（导航失败时给这个） */
 const OFFLINE_URL = "/offline/";

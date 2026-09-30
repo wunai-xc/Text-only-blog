@@ -5,7 +5,7 @@ import PrefsInit from "@/components/PrefsInit";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import ThemeInit from "@/components/ThemeInit";
 import ThemeSync from "@/components/ThemeSync";
-import { SITE } from "@/lib/site";
+import { feedAlternatesTypes, SITE } from "@/lib/site";
 import { THEME_CHROME } from "@/lib/theme";
 
 export const metadata: Metadata = {
@@ -16,15 +16,9 @@ export const metadata: Metadata = {
   applicationName: SITE.title,
   manifest: "/manifest.webmanifest",
   icons: { icon: "/favicon.svg" },
-  // 阅读器/浏览器靠这个自己发现订阅源（/feed.xml 是默认语言的别名）
-  alternates: {
-    types: {
-      "application/rss+xml": [
-        { url: "/zh/feed.xml", title: `${SITE.title}（中文）` },
-        { url: "/en/feed.xml", title: `${SITE.title} (English)` },
-      ],
-    },
-  },
+  // 阅读器/浏览器靠这个自己发现订阅源（/feed.xml 是默认语言的别名）。
+  // 地址表在 lib/site.ts：页面自己写 alternates 时要用同一份（metadata 是浅合并）。
+  alternates: { types: feedAlternatesTypes() },
 };
 
 export const viewport: Viewport = {
