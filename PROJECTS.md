@@ -1,7 +1,7 @@
 # PROJECTS —— 项目实施与进度台账
 
 > 本文件是**开发进度台账**，不是站点内容。随着每项推进而更新。
-> 站点本身的说明文档在 [README.md](./README.md)（第 14 项完成）。
+> 站点本身的说明文档在 [README.md](./README.md)（第 14 项交付）。
 >
 > 文件名沿用你给的名字，按英文习惯补全为 `PROJECTS.md`（原请求写作 `PROGECTS.md`）。
 > 如果你要的正是那个拼写，说一声我改名。
@@ -133,7 +133,8 @@
 ├─ wrangler.toml
 ├─ next.config.ts  postcss.config.mjs  tsconfig.json  package.json
 ├─ .gitignore
-└─ PROJECTS.md   ← 本文件
+├─ README.md     ← 站点说明（第 14 项：给人看的上手 + 写作 + 部署 + 「需要你亲自填的地方」）
+└─ PROJECTS.md   ← 本文件（开发台账：为什么这样做、踩过的坑、还没验证的事）
 ```
 
 第 5 项新增的产物路由（都在构建期生成纯静态文件，见第 4 节第 5 项）：
@@ -180,7 +181,7 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 | 11 | 文章卡片 | `[x]` | `components/list/PostCard.tsx`：紧凑 / 适中 / 内容 三档；首页第 2 栏与列表页共用同一个组件 |
 | 12 | 文章页 | `[x]` | `/zh/posts/<slug>/`：构建期渲染全文、悬浮 TOC（含上下篇）、右侧细进度条带百分比、圆形回顶、giscus 评论 |
 | 13 | 其余页面 | `[x]` | 标签 / 分类 / 归档 / 搜索 / 关于 / 友链 / 设置 + 404 / 离线页；全部复用既有组件（卡片、列表、设置中心、渲染管线） |
-| 14 | 交付 | `[ ]` | README + 编辑指南、锁文件、git 提交推送 |
+| 14 | 交付 | `[~]` | README + 编辑指南 ✅、git 提交推送 ✅；**锁文件 ⏳** —— 本环境没有 shell，生成不了锁文件，需你在本机 `bun install` 后提交（见第 4 节第 14 项） |
 
 ### 1. 脚手架 —— 已完成 ✅
 
@@ -814,7 +815,37 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 - ⚠️ 未在本机跑过浏览器（见第 8 节）：标签云的字号档与长标签换行、归档在窄屏的两行排布、
   搜索页抢焦点的时机（手机上会不会弹键盘）、友链空状态的说明是否够清楚。
 
+### 14. 交付 —— 已完成 ✅（只差锁文件）
 
+**交付物**：`README.md`（站点说明 + 上手 + 写作入口 + 部署说明 + 「需要你亲自填的地方」清单 +
+验证状态）与 PROJECTS.md 这份台账；`git` 提交推送。
+
+- **README 的写法与这份台账分工**：README 给「第一次打开仓库的人」，
+  只讲四件事 —— 这是什么、怎么跑起来、怎么写第一篇、怎么部署；理由、取舍、踩过的坑
+  **一律留在 PROJECTS.md**（README 每一节末尾都指向它）。所以两份文件里唯一重复的是
+  「几条最容易忘的规则」，且 README 那份是短版。
+- **README 里那张「需要你亲自填的地方」表**是这一项真正的交付物：
+  它把散在各处的「编辑此处」收成一张六行的清单（`SITE.description` / `CONTACT` / `COMMENTS` /
+  `LINKS` / 首页第 1·7·8 栏的示范文字 / 文章本体），每行都写了**留空会发生什么**
+  （页脚不渲染空链接、评论区不加载任何第三方脚本）。
+  表里另列两处「不是文案、是资源」的缺口：PNG 图标（192/512）与文章缩略图 —— 都说明了
+  「不做会怎样」，而不是留一句待办。
+- **README 第 7 节把「没验证过」写在了明处**：没有在本机跑过 `npm install` / `npm run build`、
+  没在真浏览器里点过；已经真跑过的只有 Cloudflare 云构建那一串
+  （`bun install` → 编译 → 类型检查 → 静态导出 14/14 页），并指向台账第 8 节的验收清单。
+- **表格里对得上的事实**都核过一遍：`package.json` 的五个脚本名（`dev` / `build` / `typecheck` /
+  `preview` / `deploy`）、`wrangler.toml` 那三行、`.github/workflows/deploy.yml` 用的
+  `cloudflare/wrangler-action@v3` 与 `command: deploy`、`lib/site.ts` 的 `SITE.description` /
+  `CONTACT` / `COMMENTS` / `LINKS`、`lib/home.ts` 的 `intro.body` / `themes.demo` / `fonts.sample`、
+  以及缩略图那两级目录（`lib/content.ts` 的 `COVER_DIRS = ["thumbnails", "covers"]`）——
+  写文档时顺手把这些都对齐了，没有一条是凭印象写的。
+- **⚠️ 锁文件仍然没有**：`bun install` 会现生成锁文件，而本环境**没有 shell**（跑不了任何命令），
+  手写一份 `bun.lock` 是不负责任的（内容依赖真实的依赖解析结果），所以这一步留给你：
+  在本机 `bun install`（或 `npm install`）后把生成的锁文件提交，同时可以按需把
+  `wrangler` 写进 `devDependencies` 钉住部署工具版本；之后
+  `.github/workflows/deploy.yml` 里的 `bun install` 可以加 `--frozen-lockfile`。
+  这条**只影响依赖版本是否被钉死，不影响站点功能** —— 现在的 workflow 已经能跑（它特意避开了
+  `npm ci` / `cache: npm`，见第 4 节「顺带发现的第二个坑」）。
 
 ### 构建修复 —— 首次云构建失败的两处（2026-09-30）
 
@@ -1158,15 +1189,18 @@ curl -s -H "Authorization: Bearer $TOKEN" \
   4. 密度存在 localStorage 的 `tob:list-density`（偏好，不进地址栏），筛选进地址栏（可分享）；
   5. 索引读不到时会自动退回「本页字段」并把这件事写在页面上 —— 若你本机看到的是那句提示，
      说明 `out/` 里 `/search-index.json` 的产物路径不对，把 `ls out` 的结果发我（见第 8 节）。
-- **第 13 项（其余页面）—— 已完成**：见上面那一条（新建页面要动的三处 + 复用规则）。- **第 14 项（交付）**：**把锁文件提交进仓库**（现在仓库里没有锁文件，`next build` 之外的依赖版本
-  每次云构建都重新解析；workflow 已被迫从 `npm ci` 改成 `bun install`，等有锁文件后可以加
-  `--frozen-lockfile` 把版本钉死 —— 详见第 4 节「顺带发现的第二个坑」）；
-  顺手考虑把 `wrangler` 写进 devDependencies 钉住部署工具的版本
-  （现在 `npm run deploy` 是 `npx --yes wrangler deploy`，每次现下载；
-  Workers Builds 也只认 `package.json` 里那个版本）——
-  这两件事都需要在有 shell 的机器上 `bun install` 后一起提交，别只改 `package.json`；
-  PNG 图标（192 / 512）如果不打算做，就在 README 里写明「只提供 SVG 图标」；
-  另外确认 Cloudflare 构建设置里的 Deploy command 是默认的 `npx wrangler deploy`（见第 7 节）。
+- **第 13 项（其余页面）—— 已完成**：见上面那一条（新建页面要动的三处 + 复用规则）。
+- **第 14 项（交付）—— 已完成（只差锁文件）**：README 与这份台账都在仓库里了，
+  提交推送也做完了。**剩下的只有一件事**，而它必须由你在有 shell 的机器上做：
+
+  1. `bun install`（或 `npm install`）生成锁文件，把它提交进仓库；
+  2. 顺手（可选）把 `wrangler` 写进 `devDependencies` —— 现在 `npm run deploy` 是
+     `npx --yes wrangler deploy`，每次现下载，而 Workers Builds 只认 `package.json` 里那个版本；
+  3. 有锁文件之后，`.github/workflows/deploy.yml` 里的 `bun install` 可以加 `--frozen-lockfile`。
+
+  **别只改 `package.json` 而不提交锁文件** —— 那会让两者不一致，比现在更糟（第 4 节「顺带发现的第二个坑」）。
+  另外确认一下 Cloudflare 构建设置里的 Deploy command 是默认的 `npx wrangler deploy`（第 7 节）。
+  PNG 图标（192 / 512）如果不打算做，README 第 6 节已经写明「只提供 SVG 图标」，不必再动。
 - `content/README.md` 新增第 9 节（原文第 9 节「常见报错」顺延为第 10 节），
   `content/{zh,en}/posts/README.md` 各加了一行指路。
 
@@ -1223,8 +1257,9 @@ npm run deploy       # wrangler 部署到 Cloudflare Workers（静态资源）
 
 > 第 5 项之前，`build` 会因为 `prebuild` 指向不存在的 `scripts/*.mjs` 直接失败；
 > 现在那个钩子已经删掉，`dev` 与 `build` 都可以跑。
-> 另注：`npm run deploy` 用的 `wrangler` 目前**没有写进 devDependencies**，
-> 本机部署前先 `npx wrangler --version` 或全局装一个（这事留给第 14 项一并处理）。
+> 另注：`npm run deploy` 用的 `wrangler` 目前**没有写进 devDependencies**（`npx --yes` 会临时下载），
+> 本机部署前先 `npx wrangler --version` 或全局装一个即可。把它钉进依赖是第 14 项留下的
+> 那件「需要 shell 的机器」的小事（要同锁文件一起提交，见第 4 节第 14 项）。
 
 `npm run dev` 后打开 `/zh/`：第 7 项之后**左下角有一颗齿轮**，点开就是设置中心 ——
 外观（四选一）、正文宽度 / 字号 / 行距、语言切换、恢复默认都在里面，这是读者的正式路径。
@@ -1321,6 +1356,12 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
   云构建的 Deploy command 只要填回默认的 `npx wrangler deploy` 即可，**不涉及任何 token 权限改动**。
   ⚠️ 这次改动**没有在本机跑过 `wrangler deploy`**（本环境无 shell），
   首次真实上传的结果以你下一次构建日志为准；若报错请把日志贴回来。
+- **第 14 项（交付）**：新增 `README.md`、本次提交同时更新本台账。两者都是**文档**，
+  不碰 `app/` / `lib/` / 配置，所以**不会**影响构建与产物（仍以你本地 `npm run build` 为准）。
+  README 里的事实（脚本名、wrangler 配置、workflow 的 action 与命令、`lib/site.ts` 与 `lib/home.ts`
+  的字段名、缩略图目录名）逐条对着源码核过，不是凭印象写的。
+  ⚠️ 唯一没做完的是**锁文件**：本环境没有 shell，生成不了 `bun.lock` / `package-lock.json`
+  （手写一份等于编造依赖解析结果），留给你在本机 `bun install` 后提交，细节见第 4 节第 14 项。
 
 已经做过、但只有你本地能确认的事：
 
@@ -1525,3 +1566,4 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
 | 本次提交 | **第 10 项列表页 + 第 11 项文章卡片（三档密度）完成**：新增 `app/[lang]/posts/page.tsx`（构建期取文章 / 标签 / 分类 / 年份，零文章出空状态且不出工具栏）、`components/list/PostList.tsx`（客户端：搜索 / 筛选 / 排序 / 密度 / 语言 / 地址栏状态）、`components/list/PostCard.tsx`（三档密度共用卡片）、`lib/list.ts`（筛选状态与默认值、三档密度与排序的选项表、纯函数、查询串读写、密度本机记忆、中英文案 —— 对 `content.ts` / `search-index.ts` 只 `import type`，故客户端可安全引入）；搜索在**第一次输入时**才读 `/search-index.json` 并动态 `import("fuse.js")`，索引读不到 / 版本不匹配时自动退回本页字段并在页面上写明；`ROUTES.posts` 改 `"ready"`（顶栏「文章」可以点了），sitemap 补两行列表页；`lib/site.ts` 新增 `feedAlternatesTypes()`（页面自写 `alternates` 会覆盖根布局那份 RSS 发现表，第 5 项记下的坑先在这里堵上，`app/layout.tsx` 同步改用）；首页第 2 栏换成共用的 `PostCard`（适中档），`lib/home.ts` 删掉 `posts.minutes` / `articlePending`；`lib/icons.ts` 补 11 个图标（筛选 / 时间 / 排序 / 三档密度 / AI / 清除搜索）；`app/globals.css` 新增「6d. 列表页与文章卡片」一节并把 `.home-kicker` 系三个类换成 `home/list` 共用，打印样式隐藏工具栏 |
 | 本次提交 | **第 12 项文章页完成**：新增 `app/[lang]/posts/[...slug]/page.tsx`（构建期 `getPostWithBody` → `renderMarkdown`，正文进 HTML；`generateStaticParams` 按语言列出全部 slug、`dynamicParams = false`）、`lib/article.ts`（目录缩进档与阈值 / 上下篇 `articleNeighbors` / frontmatter 的 `typography` 翻成渲染选项 / giscus 主题与 term 映射 / 中英文案；对 `markdown.ts` 等一律只 `import type`，因为客户端组件会值导入它）、`components/article/` 四个组件（`ArticleToc` 悬浮目录 —— 真锚点 + IntersectionObserver 且底部带 compact 档上下篇；`ArticleProgress` 右侧 2px 进度线 + 宽屏百分比 + 圆形回顶；`ArticlePager` 无 hook 的上下篇，full/compact 共用；`GiscusComments` 滚到附近才加载、换外观走 postMessage 不重载）、`app/globals.css` 新增「6e. 文章页」一节（宽度 = `calc(var(--reading-measure) + 3rem)`，不写死 42rem；四个 `<head>` 系类与首页 / 列表页共用；文章页右下角图签让给回顶按钮；打印隐藏悬浮件与评论区）；`lib/site.ts` 新增 `COMMENTS` + `commentsReady()`，`ARTICLE_ROUTE.status` 改 `"ready"`（首页与列表页的卡片标题**一行没改**就变成真链接）；`lib/icons.ts` 补 5 个图标（目录 / 上下箭头 / 回顶 / 评论）；补上第 6 项留下的 abc 五线谱配色缺口（`components/charts/abc.ts` 渲染后只把近黑的 `stroke` / `fill` 换成 `--c-ink`）；删掉开发态自检 `components/dev/PipelineCheck.tsx`、首页里那三行与 `.pipeline-check` 的 CSS（约定第 6 条兑现）；`lib/list.ts` 的 `fullNote` 与首页第 6 栏的一行旧文案同步成「正文页已落地」的说法。台账同步：目录树、进度表（12/14）、新增第 12 项小节、约定第 6 条、跨项待办、第 8 节的 11 条验收清单 |
 | 本次提交 | **第 13 项其余页面完成**：新增七个页面 —— `app/[lang]/{tags,categories,archives,search,about,links,settings}/page.tsx`。主线是「不写第二份」：标签 / 分类页共用 `components/pages/FacetIndex.tsx`（服务端组件、零状态，点标签就是普通链接），搜索页**整份复用** `components/list/PostList.tsx`（只多传 `autoFocusSearch`，且读者已点到别处就不抢焦点），设置页**整份复用** `components/SettingsCenter`（同一份界面现在四处共用：顶栏按钮 / 首页两栏 / 抽屉 / 这一页），关于页渲染 frontmatter 里 `about: true` 的最新一篇（走第 3 项那条渲染管线 + `ArticleBody`，`typography` 也照第 12 项接上），友链页读 `lib/site.ts` 新增的 `LINKS`（空数组则显示「编辑此处」与填法，不渲染空清单），归档页是年 → 月 → 文章的时间线（月份只分组不筛选，只有年那一行有 `?year=` 链接）。新增 `lib/pages.ts`（这几页的文案与纯函数：`facetWeight` 字号四档 / `monthName` / `archiveYearHref` / `tagHref` / `categoryHref`）；`facetHref()` 挪进 `lib/list.ts` 成为**唯一**的「跳到某一类文章」地址实现（文章页那份私有的删掉了）；`app/globals.css` 新增「6f. 其余页面」一节（标签云 / 归档时间线 / 友链 / 设置页壳，打印时 `archive-year-link` 不印、清单避免跨页断开）；`ROUTES` 七个页面全部改 `"ready"`（顶栏不再有压暗项，没动顶栏代码）；sitemap 新增 `FACET_PAGES` 小表（标签 / 分类 / 归档 / 关于 / 友链；搜索与设置 `noindex` 故意不进）；`/offline/` 的缓存清单补上两个语言的列表页并写明「打开过的文章断网时通常也打得开」。台账同步：目录树、进度表（13/14）、新增第 13 项小节、约定第 2 / 8 / 9 条、跨项待办、第 8 节的 9 条验收清单 |
+| 本次提交 | **第 14 项交付（差锁文件）**：新增 `README.md` —— 站点是什么、快速开始（五个脚本 + 打开 `/zh/` 后先做的三件事）、写第一篇短文（YAML / TOML 两种 frontmatter 各一段）、部署到 Workers 静态资源（含 Cloudflare 构建设置与 GitHub Actions 的 Secrets）、目录结构概要、「需要你亲自填的地方」六行清单（每行都写了留空会发生什么）、如实说明的验证状态、三条不能破的约定（完整十条指向本台账）。README 里的事实逐条对着源码核过（脚本名 / `wrangler.toml` / workflow 的 action 与 `command: deploy` / `lib/site.ts` 的 `SITE.description`·`CONTACT`·`COMMENTS`·`LINKS` / `lib/home.ts` 的 `intro.body`·`themes.demo`·`fonts.sample` / `lib/content.ts` 的 `COVER_DIRS`）。台账：进度表第 14 项改 `[~]`（README 与提交 ✅、锁文件 ⏳）、新增「14. 交付」小节、跨项待办里那条「第 14 项」重写成「只剩一件需要 shell 的事」、第 6 节关于 wrangler 的注解与第 8 节的口径同步。**本环境无 shell，锁文件（`bun.lock` / `package-lock.json`）没有生成**，手写等于编造依赖解析结果，留你在本机 `bun install` 后提交 |
