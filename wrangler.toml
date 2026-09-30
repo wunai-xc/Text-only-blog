@@ -1,0 +1,7 @@
+# Cloudflare Pages 部署配置
+# 编辑此处：把 name 改成你在 Cloudflare 上想用的项目名
+name = "text-only-blog"
+compatibility_date = "2025-09-01"
+
+# next build 的静态产物目录
+pages_build_output_dir = "out"

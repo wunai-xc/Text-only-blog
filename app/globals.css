@@ -1,0 +1,27 @@
+/* ============================================================
+   全局样式入口（第 1 项：脚手架最小可用版）
+   - Tailwind CSS 4：用 @import 引入，配置走 CSS 变量（@theme），不再需要 tailwind.config.js
+   - KaTeX 公式样式 + monokai 代码高亮主题
+   第 6 项会把这里的令牌体系扩成「亮色 / 暗色 / 护眼纸质」三套 + 蓝图草图背景。
+   ============================================================ */
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+@import "highlight.js/styles/monokai.css";
+
+@theme {
+  --font-sans: system-ui, -apple-system, "Segoe UI", "Noto Sans SC",
+    "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-serif: "Source Han Serif SC", "Noto Serif SC", Georgia, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}

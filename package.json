@@ -1,0 +1,55 @@
+{
+  "name": "text-only-blog",
+  "version": "0.1.0",
+  "private": true,
+  "description": "纯文字博客 — Next.js 16 静态导出 / Markdown 写作 / 五类图表 / 中英双语",
+  "scripts": {
+    "prebuild": "node scripts/generate-search-index.mjs && node scripts/generate-rss.mjs && node scripts/generate-changelog.mjs",
+    "predev": "node scripts/generate-search-index.mjs && node scripts/generate-changelog.mjs",
+    "dev": "next dev",
+    "build": "next build",
+    "preview": "npx --yes serve out -l 4173",
+    "clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true});require('fs').rmSync('out',{recursive:true,force:true})\"",
+    "deploy": "wrangler pages deploy out"
+  },
+  "dependencies": {
+    "@hpcc-js/wasm-graphviz": "^1",
+    "@iconify/icons-mdi": "^1",
+    "@iconify/react": "^6",
+    "abcjs": "^6",
+    "echarts": "^5",
+    "fuse.js": "^7",
+    "gray-matter": "^4",
+    "highlight.js": "^11",
+    "katex": "^0.16",
+    "mermaid": "^11",
+    "next": "16.3.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "rehype-autolink-headings": "^7",
+    "rehype-highlight": "^7",
+    "rehype-katex": "^7",
+    "rehype-raw": "^7",
+    "rehype-slug": "^6",
+    "rehype-stringify": "^10",
+    "remark-breaks": "^4",
+    "remark-gfm": "^4",
+    "remark-math": "^6",
+    "remark-parse": "^11",
+    "remark-rehype": "^11",
+    "smiles-drawer": "^2",
+    "unified": "^11",
+    "unist-util-visit": "^5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "overrides": {
+    "katex": "^0.16"
+  }
+}
