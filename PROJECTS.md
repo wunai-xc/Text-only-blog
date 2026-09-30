@@ -168,7 +168,10 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
   `remark-parse → gfm → breaks → math → 图表块 → 引用角标 → remark-rehype → rehype-raw → slug →
   目录收集 → autolink-headings → katex → highlight → stringify`。
 - 公式：KaTeX + `katex/contrib/mhchem`（`\ce` / `\pu`）+ `KATEX_MACROS` 自定义宏（`\RR`、`\dd`、`\abs`、`\E`…）。
-  `throwOnError: false`：写错公式把错误画在原文位置并着色，而不是让整站构建失败；`trust: false`：不允许 `\href` 之类发请求。
+  写错公式时把错误画在原文位置并着色，而不是让整站构建失败 —— 这件事由 `rehype-katex`
+  自己保证（它先用 `throwOnError: true` 试、失败记一条 vfile message、再用 `throwOnError: false`
+  重画）；**传 `throwOnError` 反而会类型报错**（该字段被 `Omit` 掉了），见「构建修复」一节。
+  `trust: false`：不允许 `\href` 之类发请求。
 - 代码高亮：highlight.js + monokai（主题在 `app/globals.css` 里 `@import`），未知语言不报错。
 - 五类图表：`lib/charts.ts` 是语言名登记表，构建期把 ```` ```mermaid ```` 之类的代码块换成占位 `<figure>`
   （`data-chart` + 隐藏的源码 `<pre class="chart-source">`），客户端 `components/ArticleBody.tsx` 见到才
@@ -345,6 +348,32 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
   `THEME_INIT_SCRIPT`（`applyTheme()` 的内联版本：首帧脚本与运行时 API 必须同一套判定逻辑）、
   `FALLBACK_TOKENS`（读不到 CSS 变量时的兜底）。三处都在 `lib/theme.ts` 顶部注释里写明了。
 
+### 构建修复 —— 首次云构建失败的两处（2026-09-30）
+
+Cloudflare 上第一次真正跑 `npm run build` 时，编译（Turbopack）通过，**类型检查**挂了两处
+—— 都在 `lib/markdown.ts` 的插件选项上（第 3 项写的代码，此前从没被 tsc 检查过）：
+
+1. `rehype-autolink-headings` / `rehype-katex` 的选项原本内联写在 `.use(plugin, { … })` 里，
+   tsc 报 `TS2345`。原因在 unified 的 `Processor#use` 签名：参数类型是
+   `...parameters: Parameters | [boolean]`（联合元组），而 TS 对联合签名里的**新建字面量**
+   只会挑一支做上下文推导 —— 日志里它挑中了 `[boolean]`，于是报
+   `… is not assignable to type 'boolean'`（两处都是这个原因）。
+   **修法**：把选项写成显式标注插件自己 `Options` 类型的常量（`AUTOLINK_HEADING_OPTIONS` /
+   `KATEX_OPTIONS`）—— 传进去的是有类型的值而不是新建字面量，只需一次普通结构比较，联合推导不再参与。
+2. `rehype-katex` 的 `Options` 是 `Omit<KatexOptions, "displayMode" | "throwOnError">`
+   —— 原来传的 `throwOnError: false` 属于「不存在的属性」，直接类型错误。
+   查了插件源码（`rehype-katex@7.0.1/lib/index.js`）确认：它自己先用 `throwOnError: true` 试、
+   失败记一条 vfile message、再用 `throwOnError: false` 重画 —— 所以「写错公式不弄挂整站」
+   依旧成立，只是这件事由插件保证，不是我们传参保证的。`throwOnError` 已删掉。
+3. 顺手做的：插件记在 vfile 上的消息（例如上面那条 KaTeX 渲染失败）现在会并进
+   `renderMarkdown` 的 `warnings`，构建日志与开发态自检都能看到 —— 以前它们是**看不见的**。
+4. `tsconfig.json` 的 `jsx` 从 `preserve` 改成 `react-jsx`，并补上 `.next/dev/types/**/*.ts` 的
+   include：这正是云构建日志里 Next 16 标为 **mandatory changes** 自己改的两项；
+   写进仓库是为了让 `npm run typecheck`（第 6 节列的本地命令）不必先跑一次 build 才能用。
+
+还没验证的：改完这些之后**是否真的通过类型检查、静态导出是否产出预期的产物**，
+要等再触发一次构建（或本地 `npm run typecheck && npm run build`）。
+
 ### 跨项待办（做到对应项时顺手勾掉）
 
 - **第 7 项（框架 UI / 设置中心）**：
@@ -452,6 +481,9 @@ http://localhost:3000/zh/?theme=dark
 - 已完成的代码属于「写完即交付」，实际编译与运行结果以你本地执行为准；
 - 有报错直接把日志贴给我，我按证据修；
 - 每次交付后本文件的进度表与「已完成 / 进行中」小节会同步更新。
+- **2026-09-30 的首次云构建**：`bun install` → Turbopack 编译 → 内容管线都通过了，
+  挂在**类型检查**（`lib/markdown.ts` 两处 `TS2345`，详见第 4 节「构建修复」）；
+  修完还没重新跑过 —— 下一次构建的日志是最有说服力的证据。
 
 已经做过、但只有你本地能确认的事：
 
@@ -514,3 +546,4 @@ http://localhost:3000/zh/?theme=dark
 | 本次提交 | 第 4 项中文排版优化完成（`lib/typography.ts`：补空格 / 标点与成对括号转全角 / `...`→`……`，四条规则可开关，代码与公式与链接地址自动跳过）；自检加两组对照；写作规范新增第 9 节 |
 | 本次提交 | 第 5 项构建产物完成（方案改为在 `next build` 内生成：`/search-index.json`、`/feed.xml` + 每语言 RSS、`/sitemap.xml`、`/robots.txt`、`/manifest.webmanifest`、`/changelog.json`；PWA：`public/sw.js` + `/offline/` + 注册组件 + `favicon.svg`）；删除失效的 `prebuild`/`predev`（它们一直是 `build` 失败的根因）并新增 `typecheck`；新增「跨项待办」小节 |
 | 本次提交 | 第 6 项设计系统完成（`app/globals.css` 三套令牌：纸/亮/暗 + `@theme inline` 映射成语义色工具类；`lib/theme.ts`：选择解析、首帧脚本、运行时 API、令牌读取；蓝图草图背景层；`.page`/`.panel` 原子件与正文度量 `--reading-*`；占位页面改用令牌）。图表跟随主题：`ChartContext` 扩成 `{theme, dark, colors}`，ArticleBody 订阅外观变化后重绘，mermaid/echarts/graphviz/smiles 改用令牌（abc 留作待办）。manifest 配色改用 `THEME_CHROME` |
+| 2026-09-30 | 首次云构建的修复：`lib/markdown.ts` 的 autolink / katex 选项改成显式标注 `Options` 的常量（TS2345）、删掉 `rehype-katex` 不允许的 `throwOnError`、把 vfile 消息并进 `warnings`；`tsconfig.json` 按 Next 16 的 mandatory changes 改 `jsx: react-jsx` 并补 include |

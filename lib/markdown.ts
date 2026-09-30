@@ -31,9 +31,9 @@
 
 import "katex/contrib/mhchem"; // 副作用导入：注册 \ce{} / \pu{}
 
-import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeAutolinkHeadings, { type Options as AutolinkOptions } from "rehype-autolink-headings";
 import rehypeHighlight from "rehype-highlight";
-import rehypeKatex from "rehype-katex";
+import rehypeKatex, { type Options as KatexOptions } from "rehype-katex";
 import rehypeRaw from "rehype-raw";
 import rehypeSlug from "rehype-slug";
 import rehypeStringify from "rehype-stringify";
@@ -73,6 +73,48 @@ export const KATEX_MACROS: Record<string, string> = {
   "\\Cov": "\\operatorname{Cov}",
   "\\argmax": "\\operatorname{arg\\,max}",
   "\\argmin": "\\operatorname{arg\\,min}",
+};
+
+/* --------------------------- 两个插件的选项 --------------------------- */
+
+/**
+ * 标题锚点（`<h2>…<a class="heading-anchor">#</a></h2>`）。
+ *
+ * 为什么单独拎出来、还显式标注插件自己的 `Options` 类型，而不是内联写在 `.use()` 里：
+ * unified 的签名是 `use(plugin, ...parameters: Parameters | [boolean])`（见 unified 的 index.d.ts），
+ * 于是「选项」这个位置是一个**联合元组**；TS 对联合签名里的**新建字面量**只会挑一支做上下文
+ * 推导，2026-09-30 的云构建日志里它挑中了 `[boolean]` 那一支，于是报
+ * `TS2345 … is not assignable to type 'boolean'`（两处失败的都是这个原因）。
+ * 写成显式标注 `Options` 的常量后，传进去的是**有类型、有名字**的值而不是新建字面量，
+ * 只需要一次普通的结构比较（`Options` 可赋值给 `Readonly<Options>`），联合推导不再参与。
+ */
+const AUTOLINK_HEADING_OPTIONS: AutolinkOptions = {
+  behavior: "append",
+  properties: { className: ["heading-anchor"], ariaHidden: true, tabIndex: -1 },
+  content: {
+    type: "element",
+    tagName: "span",
+    properties: { ariaHidden: true },
+    children: [{ type: "text", value: "#" }],
+  },
+};
+
+/**
+ * KaTeX。
+ *
+ * ⚠️ 这里**不能写 `throwOnError`**：rehype-katex 的 `Options` 是
+ * `Omit<KatexOptions, "displayMode" | "throwOnError">`，传了就是类型错误（同样在云构建里炸过）。
+ * 那「公式写错不要弄挂整站」由谁保证？由插件自己，看它的源码就清楚：
+ * 它先用 `throwOnError: true` 试一次，失败时往 vfile 上记一条 message（我们把它收进 warnings），
+ * 再用 `throwOnError: false` 重画一次 —— 于是错误按下面的 `errorColor` 画在原文位置。
+ * `strict: "ignore"` / `trust: false` 则照常透传给 KaTeX：前者让不规范的写法变成警告，
+ * 后者禁止 `\href` 之类搞出站外请求。
+ */
+const KATEX_OPTIONS: KatexOptions = {
+  errorColor: "#d64545",
+  strict: "ignore",
+  trust: false,
+  macros: KATEX_MACROS,
 };
 
 /* ------------------------------ 公共类型 ------------------------------ */
@@ -573,28 +615,22 @@ export async function renderMarkdown(
     .use(rehypeRaw)
     .use(rehypeSlug)
     .use(rehypeCollectHeadings, { collect: (heading: HeadingRecord) => headings.push(heading) })
-    .use(rehypeAutolinkHeadings, {
-      behavior: "append",
-      properties: { className: ["heading-anchor"], ariaHidden: true, tabIndex: -1 },
-      content: {
-        type: "element",
-        tagName: "span",
-        properties: { ariaHidden: true },
-        children: [{ type: "text", value: "#" }],
-      },
-    })
-    .use(rehypeKatex, {
-      throwOnError: false, // 写错公式时把错误画在原文位置，而不是让整站构建失败
-      errorColor: "#d64545",
-      strict: "ignore",
-      trust: false, // 不允许 \href / \includegraphics 之类搞出站外请求
-      macros: KATEX_MACROS,
-    })
+    .use(rehypeAutolinkHeadings, AUTOLINK_HEADING_OPTIONS)
+    .use(rehypeKatex, KATEX_OPTIONS)
     .use(rehypeHighlight, { detect: false, ignoreMissing: true })
     .use(rehypeStringify, { allowDangerousHtml: true });
 
   const file = await processor.process(markdown);
   const html = String(file);
+
+  /**
+   * 插件记在 vfile 上的消息（例如 rehype-katex 的「这条公式没渲染成功」）也收进 warnings：
+   * 它们是给作者看的诊断信息，构建日志与开发态自检都会打印，不影响产物。
+   */
+  for (const message of file.messages) {
+    const where = typeof message.line === "number" ? `第 ${message.line} 行：` : "";
+    warn(`${message.source ?? "markdown"}：${where}${message.reason}`);
+  }
 
   const referencesHtml =
     options.referenceList === false ? "" : renderReferenceList(slots, cited);
