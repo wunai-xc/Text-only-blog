@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!--
+    站点图标 / favicon.svg（第 5 项）——「设计图纸」风格：图框 + 三行文字。
+    纯文字博客，所以画的是「一张写着字的纸」，不是字母 logo。
+    内联 CSS 里的 prefers-color-scheme 会在浏览器把 SVG 当图片加载时生效（暗色下自动换色）。
+  -->
+  <style>
+    :root { --ink: #1d4f63; --paper: #f4f1e8; }
+    @media (prefers-color-scheme: dark) { :root { --ink: #8ecadd; --paper: #0e1416; } }
+    .frame { fill: none; stroke: var(--ink); stroke-width: 1.6; }
+    .dash { fill: none; stroke: var(--ink); stroke-width: 1.2; stroke-dasharray: 2 2; opacity: 0.75; }
+    .line { stroke: var(--ink); stroke-width: 2.2; stroke-linecap: round; }
+    .bg { fill: var(--paper); }
+  </style>
+
+  <rect class="bg" x="0" y="0" width="32" height="32" rx="6" />
+  <rect class="frame" x="5.5" y="4.5" width="21" height="23" rx="2.5" />
+  <path class="dash" d="M5.5 9.5h21" />
+  <g class="line">
+    <path d="M9.5 14.5h13" />
+    <path d="M9.5 18.5h13" />
+    <path d="M9.5 22.5h7.5" />
+  </g>
+</svg>

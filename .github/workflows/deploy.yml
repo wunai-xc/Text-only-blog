@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # 首页「更新日志」栏要读 git log 生成 changelog.json，浅克隆会让记录不全
+          # 首页「更新日志」栏在 next build 期间读 git log，浅克隆会让记录不全
           fetch-depth: 0
 
       - uses: actions/setup-node@v4
@@ -30,7 +30,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build (含 prebuild：搜索索引 / RSS / 更新日志)
+      - name: Build（搜索索引 / RSS / sitemap / robots / manifest / 更新日志都在 next build 里生成）
         run: npm run build
 
       - name: Deploy

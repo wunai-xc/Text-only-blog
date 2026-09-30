@@ -25,3 +25,235 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
+
+/* ============================================================
+   第 3 项：Markdown 渲染输出的最小可读样式
+   —— 只管「公式、代码、表格、图表、引用角标、文末参考列表」不缺胳膊少腿。
+   第 6 项会用令牌体系（亮 / 暗 / 护眼纸质）把这一整块换掉，届时删掉本节即可。
+   ============================================================ */
+
+.article-body {
+  --body-fg: #23201c;
+  --body-muted: #6c6459;
+  --body-rule: #d8d2c2;
+  --body-surface: #f7f4ea;
+  --body-accent: #8a6a3b;
+  --body-missing: #c0392b;
+
+  max-width: 46rem;
+  color: var(--body-fg);
+  font-size: 1.0625rem;
+  line-height: 1.85;
+  overflow-wrap: break-word;
+}
+
+.article-body h1,
+.article-body h2,
+.article-body h3,
+.article-body h4,
+.article-body h5,
+.article-body h6 {
+  position: relative;
+  margin: 2rem 0 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+  scroll-margin-top: 5rem; /* 目录跳转时别顶到屏幕上边 */
+}
+
+.article-body h1 { font-size: 1.7rem; }
+.article-body h2 { font-size: 1.4rem; }
+.article-body h3 { font-size: 1.2rem; }
+.article-body h4,
+.article-body h5,
+.article-body h6 { font-size: 1.05rem; }
+
+.article-body p,
+.article-body ul,
+.article-body ol,
+.article-body blockquote,
+.article-body pre,
+.article-body table,
+.article-body figure { margin: 0.9rem 0; }
+
+.article-body ul,
+.article-body ol { padding-left: 1.4rem; }
+.article-body ul { list-style: disc; }
+.article-body ol { list-style: decimal; }
+.article-body li { margin: 0.25rem 0; }
+.article-body li > ul,
+.article-body li > ol { margin: 0.25rem 0; }
+
+.article-body blockquote {
+  padding: 0.2rem 0 0.2rem 0.9rem;
+  border-left: 3px solid var(--body-rule);
+  color: var(--body-muted);
+}
+
+.article-body hr {
+  margin: 2rem 0;
+  border: 0;
+  border-top: 1px dashed var(--body-rule);
+}
+
+.article-body a { color: var(--body-accent); text-decoration: underline; text-underline-offset: 3px; }
+.article-body img { max-width: 100%; height: auto; }
+
+/* 代码：monokai 主题自带底色，这里只补间距与圆角 */
+.article-body pre {
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  background: #272822;
+  overflow-x: auto;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.article-body pre code {
+  padding: 0;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: inherit;
+}
+
+.article-body :not(pre) > code {
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: var(--body-surface);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+/* 表格 */
+.article-body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.article-body th,
+.article-body td {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--body-rule);
+  text-align: left;
+}
+
+.article-body th { background: var(--body-surface); }
+
+/* 公式：行间公式太长时横向滚动，而不是撑破版面 */
+.article-body .katex-display {
+  margin: 1.1rem 0;
+  padding: 0.2rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* 标题锚点：鼠标悬停或键盘聚焦时出现，触屏设备常驻 */
+.heading-anchor {
+  margin-left: 0.4rem;
+  color: var(--body-muted, #6c6459);
+  font-weight: 400;
+  text-decoration: none;
+  opacity: 0;
+}
+
+.article-body :is(h1, h2, h3, h4, h5, h6):hover .heading-anchor,
+.heading-anchor:focus-visible { opacity: 1; }
+
+@media (hover: none) {
+  .heading-anchor { opacity: 0.35; }
+}
+
+/* 参考文献角标 */
+.cite {
+  margin-left: 0.15em;
+  color: var(--body-accent, #8a6a3b);
+  font-size: 0.85em;
+  text-decoration: none;
+  vertical-align: super;
+  line-height: 0;
+}
+
+.cite-missing {
+  color: var(--body-missing, #c0392b);
+  font-weight: 600;
+  cursor: help;
+}
+
+/* 文末参考列表 */
+.references {
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--body-rule, #d8d2c2);
+  font-size: 0.95rem;
+}
+
+.references-title { font-size: 1.1rem; font-weight: 600; }
+
+.references-list { margin: 0.6rem 0 0; padding-left: 1.6rem; }
+
+.reference-item { margin: 0.4rem 0; }
+
+.reference-index { color: var(--body-muted, #6c6459); }
+
+.reference-body { display: inline; }
+
+.reference-meta,
+.reference-note {
+  margin-left: 0.4em;
+  color: var(--body-muted, #6c6459);
+  font-size: 0.9em;
+}
+
+.reference-back { text-decoration: none; }
+
+/* 图表：占位容器在客户端被填上 SVG / canvas */
+.chart-block {
+  margin: 1.4rem 0;
+  padding: 0.75rem;
+  border: 1px solid var(--body-rule, #d8d2c2);
+  border-radius: 8px;
+  background: var(--body-surface, #f7f4ea);
+}
+
+.chart-canvas {
+  min-height: 4rem;
+  overflow-x: auto;
+}
+
+.chart-block[data-chart="echarts"] .chart-canvas { height: 22rem; }
+
+.chart-caption {
+  margin-top: 0.5rem;
+  color: var(--body-muted, #6c6459);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.chart-source { display: none; } /* 源码只给客户端读，不给读者看 */
+
+.chart-error {
+  margin: 0;
+  color: var(--body-missing, #c0392b);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+}
+
+/* 开发态渲染自检块（components/dev/PipelineCheck.tsx），生产构建里不存在 */
+.pipeline-check {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px dashed #b8ae95;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.pipeline-check summary { cursor: pointer; font-weight: 600; }
+
+.pipeline-check-note {
+  margin: 0.5rem 0;
+  color: #6c6459;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}

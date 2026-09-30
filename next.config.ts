@@ -2,7 +2,12 @@ import type { NextConfig } from "next";
 
 /**
  * 静态导出配置（Cloudflare Pages 用）。
- * 注意：output: "export" 下不能用 rewrites / redirects / 图片优化 / API 路由。
+ *
+ * output: "export" 下可用的：Server Component、prerender 出来的 GET Route Handler
+ * （必须标 `dynamic = "force-static"`）、sitemap.ts / robots.ts / manifest.ts 这些元数据约定。
+ * 见 app/feed.xml、app/search-index.json、app/changelog.json、app/sitemap.ts。
+ * 不可用的：rewrites / redirects / headers、依赖 Request 的动态 Route Handler、
+ * 服务端图片优化（所以 images.unoptimized）。
  * 根路径 "/" 的语言跳转由 app/page.tsx 在浏览器端完成。
  */
 const nextConfig: NextConfig = {

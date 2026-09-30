@@ -4,10 +4,9 @@
   "private": true,
   "description": "纯文字博客 — Next.js 16 静态导出 / Markdown 写作 / 五类图表 / 中英双语",
   "scripts": {
-    "prebuild": "node scripts/generate-search-index.mjs && node scripts/generate-rss.mjs && node scripts/generate-changelog.mjs",
-    "predev": "node scripts/generate-search-index.mjs && node scripts/generate-changelog.mjs",
     "dev": "next dev",
     "build": "next build",
+    "typecheck": "tsc --noEmit",
     "preview": "npx --yes serve out -l 4173",
     "clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true});require('fs').rmSync('out',{recursive:true,force:true})\"",
     "deploy": "wrangler pages deploy out"
