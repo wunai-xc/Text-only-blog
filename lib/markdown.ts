@@ -90,11 +90,13 @@ export const KATEX_MACROS: Record<string, string> = {
  */
 const AUTOLINK_HEADING_OPTIONS: AutolinkOptions = {
   behavior: "append",
-  properties: { className: ["heading-anchor"], ariaHidden: true, tabIndex: -1 },
+  // ariaHidden 必须是字符串 "true"：hast 的 properties 类型把 ARIA 属性收窄成
+  // `"true" | "false" | string`，写布尔 `true` 会 TS2322（2026-09-30 云构建）。
+  properties: { className: ["heading-anchor"], ariaHidden: "true", tabIndex: -1 },
   content: {
     type: "element",
     tagName: "span",
-    properties: { ariaHidden: true },
+    properties: { ariaHidden: "true" },
     children: [{ type: "text", value: "#" }],
   },
 };
