@@ -374,7 +374,7 @@ Cloudflare 上第一次真正跑 `npm run build` 时，编译（Turbopack）通�
 还没验证的：改完这些之后**是否真的通过类型检查、静态导出是否产出预期的产物**，
 要等再触发一次构建（或本地 `npm run typecheck && npm run build`）。
 
-### 部署失败 —— `wrangler deploy` 用错了命令（2026-09-30，第二次云构建）
+### 部署失败 —— 部署命令填错两次（2026-09-30，第二、三次云构建）
 
 **先记好消息**：第一次构建那两处类型错误（`lib/markdown.ts` 的 `TS2345` 与 `throwOnError`）确实修好了。
 第二次日志里 `Running TypeScript ... Finished TypeScript in 3.7s`、`Generating static pages (14/14)`，
@@ -404,6 +404,28 @@ Executing user deploy command: npx wrangler deploy
      不带参数时它会自己读 `wrangler.toml`：`pages_build_output_dir` 当产物目录、`name` 当项目名；
   2. 或者填成本仓库已有的那条：`npx wrangler pages deploy out --project-name=text-only-blog`
      （与 `.github/workflows/deploy.yml` 完全一致，项目名写死、报错更直白；本项目推荐这条）。
+
+**第二次尝试（第三次云构建）：命令名拼错，`wrangler` 写成了 `wrangLer`**
+
+构建设置已改成 Pages 那条命令，方向对了，但字母打错：
+
+```
+Executing user deploy command: npx wrangLer pages deploy out
+npm error 404 Not Found - GET https://registry.npmjs.org/wrangLer - Not found
+npm error 404  1. name can no longer contain capital letters
+```
+
+- 原因：`npx <名字>` 在本地找不到该命令时会去 **npm registry 下载同名包**。
+  npm 包名**只允许小写**（大写字母是历史遗留的非法命名），所以 `wrangLer` 必然 404 ——
+  报错里那句「name can no longer contain capital letters」说的就是这件事。
+  这跟 Wrangler 无关，纯粹是那个大写的 `L`。
+- 顺带说明：这条命令**没有** `--project-name`。它其实能跑（`wrangler.toml` 的 `name` 就是默认项目名），
+  但为了报错更直白、也和 `.github/workflows/deploy.yml` 完全一致，还是建议带上。
+- **正确写法**（复制粘贴，注意全小写、`pages` 与 `deploy` 之间是空格）：
+
+```
+npx wrangler pages deploy out --project-name=text-only-blog
+```
 
 **顺带记两条**：
 
@@ -527,11 +549,13 @@ http://localhost:3000/zh/?theme=dark
 - 每次交付后本文件的进度表与「已完成 / 进行中」小节会同步更新。
 - **2026-09-30 的首次云构建**：`bun install` → Turbopack 编译 → 内容管线都通过了，
   挂在**类型检查**（`lib/markdown.ts` 两处 `TS2345`，详见第 4 节「构建修复」）。
-- **2026-09-30 的第二次云构建**：上面那两处类型错误**确认修好**（`Finished TypeScript in 3.7s`），
-  静态导出 14/14 页全部生成，构建阶段 `Success`；失败点是**部署命令填错**
-  （`npx wrangler deploy` 而非 `npx wrangler pages deploy`），详见第 4 节「部署失败」。
-  这次日志同时证明：`out/` 确实被静态导出产出（否则 Pages 部署也无从谈起），
+- **2026-09-30 的第二次 / 第三次云构建**：上面那两处类型错误**确认修好**（两次都是
+  `Running TypeScript` 3.6–3.7s 通过、静态导出 14/14 页），构建阶段连续两次 `Success`；
+  失败点都在**部署命令**上 —— 第二次填了 Workers 的 `npx wrangler deploy`，
+  第三次把 `wrangler` 打成了 `wrangLer`（npm 包名不允许大写，直接 404）。
+  两次日志合起来说明：`out/` 确实被静态导出产出（否则 Pages 部署也无从谈起），
   但**产物清单**（`feed.xml` 是否为目录、sitemap/robots/manifest 是否在根）仍需 `ls out` 确认。
+  详见第 4 节「部署失败」。
 
 已经做过、但只有你本地能确认的事：
 
@@ -596,3 +620,4 @@ http://localhost:3000/zh/?theme=dark
 | 本次提交 | 第 6 项设计系统完成（`app/globals.css` 三套令牌：纸/亮/暗 + `@theme inline` 映射成语义色工具类；`lib/theme.ts`：选择解析、首帧脚本、运行时 API、令牌读取；蓝图草图背景层；`.page`/`.panel` 原子件与正文度量 `--reading-*`；占位页面改用令牌）。图表跟随主题：`ChartContext` 扩成 `{theme, dark, colors}`，ArticleBody 订阅外观变化后重绘，mermaid/echarts/graphviz/smiles 改用令牌（abc 留作待办）。manifest 配色改用 `THEME_CHROME` |
 | 2026-09-30 | 首次云构建的修复：`lib/markdown.ts` 的 autolink / katex 选项改成显式标注 `Options` 的常量（TS2345）、删掉 `rehype-katex` 不允许的 `throwOnError`、把 vfile 消息并进 `warnings`；`tsconfig.json` 按 Next 16 的 mandatory changes 改 `jsx: react-jsx` 并补 include |
 | 2026-09-30 | 第二次云构建：类型检查与静态导出（14/14 页）通过，确认上次修复生效；部署失败定位为**命令填错**——`npx wrangler deploy` 是 Workers 命令，Pages 项目要用 `npx wrangler pages deploy out --project-name=text-only-blog`。台账新增「部署失败」小节与第 7 节相应条目，仓库文件未改动 |
+| 2026-09-30 | 第三次云构建：构建再次通过（TS 3.6s、14/14 页）；部署失败是**命令名拼错**（`wrangLer`，npm 包名不允许大写 → registry 404）。台账补上正确命令与原因，第 8 节合并记两次部署失败 |
