@@ -77,35 +77,35 @@ export const ROUTES: Record<RouteId, SiteRoute> = {
   },
   tags: {
     path: "/{lang}/tags/",
-    status: "pending",
+    status: "ready",
     item: 13,
     nav: true,
     icon: "mdi:tag-multiple-outline",
   },
   categories: {
     path: "/{lang}/categories/",
-    status: "pending",
+    status: "ready",
     item: 13,
     nav: true,
     icon: "mdi:shape-outline",
   },
   archives: {
     path: "/{lang}/archives/",
-    status: "pending",
+    status: "ready",
     item: 13,
     nav: true,
     icon: "mdi:archive-outline",
   },
-  search: { path: "/{lang}/search/", status: "pending", item: 13, nav: true, icon: "mdi:magnify" },
+  search: { path: "/{lang}/search/", status: "ready", item: 13, nav: true, icon: "mdi:magnify" },
   links: {
     path: "/{lang}/links/",
-    status: "pending",
+    status: "ready",
     item: 13,
     nav: true,
     icon: "mdi:account-multiple-outline",
   },
-  about: { path: "/{lang}/about/", status: "pending", item: 13, icon: "mdi:account-outline" },
-  settings: { path: "/{lang}/settings/", status: "pending", item: 13, icon: "mdi:cog-outline" },
+  about: { path: "/{lang}/about/", status: "ready", item: 13, icon: "mdi:account-outline" },
+  settings: { path: "/{lang}/settings/", status: "ready", item: 13, icon: "mdi:cog-outline" },
 };
 
 /** 路径（替换 {lang}）；不保证这一页已经存在 —— 判断用 routeReady() */
@@ -349,6 +349,18 @@ export function commentsReady(): boolean {
     COMMENTS.categoryId !== ""
   );
 }
+
+/**
+ * 友链（第 13 项的 /[lang]/links/ 页）。**现在是空的** —— 空数组时那一页只显示一段
+ * 「编辑此处」的说明，不会渲染出一个空清单。
+ *
+ * 填法（一行一条）：
+ *   { name: "某某的博客", url: "https://example.com", note: "一句话说明" }
+ * `note` 可以不写。加别人之前先问一声，并确认对方也链了你 —— 这件事代码管不了。
+ */
+export const LINKS: { name: string; url: string; note?: string }[] = [
+  // 编辑此处：删掉这一行注释，按上面的形状填自己的友链
+];
 
 /** 每语言的 RSS 地址（第 5 项生成，路由见 app/[lang]/feed.xml/route.ts） */
 export function feedHref(lang: Lang): string {

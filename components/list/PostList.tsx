@@ -108,12 +108,19 @@ export default function PostList({
   posts,
   facets,
   indexVersion,
+  autoFocusSearch = false,
 }: {
   lang: Lang;
   posts: ListPost[];
   facets: ListFacets;
   /** lib/search-index.ts 的 SEARCH_INDEX_VERSION，由服务端页面当 props 传下来 */
   indexVersion: number;
+  /**
+   * 挂载后把光标放进搜索框（第 13 项的 `/search/` 页用；列表页不传）。
+   * 只在**专门的搜索页**这么做：那一页读者来就是为了打字，省一次点击是好事；
+   * 列表页不自动抢焦点（有人是想翻清单，被抢走焦点会很烦，手机上还会弹起键盘）。
+   */
+  autoFocusSearch?: boolean;
 }) {
   const t = LIST_TEXT[lang];
   const [filters, setFilters] = useState<ListFilters>(DEFAULT_FILTERS);
@@ -133,6 +140,16 @@ export default function PostList({
     hydrated.current = true;
     if (Object.keys(patch).length > 0) setFilters((current) => ({ ...current, ...patch }));
   }, []);
+
+  /* ---- 专门的搜索页：挂载后把光标放进搜索框（见 autoFocusSearch 的注释） ---- */
+  useEffect(() => {
+    if (!autoFocusSearch) return;
+    const { activeElement } = document;
+    // 读者已经自己点到别处去了就不抢（例如他刚点开设置抽屉）
+    if (activeElement instanceof HTMLElement && activeElement !== document.body) return;
+    const input = document.getElementById("list-search");
+    if (input instanceof HTMLInputElement) input.focus();
+  }, [autoFocusSearch]);
 
   /* ---- 筛选与密度：地址栏跟着走（用 replaceState，不产生历史记录、不触发路由滚动） ---- */
   useEffect(() => {

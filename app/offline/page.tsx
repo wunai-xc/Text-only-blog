@@ -18,10 +18,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/** 已缓存的页面可以直接打开：外壳里预缓存了两个语言的首页 */
+/** 已缓存的页面可以直接打开：外壳里预缓存了两个语言的首页与文章列表（见 public/sw.js） */
 const CACHED_LINKS = [
   { href: "/zh/", label: "中文首页" },
   { href: "/en/", label: "English home" },
+  { href: "/zh/posts/", label: "中文文章列表" },
+  { href: "/en/posts/", label: "English post list" },
   { href: "/", label: "语言分流页 / start page" },
 ];
 
@@ -32,6 +34,10 @@ export default function OfflinePage() {
       <h1 className="text-2xl font-semibold tracking-tight">现在没有网络</h1>
       <p className="text-sm text-ink-muted">
         这一页是本地缓存下来的。已经打开过的文章通常还能看，没打开过的要等网络回来。
+      </p>
+      <p className="text-sm text-ink-muted">
+        标签 / 分类 / 归档 / 关于这几页是纯清单（由构建期的数据生成），网络回来之前打不开新的一份，
+        但文章地址一旦访问过就会进缓存 —— 断网时从地址栏直接敲文章地址往往也打得开。
       </p>
       <p className="text-sm text-ink-muted">
         No network right now. This page is served from the cache.

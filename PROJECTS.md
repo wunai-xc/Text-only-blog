@@ -55,6 +55,13 @@
 │     └─ posts/
 │        ├─ page.tsx         文章列表页（第 10 项：构建期取数据；筛选 / 搜索 / 密度在 lib/list.ts + components/list）
 │        └─ [...slug]/page.tsx  文章正文页（第 12 项：构建期渲染全文 + 目录 / 进度 / 上下篇 / 评论）
+│     ├─ tags/page.tsx       标签页（第 13 项：薄壳，本体是 components/pages/FacetIndex）
+│     ├─ categories/page.tsx 分类页（第 13 项：与标签页共用同一个组件）
+│     ├─ archives/page.tsx   归档页（第 13 项：年 → 月 → 文章的时间线）
+│     ├─ search/page.tsx     搜索页（第 13 项：复用列表页组件 + 自动聚焦搜索框）
+│     ├─ about/page.tsx      关于页（第 13 项：渲染 frontmatter 里 about: true 的那篇文章）
+│     ├─ links/page.tsx      友链页（第 13 项：读 lib/site.ts 的 LINKS，空则显示「编辑此处」）
+│     └─ settings/page.tsx   设置页（第 13 项：直接复用 components/SettingsCenter）
 ├─ components/
 │  ├─ ArticleBody.tsx        正文容器：注入 HTML 并按需动态加载五类图表
 │  ├─ charts/
@@ -95,6 +102,8 @@
 │  ├─ list/
 │  │  ├─ PostCard.tsx        文章卡片（第 11 项：紧凑 / 适中 / 内容 三档；首页与列表页共用）
 │  │  └─ PostList.tsx        列表页本体（第 10 项，客户端：搜索 / 筛选 / 密度 / 地址栏状态）
+│  ├─ pages/
+│  │  └─ FacetIndex.tsx      标签页 / 分类页的同一份实现（第 13 项；服务端组件，无状态）
 │  └─ ServiceWorkerRegistrar.tsx  注册 /sw.js（生产构建才注册，dev 下只清旧 SW）
 ├─ content/
 │  ├─ README.md              写作规范
@@ -107,6 +116,7 @@
 │  ├─ home.ts                首页版面与文案（第 9 项：八栏顺序 / 并排 / 栏号 / 中英文案）
 │  ├─ list.ts                列表页（第 10/11 项：筛选状态 / 三档密度 / 纯函数 / 地址栏读写 / 中英文案，零依赖）
 │  ├─ article.ts             文章页（第 12 项：目录缩进与阈值 / 上下篇 / typography 字段 / giscus 映射 / 中英文案，零依赖）
+│  ├─ pages.ts               其余页面（第 13 项：标签 / 分类 / 归档 / 搜索 / 关于 / 友链 / 设置的文案 + 字号档 + 地址，零依赖）
 │  ├─ toml.ts                自写 TOML 解析器（`+++` frontmatter 用）
 │  ├─ frontmatter.ts         双格式识别与字段归一化
 │  ├─ content.ts             内容加载 / 查询 API（只读盘，不渲染）
@@ -169,8 +179,8 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 | 10 | 列表页 | `[x]` | `app/[lang]/posts/` + `lib/list.ts`：搜索（懒读 `/search-index.json`）、筛选（标签/分类/年份/排序）、语言切换、密度切换、AI 默认隐藏 |
 | 11 | 文章卡片 | `[x]` | `components/list/PostCard.tsx`：紧凑 / 适中 / 内容 三档；首页第 2 栏与列表页共用同一个组件 |
 | 12 | 文章页 | `[x]` | `/zh/posts/<slug>/`：构建期渲染全文、悬浮 TOC（含上下篇）、右侧细进度条带百分比、圆形回顶、giscus 评论 |
-| 13 | 其余页面 | `[ ]` | 关于/友链/标签/分类/归档/搜索/设置/404/离线 |
-| 14 | 交付 | `[ ]` | README + 编辑指南、git 提交推送 |
+| 13 | 其余页面 | `[x]` | 标签 / 分类 / 归档 / 搜索 / 关于 / 友链 / 设置 + 404 / 离线页；全部复用既有组件（卡片、列表、设置中心、渲染管线） |
+| 14 | 交付 | `[ ]` | README + 编辑指南、锁文件、git 提交推送 |
 
 ### 1. 脚手架 —— 已完成 ✅
 
@@ -743,6 +753,67 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 - ⚠️ 未在本机跑过浏览器（见第 8 节）：悬浮目录的高亮带、进度条与回顶的手感、
   giscus 懒加载与换配色、五线谱在三套外观下的观感，都需要你本机看一眼。
 
+### 13. 其余页面 —— 已完成 ✅
+
+**交付物**：七个新页面 —— `app/[lang]/{tags,categories,archives,search,about,links,settings}/page.tsx`、
+共用组件 `components/pages/FacetIndex.tsx`、文案与纯函数 `lib/pages.ts`、
+`app/globals.css` 的「6f. 其余页面」一节；另外收尾了 `/offline/`（第 5 项建的）与 404（第 1 项建的）。
+
+**这一项的主线是「不写第二份」**，七页里只有两处真正的新代码：
+
+| 页面 | 新写了什么 | 复用了什么 |
+| --- | --- | --- |
+| 标签 | 薄壳（metadata）+ `FacetIndex` | `getTaxonomy`（第 2 项）、`facetHref`（第 10 项） |
+| 分类 | 同上，`kind="category"` | 与标签页**同一个组件**，差别只在 `lib/pages.ts` 的文案 |
+| 归档 | 页面本体（时间线的渲染） | `getArchive`（第 2 项）、`LIST_TEXT.card` 的置顶 / AI / 草稿小字 |
+| 搜索 | 薄壳（metadata + 文案） | **列表页那个组件**（`PostList`）整份复用，只多传 `autoFocusSearch` |
+| 关于 | 页面本体 | frontmatter 里 `about: true` 的文章 + 第 3 项的渲染管线 + `ArticleBody` |
+| 友链 | 页面本体 | `lib/site.ts` 新增的 `LINKS`（空数组 → 「编辑此处」） |
+| 设置 | 薄壳（metadata） | **`components/SettingsCenter`** 整份复用（第 7 项就留好的口子） |
+
+- **标签 / 分类页**：一次列全、带篇数，字号分四档（`lib/pages.ts` 的 `facetWeight(count, max)`，
+  交给 CSS 的 `.facet-chip[data-weight="…"]`；只有一个标签时全落 0 档 —— 都一样多就没有「大一号」
+  的意义）。片子沿用全站「虚线 = 标签、实线 = 分类」的观感（与卡片、文章页同一套）。
+  它是**服务端组件、零状态**：点一个标签就是普通链接跳到列表页，由那一页接管筛选
+  ——所以 JS 挂了、爬虫、离线三种情况下这一页都还能点。
+- **归档页**：年 → 月 → 文章（新的在前，顺序沿用 `getArchive`，这一页不再排一遍）。
+  **月份是分组、不是筛选**（列表页筛到「年」这一档），所以只有年那一行右边有
+  「看这一年的全部 →」（`?year=YYYY`），月份那一行**故意不可点** —— 点不动比点进去发现筛选没生效好。
+  想要月份筛选说一声，加一个 `?month=` 就能用。
+- **搜索页**：**没有第二份搜索实现**（约定第 9 条）—— 它渲染的就是列表页那个 `PostList`，
+  差别只有三处：页头文案、`autoFocusSearch`（挂载后把光标放进搜索框，且**读者已经点到别处就不抢**）、
+  图纸编号（07 点阵）。数据仍在构建期取，所以不搜索也能读这一页。
+- **关于页**：不是另写一份静态文案，而是渲染 frontmatter 里 `about: true` 的**最新一篇**
+  （第 2 项的 `getAboutPost`，每语言各一篇）。渲染走第 3 项那条管线，frontmatter 的
+  `typography` 也照第 12 项那样接上了；参考文献列表与 `updated` 那行小字沿用文章页的类。
+  与文章页**刻意的差别**：没有悬浮目录、进度条、回顶与评论区 —— 它是一页说明，不是一篇长文。
+  没有这样的文章时是空状态 + 怎么写（约定第 2 条）。
+- **友链页**：数据只有 `lib/site.ts` 的 `LINKS` 一处（现在空 → 显示「编辑此处」与填法，
+  不渲染空清单）。外链一律 `target="_blank"` + `rel="noopener noreferrer"`，
+  并且**把地址印出来** —— 点不动的时候（离线 / 对方改域名）读者还能自己复制。
+- **设置页**：直接放第 7 项的 `SettingsCenter`（它当时就写明了「只负责内容、不管容器」）。
+  于是**同一份设置界面现在有四处在用**：顶栏外观按钮、首页第 7/8 栏、左下角抽屉、这一页。
+  这一页 `robots: { index: false }` 且不进 sitemap（对搜索引擎没有价值）。
+- **`lib/pages.ts`**（新）：这几页的文案与纯函数（`facetWeight` / `monthName` /
+  `archiveYearHref` / `tagHref` / `categoryHref`）都在这一个文件里。放在一起的理由写在文件头：
+  它们都是「清单 + 跳转」型页面，文案结构一样，拆成七份只会让改一句话要开七个文件；
+  真正的独立页面（有正文的）不往这里放。
+- **`facetHref()` 挪进了 `lib/list.ts`**：文章页（第 12 项）原来有一个私有的同名函数，
+  第 13 项的标签 / 分类页也要用 —— 于是「跳到某一类文章」的地址**只有一处实现**，
+  文章页改成调它，删掉了自己那份（这正是约定第 9 条要的效果：查询串的编解码只有一处）。
+- **页头统一**：第 13 项这几页都用列表页那一套类（`.list-head` / `.list-kicker` / `.list-no` /
+  `.list-rule` / `.list-title` / `.list-lead` / `.list-meta`），不再各长一套页头
+  （那三个 kicker 别名当时就是为此准备的）。
+- **sitemap**：新增一张 `FACET_PAGES` 小表（标签 / 分类 / 归档 / 关于 / 友链）循环生成每语言一行；
+  **搜索页与设置页故意不进**（两页都 `noindex`）。文章的 `postRoutes()` 不变。
+- **`ROUTES` 全部改成 `"ready"`**：顶栏七项（首页 / 文章 / 标签 / 分类 / 归档 / 搜索 / 友链）
+  现在**没有一项是压暗的** —— 它们本来就走 `RouteLink`，改状态就生效，没有去动顶栏代码。
+- **离线页收尾**：`/offline/` 的「已缓存，断网也能打开」清单加上两个语言的**文章列表**
+  （第 10 项已经把它们放进 `sw.js` 的外壳），并写明「打开过的文章地址断网时通常也打得开」。
+  `sw.js` 的 `CACHE_VERSION` **没动**（外壳清单没变，只是页面里多列了两条已有的缓存项）。
+- ⚠️ 未在本机跑过浏览器（见第 8 节）：标签云的字号档与长标签换行、归档在窄屏的两行排布、
+  搜索页抢焦点的时机（手机上会不会弹键盘）、友链空状态的说明是否够清楚。
+
 
 
 ### 构建修复 —— 首次云构建失败的两处（2026-09-30）
@@ -1029,9 +1100,18 @@ curl -s -H "Authorization: Bearer $TOKEN" \
      以后改了 slug 规则（正文 URL 变了）就把 `app/[lang]/posts/[...slug]/page.tsx` 的
      `generateStaticParams` 与 `lib/content.ts` 的 `PostMeta.href` 一起核一遍 —— 两者必须同源；
   6. 第 13 项的 `/[lang]/settings/` 页与首页第 7/8 栏用的是同一套组件与 API，别在那边另写一份。
-- **第 13 项**：页面落地后把 `lib/site.ts` 的 `ROUTES[id].status` 从 `"pending"` 改成 `"ready"`
-  —— 顶栏、页脚、`RouteLink` 的入口会一起生效；新页面同时加进 `app/sitemap.ts` 的 `pageRoutes()`
-  （第 10 项已经按这条办过：`ROUTES.posts` 已是 `"ready"`，sitemap 里也补了列表页两行）。
+- **第 13 项 —— 已完成**（这一条留档并转成「后续项要用到的东西」）：
+  1. ✅ 七个页面的 `ROUTES[id].status` 都已改成 `"ready"`：顶栏、页脚、`RouteLink` 的入口
+     一起生效，**没有改顶栏代码**；sitemap 里新增一张 `FACET_PAGES` 小表循环生成每语言一行
+     （搜索页与设置页 `noindex`，故意不进）；`/offline/` 的缓存清单补上了两个语言的列表页。
+  2. 以后新加一页的**固定动作**是三处：`lib/site.ts` 的 `ROUTES` 补一条（先 `"pending"`）、
+     `app/sitemap.ts` 的 `pageRoutes()` 补一行、`lib/decor.ts` 的 `PATTERNS` / `SHEETS` 各加一行
+     —— 装饰层的两张表是穷尽类型，漏了 TypeScript 直接报错；
+  3. 「清单 + 跳转」型的页面**不要各写一套**：标签 / 分类是同一个 `FacetIndex`，
+     搜索页直接渲染列表页的 `PostList`，设置页直接放 `SettingsCenter`，
+     这几页的文案与纯函数都在 `lib/pages.ts`；
+  4. 页头一律用列表页那一套类（`.list-head` 系）：新页面照抄结构即可，别再定义第四套页头；
+  5. 「跳到某一类文章」一律 `lib/list.ts` 的 `facetHref()`（第 12 项的文章页也已经改成用它）。
 - **第 12 项（文章页）—— 已完成**，这条留档并转成「后续项要用到的东西」：
   1. 正文页的**宽度只有一个来源**：`--reading-measure`（`app/globals.css` 的
      `.article-page { max-width: calc(var(--reading-measure) + 3rem) }`），别在任何地方写死 42rem；
@@ -1050,8 +1130,9 @@ curl -s -H "Authorization: Bearer $TOKEN" \
      改懒加载距离就动那个 `rootMargin: 600px`；
   6. 第 13 项的标签 / 分类页要「跳到某一类文章」时，直接用文章页那套链接
      （`/zh/posts/?tag=…` / `?cat=…`，由 `lib/list.ts` 的 `listQueryString` 生成），别另实现一遍。
-- **第 13 项（设置页）**：`/[lang]/settings/` 直接复用 `components/SettingsCenter.tsx`（它不管容器），
-  不要另写一套；落地后把 `ROUTES.settings.status` 改成 `"ready"`。
+- **第 13 项（设置页）—— 已完成**：`/[lang]/settings/` 直接复用了 `components/SettingsCenter.tsx`
+  （它不管容器），**没有另写一套**；`ROUTES.settings.status` 也已经是 `"ready"` 了
+  （这一页同时是 `noindex`、不进 sitemap）。
 - **第 8 项（装饰与动效）—— 已完成**，这两条留档并转成「后续项要用到的东西」：
   1. 新增一张图纸 = `lib/decor.ts` 的 `PATTERNS` / `SHEETS` 各加一行 + `app/globals.css` 加一条
      `[data-decor="…"]`；**不要**在组件里写 `if (pathname === …)`，图签名字也别在页面里手抄；
@@ -1077,9 +1158,7 @@ curl -s -H "Authorization: Bearer $TOKEN" \
   4. 密度存在 localStorage 的 `tob:list-density`（偏好，不进地址栏），筛选进地址栏（可分享）；
   5. 索引读不到时会自动退回「本页字段」并把这件事写在页面上 —— 若你本机看到的是那句提示，
      说明 `out/` 里 `/search-index.json` 的产物路径不对，把 `ls out` 的结果发我（见第 8 节）。
-- **第 13 项（其余页面）**：新页面加到 `app/sitemap.ts` 的 `pageRoutes()`；
-  离线页的文案也归这一项。
-- **第 14 项（交付）**：**把锁文件提交进仓库**（现在仓库里没有锁文件，`next build` 之外的依赖版本
+- **第 13 项（其余页面）—— 已完成**：见上面那一条（新建页面要动的三处 + 复用规则）。- **第 14 项（交付）**：**把锁文件提交进仓库**（现在仓库里没有锁文件，`next build` 之外的依赖版本
   每次云构建都重新解析；workflow 已被迫从 `npm ci` 改成 `bun install`，等有锁文件后可以加
   `--frozen-lockfile` 把版本钉死 —— 详见第 4 节「顺带发现的第二个坑」）；
   顺手考虑把 `wrangler` 写进 devDependencies 钉住部署工具的版本
@@ -1096,7 +1175,9 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 ## 5. 约定与规则（重要）
 
 1. **仓库不含任何文章。** `content/**/posts/` 只放 `README.md`（写作规范），加载器显式跳过该文件名；不写测试文章、不写示例文章。
-2. **需要作者补内容的地方统一标「编辑此处」**，包括：站点标语/描述、首页各栏文案、关于页、友链、演示段落、头像与 favicon 资源位。
+2. **需要作者补内容的地方统一标「编辑此处」**，包括：站点标语/描述、首页各栏文案、
+   演示段落、头像与 favicon 资源位；**第 13 项之后「关于」与「友链」不再写「编辑此处」在页面里** ——
+   它们的来源分别是「一篇 `about: true` 的文章」与 `lib/site.ts` 的 `LINKS`（空的时候才显示说明）。
 3. **UI 文案不算文章**，由 `lib/site.ts` 的 i18n 表统一维护（中英各一份，缺一边会出现 `undefined`）。
 4. 零文章、零配置时站点必须仍能构建与浏览，所有页面要有空状态。
 5. 动效一律尊重 `prefers-reduced-motion`，且背景/装饰层不得影响正文可读性（`aria-hidden`、`pointer-events: none`）。
@@ -1113,10 +1194,13 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 8. **链接的可用性只有一个事实来源**（第 7 项起）：站内链接一律走 `components/RouteLink.tsx`，
    而它读 `lib/site.ts` 的 `ROUTES[id].status`。页面还没做就写 `"pending"`（渲染成不可点、悬停说明
    由第几项落地），做完改成 `"ready"` —— 不在页面里写死 href、也不留会 404 的死链。
+   **第 13 项起 `ROUTES` 里已经没有 `"pending"` 了**（七个页面全部落地）；机制留着：
+   以后新加一页（比如专题页）照样先写 `"pending"`，做完再改一个字。
    阅读偏好同理：只写 `--reading-*` 令牌（`lib/prefs.ts`），别在组件里直接改字体大小。
 9. **列表与卡片各只有一份实现**（第 10/11 项起）：文章卡片一律用 `components/list/PostCard.tsx` 的三档
    （`data-density` 交给 CSS），新页面不要另写一份卡片；「只显示某一类文章」一律用列表页的查询串
-   （`/zh/posts/?tag=…`、`?cat=…`、`?year=…`、`?sort=…`、`?density=…`），编解码只在 `lib/list.ts`。
+   （`/zh/posts/?tag=…`、`?cat=…`、`?year=…`、`?sort=…`、`?density=…`），编解码只在 `lib/list.ts`
+   —— 要生成这样的地址就调 `facetHref()`（第 13 项起它也在 `lib/list.ts` 里）。
    偏好与筛选分家：**筛选进地址栏**（可分享、可收藏），**偏好进 localStorage**（`tob:list-density` 等）。
 10. **每一页的版面、文案与阈值都在自己的 `lib/*.ts` 里**（第 9 项起的做法：首页 `lib/home.ts`、
     列表页 `lib/list.ts`、文章页 `lib/article.ts`）：页面组件只负责把数据渲染出来，
@@ -1156,9 +1240,11 @@ http://localhost:3000/zh/?theme=dark
 外观之外，第 8 项的「一张图纸」也能这样对照（对照表在 `lib/decor.ts`）：
 `/zh/` 整幅图纸 · `/zh/posts/` 分栏线（图签 `TOB-ZH-02`）· 文章页（`/zh/posts/<slug>/`，第 12 项）
 左边缘刻度尺（图签那两行小字在这一页让给了回顶按钮）·
-`/zh/tags/` 密格 · `/zh/categories/` 剖面线 · `/zh/search/` 点阵 · `/offline/` 空纸；
-第 13 项落地之前，只有首页、列表页与文章页能真的看到（其余路径还不存在，敲进去会落到 404 页，
-此时蓝图层按 `unknown` 画、图签印 `TOB-ZH-00` —— 这是预期行为）。
+`/zh/tags/` 密格 · `/zh/categories/` 剖面线 · `/zh/archives/` 分栏线 · `/zh/search/` 点阵 ·
+`/zh/about/` 密格 · `/zh/links/` 剖面线 · `/zh/settings/` 分栏线 · `/offline/` 空纸；
+第 13 项之后**十一张图纸都能真的看到**（编号 01~11 连续）。
+敲一个不存在的路径（例如 `/zh/nope/`）会落到 `out/404.html`，
+此时蓝图层按 `unknown` 画、图签印 `TOB-ZH-00` —— 这是预期行为。
 
 **开发态渲染自检已经删掉了**（第 12 项落地时连同 `components/dev/PipelineCheck.tsx`、
 首页里那三行、以及 `.pipeline-check` 的 CSS 一起删）。它原来的任务是把第 3 项的 GFM / 公式 /
@@ -1329,6 +1415,30 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
   「正文在第 12 项落地后可读」改成「点标题进正文页读全文」；首页第 6 栏的「这一项已经做到的」
   最后一条从「第 12 项落地」改成「（文章页）」。仓库里如果再看到「第 12 项」被当成**待办**，
   那就是漏改的注释，告诉我一声。
+- **第 13 项（其余页面）也没在本机跑过浏览器**，请按顺序看（前两条最要紧）：
+  1. **产物路径**：`npm run build` 之后 `ls out/zh` 应当看到 `tags`、`categories`、`archives`、
+     `search`、`about`、`links`、`settings` 七个目录（每个里有 `index.html`）；
+     同时 `out/sitemap.xml` 里应当出现 `/zh/tags/`、`/zh/archives/`、`/zh/about/`、`/zh/links/`
+     两类条目（**不该**出现 `/zh/search/` 与 `/zh/settings/` —— 那两页是 `noindex`）。
+  2. **顶栏七项全部可点**（首页 / 文章 / 标签 / 分类 / 归档 / 搜索 / 友链）—— 第 13 项把
+     `ROUTES` 里的 `"pending"` 清零了；页脚的 RSS 仍然可点。
+  3. **标签页 / 分类页**：字号应当按篇数分四档（最多的那个最大），点一个标签应当跳到
+     `/zh/posts/?tag=…` 且**列表页里那一项已经选中**；长标签（中文长句）应当整块换行、不溢出；
+     宽屏两栏之外的窄屏应当自然堆叠。
+  4. **归档页**：年月分组的顺序对不对（新的在前）；年那一行右边的「看 2024 年的全部 →」
+     应当跳到列表页并筛好那一年；**月份那一行点不动是设计如此**（它是分组不是筛选）。
+     置顶 / AI 的小字应当与卡片上的一模一样。
+  5. **搜索页**：打开 `/zh/search/` 光标应当在搜索框里（手机上会弹键盘 —— 如果你觉得烦，
+     说一声，把 `autoFocusSearch` 去掉即可）；第一次输入时 Network 里才出现
+     `/search-index.json` 与 fuse.js；搜出来的结果与列表页里的筛选可以叠加。
+  6. **关于页**：还没有 `about: true` 的文章时应当显示「编辑此处」那段说明；
+     加一篇 about 文章后应当显示它的正文（公式 / 图表 / 参考文献都走同一套管线）。
+  7. **友链页**：现在是空状态；把 `lib/site.ts` 的 `LINKS` 填两行再构建，
+     应当出现两栏卡片，外链在新标签页打开且地址印在下面。
+  8. **设置页**（`/zh/settings/`）：里面的选项应当与左下角抽屉**完全同步** ——
+     在这一页改外观，顶栏按钮与首页第 7/8 栏应当立刻跟着变（反之亦然）。
+  9. **离线页**（`npm run preview` 后断网）：清单里应当看到两个语言的首页与列表页；
+     之前打开过的文章地址直接敲也应当能打开（走的是同一个 Service Worker 缓存）。
 - Service Worker（`public/sw.js`）与离线页只做了「逻辑上自洽」，没在任何浏览器里跑过。
   `npm run preview` 之后确认三件事：Application → Service Workers 里注册成功；
   断网（DevTools → Network → Offline）刷新仍能看到离线页；
@@ -1414,3 +1524,4 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
 | 本次提交 | **第 8 项装饰与动效完成**：新增 `lib/decor.ts`（路径 → 图纸的唯一事实来源：`section` / `pattern` / 两位编号 / 图签语言，纯函数 + 两张穷尽表，零依赖）；`components/BlueprintBackground.tsx` 从空 div 变成 `"use client"` 组件，用 `usePathname()` 挂 `data-decor` / `data-route`，并在换页时让纸面重铺一次（0.32s、首帧不播、尊重 `prefers-reduced-motion`）；`app/globals.css` 新增「5b. 图案随路由变」一节 —— 七套图案（sheet / columns / measure / grid / hatch / dots / plain，全是渐变，无图片、无滤镜、不动布局）+ 右下角图签（`TOB-ZH-01` 之类，窄屏不印）+ `[data-route="article"]` 的边缘淡出微调；`lib/site.ts` 新增 `isRouteId()` 与 `SITE.i18n.decor` 三条文案（图签名字复用导航文案，不重复写十二个）。这一项**未改任何颜色与令牌、未动层序**；「纸质颗粒」未做，理由见第 4 节第 8 项 |
 | 本次提交 | **第 10 项列表页 + 第 11 项文章卡片（三档密度）完成**：新增 `app/[lang]/posts/page.tsx`（构建期取文章 / 标签 / 分类 / 年份，零文章出空状态且不出工具栏）、`components/list/PostList.tsx`（客户端：搜索 / 筛选 / 排序 / 密度 / 语言 / 地址栏状态）、`components/list/PostCard.tsx`（三档密度共用卡片）、`lib/list.ts`（筛选状态与默认值、三档密度与排序的选项表、纯函数、查询串读写、密度本机记忆、中英文案 —— 对 `content.ts` / `search-index.ts` 只 `import type`，故客户端可安全引入）；搜索在**第一次输入时**才读 `/search-index.json` 并动态 `import("fuse.js")`，索引读不到 / 版本不匹配时自动退回本页字段并在页面上写明；`ROUTES.posts` 改 `"ready"`（顶栏「文章」可以点了），sitemap 补两行列表页；`lib/site.ts` 新增 `feedAlternatesTypes()`（页面自写 `alternates` 会覆盖根布局那份 RSS 发现表，第 5 项记下的坑先在这里堵上，`app/layout.tsx` 同步改用）；首页第 2 栏换成共用的 `PostCard`（适中档），`lib/home.ts` 删掉 `posts.minutes` / `articlePending`；`lib/icons.ts` 补 11 个图标（筛选 / 时间 / 排序 / 三档密度 / AI / 清除搜索）；`app/globals.css` 新增「6d. 列表页与文章卡片」一节并把 `.home-kicker` 系三个类换成 `home/list` 共用，打印样式隐藏工具栏 |
 | 本次提交 | **第 12 项文章页完成**：新增 `app/[lang]/posts/[...slug]/page.tsx`（构建期 `getPostWithBody` → `renderMarkdown`，正文进 HTML；`generateStaticParams` 按语言列出全部 slug、`dynamicParams = false`）、`lib/article.ts`（目录缩进档与阈值 / 上下篇 `articleNeighbors` / frontmatter 的 `typography` 翻成渲染选项 / giscus 主题与 term 映射 / 中英文案；对 `markdown.ts` 等一律只 `import type`，因为客户端组件会值导入它）、`components/article/` 四个组件（`ArticleToc` 悬浮目录 —— 真锚点 + IntersectionObserver 且底部带 compact 档上下篇；`ArticleProgress` 右侧 2px 进度线 + 宽屏百分比 + 圆形回顶；`ArticlePager` 无 hook 的上下篇，full/compact 共用；`GiscusComments` 滚到附近才加载、换外观走 postMessage 不重载）、`app/globals.css` 新增「6e. 文章页」一节（宽度 = `calc(var(--reading-measure) + 3rem)`，不写死 42rem；四个 `<head>` 系类与首页 / 列表页共用；文章页右下角图签让给回顶按钮；打印隐藏悬浮件与评论区）；`lib/site.ts` 新增 `COMMENTS` + `commentsReady()`，`ARTICLE_ROUTE.status` 改 `"ready"`（首页与列表页的卡片标题**一行没改**就变成真链接）；`lib/icons.ts` 补 5 个图标（目录 / 上下箭头 / 回顶 / 评论）；补上第 6 项留下的 abc 五线谱配色缺口（`components/charts/abc.ts` 渲染后只把近黑的 `stroke` / `fill` 换成 `--c-ink`）；删掉开发态自检 `components/dev/PipelineCheck.tsx`、首页里那三行与 `.pipeline-check` 的 CSS（约定第 6 条兑现）；`lib/list.ts` 的 `fullNote` 与首页第 6 栏的一行旧文案同步成「正文页已落地」的说法。台账同步：目录树、进度表（12/14）、新增第 12 项小节、约定第 6 条、跨项待办、第 8 节的 11 条验收清单 |
+| 本次提交 | **第 13 项其余页面完成**：新增七个页面 —— `app/[lang]/{tags,categories,archives,search,about,links,settings}/page.tsx`。主线是「不写第二份」：标签 / 分类页共用 `components/pages/FacetIndex.tsx`（服务端组件、零状态，点标签就是普通链接），搜索页**整份复用** `components/list/PostList.tsx`（只多传 `autoFocusSearch`，且读者已点到别处就不抢焦点），设置页**整份复用** `components/SettingsCenter`（同一份界面现在四处共用：顶栏按钮 / 首页两栏 / 抽屉 / 这一页），关于页渲染 frontmatter 里 `about: true` 的最新一篇（走第 3 项那条渲染管线 + `ArticleBody`，`typography` 也照第 12 项接上），友链页读 `lib/site.ts` 新增的 `LINKS`（空数组则显示「编辑此处」与填法，不渲染空清单），归档页是年 → 月 → 文章的时间线（月份只分组不筛选，只有年那一行有 `?year=` 链接）。新增 `lib/pages.ts`（这几页的文案与纯函数：`facetWeight` 字号四档 / `monthName` / `archiveYearHref` / `tagHref` / `categoryHref`）；`facetHref()` 挪进 `lib/list.ts` 成为**唯一**的「跳到某一类文章」地址实现（文章页那份私有的删掉了）；`app/globals.css` 新增「6f. 其余页面」一节（标签云 / 归档时间线 / 友链 / 设置页壳，打印时 `archive-year-link` 不印、清单避免跨页断开）；`ROUTES` 七个页面全部改 `"ready"`（顶栏不再有压暗项，没动顶栏代码）；sitemap 新增 `FACET_PAGES` 小表（标签 / 分类 / 归档 / 关于 / 友链；搜索与设置 `noindex` 故意不进）；`/offline/` 的缓存清单补上两个语言的列表页并写明「打开过的文章断网时通常也打得开」。台账同步：目录树、进度表（13/14）、新增第 13 项小节、约定第 2 / 8 / 9 条、跨项待办、第 8 节的 9 条验收清单 |

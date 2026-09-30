@@ -10,9 +10,9 @@ import { ARTICLE_TEXT, articleNeighbors, parseTypographyOption } from "@/lib/art
 import { getPost, getPostWithBody, getPosts } from "@/lib/content";
 import { decorate } from "@/lib/decor";
 import { asBoolean } from "@/lib/frontmatter";
-import { DEFAULT_FILTERS, LIST_TEXT, listQueryString, toListPost } from "@/lib/list";
+import { LIST_TEXT, facetHref, toListPost } from "@/lib/list";
 import { renderMarkdown } from "@/lib/markdown";
-import { feedAlternatesTypes, isLang, LANGS, SITE, type Lang } from "@/lib/site";
+import { feedAlternatesTypes, isLang, LANGS, SITE } from "@/lib/site";
 
 /**
  * 文章页（第 12 项）：`/zh/posts/<slug>/`（slug 可能带目录，见 content/README.md 第 1 节）
@@ -31,6 +31,7 @@ import { feedAlternatesTypes, isLang, LANGS, SITE, type Lang } from "@/lib/site"
  *   - 上下篇：`articleNeighbors()`（lib/article.ts），顺序就是 `getPosts` 的时间倒序，
  *     这里不再排一遍；
  *   - 评论：第 12 项的 giscus（配置在 lib/site.ts 的 `COMMENTS`，没填就显示「编辑此处」）。
+ *   - 标签 / 分类片的地址：`facetHref()`（lib/list.ts），与第 13 项的标签页同一个来源。
  *
  * ⚠️ 正文宽度一律由 `--reading-*` 令牌决定（约定第 8 条）：这一页的宽度是
  * `calc(var(--reading-measure) + 3rem)`（见 globals.css 的「6e. 文章页」），
@@ -92,15 +93,6 @@ export async function generateMetadata({
       tags: [...post.tags, ...post.categories],
     },
   };
-}
-
-/** 标签 / 分类片：链到列表页的筛选（编解码只有 lib/list.ts 一处实现，约定第 9 条） */
-function facetHref(lang: Lang, key: "tag" | "cat", name: string): string {
-  const query = listQueryString({
-    ...DEFAULT_FILTERS,
-    ...(key === "tag" ? { tags: [name] } : { categories: [name] }),
-  });
-  return `/${lang}/posts/${query}`;
 }
 
 export default async function LangPost({

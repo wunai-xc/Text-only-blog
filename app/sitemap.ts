@@ -15,8 +15,10 @@ import { LANGS, SITE, type Lang } from "@/lib/site";
  *   /zh/、/en/               各语言首页
  *   /zh/posts/、/en/posts/   文章列表页（第 10 项）
  *   /zh/posts/<slug>/ …      文章正文页，URL 由 content/ 里的文章推出（第 12 项落地后已能访问）
+ *   /zh/tags/ 等三张清单页    标签 / 分类 / 归档（第 13 项；搜索页故意不进 sitemap）
+ *   /zh/about/、/zh/links/   关于与友链（第 13 项；设置页 noindex，也不进 sitemap）
  *
- * 第 13 项新加页面（标签、分类、归档、关于、搜索、友链）时，在 `pageRoutes` 里补一行；
+ * 之后新加页面（比如真正的专题页）时，在 `pageRoutes` 里补一行；
  * 不要在这里写「还没有的页面」，sitemap 指向 404 是负分。
  *
  * 文章 URL 与正文页的路由必须一致：两者都由 `PostMeta.href`（lib/content.ts）决定 ——
@@ -24,9 +26,21 @@ import { LANGS, SITE, type Lang } from "@/lib/site";
  * `generateStaticParams` 是同一个来源，改 slug 规则时只需要改 lib/content.ts 一处。
  */
 
+/**
+ * 第 13 项的清单页：路径 + 在 sitemap 里的优先级。
+ * 加一页只动这张表（`path` 末尾的斜杠与 `lib/site.ts` 的 ROUTES 写法保持一致）。
+ */
+const FACET_PAGES: { path: string; priority: number }[] = [
+  { path: "/tags/", priority: 0.5 },
+  { path: "/categories/", priority: 0.5 },
+  { path: "/archives/", priority: 0.6 },
+  { path: "/about/", priority: 0.6 },
+  { path: "/links/", priority: 0.3 },
+];
+
 export const dynamic = "force-static";
 
-/** 每语言的固定页面（首页 + 文章列表页）。第 13 项做标签 / 分类 / 归档 / 关于 / 搜索 / 友链时在这里补 */
+/** 每语言的固定页面（首页 + 文章列表页 + 第 13 项的清单页）。关于 / 友链 / 设置落地时在这里补 */
 function pageRoutes(): MetadataRoute.Sitemap {
   /** 同一个路径模板在各语言下的绝对地址（hreflang 用） */
   const languageUrls = (path: string): Record<string, string> =>
@@ -64,6 +78,26 @@ function pageRoutes(): MetadataRoute.Sitemap {
         },
       },
     });
+
+    /**
+     * 第 13 项的清单页：标签 / 分类 / 归档（地址模板一样，只有路径与优先级不同）。
+     * **搜索页故意不在这里**：那一页的 `metadata.robots` 是 `noindex` —— 它的内容是
+     * 文章列表的一份投影，收录进来只会与文章页抢位置。
+     */
+    for (const page of FACET_PAGES) {
+      const languages = languageUrls(page.path);
+      routes.push({
+        url: `${SITE.url}/${lang}${page.path}`,
+        changeFrequency: "weekly",
+        priority: page.priority,
+        alternates: {
+          languages: {
+            ...languages,
+            "x-default": `${SITE.url}/${SITE.defaultLang}${page.path}`,
+          },
+        },
+      });
+    }
   }
 
   return routes;

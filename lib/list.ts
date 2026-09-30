@@ -301,6 +301,20 @@ export function listQueryString(filters: ListFilters): string {
 }
 
 /**
+ * 「跳到某一类文章」的地址 —— 就是这一页的筛选状态（`/zh/posts/?tag=…`、`/en/posts/?cat=…`）。
+ *
+ * 编解码只有上面 `listQueryString` 一处实现，所以文章页的标签片（第 12 项）、
+ * 标签页与分类页（第 13 项）都调这一个函数，**不要各自拼查询串**（约定第 9 条）。
+ */
+export function facetHref(lang: Lang, key: "tag" | "cat", name: string): string {
+  const query = listQueryString({
+    ...DEFAULT_FILTERS,
+    ...(key === "tag" ? { tags: [name] } : { categories: [name] }),
+  });
+  return `/${lang}/posts/${query}`;
+}
+
+/**
  * 读 `window.location.search`。**只在浏览器里挂载之后调**（静态导出时服务端读不到查询串，
  * 首帧必须与 SSR 一致，否则 React 会报水合不一致 —— 与第 7 项读 localStorage 同一个道理）。
  */

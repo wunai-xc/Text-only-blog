@@ -1641,6 +1641,267 @@
   }
 
   /* ==========================================================
+     6f. 其余页面（第 13 项）
+     标签 / 分类（同一个组件 FacetIndex）、归档、搜索（复用列表页组件）。
+     页头一律沿用列表页那一套类（.list-head 系），所以这里只管「清单本身」怎么画。
+     文案、字号档与地址都在 lib/pages.ts / lib/list.ts，这里不写判断。
+
+     （这一节写在 6e 之前是有意的：标签片与分类片跟 6d 的卡片片、文章页的标签片是
+     同一套「片」的观感，放在一起才好对照。引用时看节号，别看顺序。）
+
+     还有一条贯穿全站的取舍：这几页都是**服务端渲染**的清单，没有任何状态 ——
+     点一个标签就是普通链接，跳到列表页由那一页接管筛选（约定第 9 条）。
+     ========================================================== */
+
+  /* ---------- 标签云 / 分类云 ---------- */
+
+  .facet-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .facet-item {
+    /* 让长标签整块换行，不会被折成两半 */
+    max-width: 100%;
+  }
+
+  .facet-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    padding: 0.15rem 0.55rem;
+    border: 1px dashed var(--c-rule-strong);
+    border-radius: 999px;
+    color: var(--c-ink-muted);
+    font-size: 0.85rem;
+    line-height: 1.7;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+
+  .facet-chip:hover {
+    border-color: var(--c-accent);
+    background-color: var(--c-accent-soft);
+    color: var(--c-accent);
+  }
+
+  /* 分类是「实线片」（与卡片、文章页上的分类片同一套观感：实线 = 分类、虚线 = 标签） */
+  .facet-chip[data-kind="category"] {
+    border-style: solid;
+    border-color: var(--c-accent);
+    color: var(--c-accent);
+  }
+
+  /* 字号四档由 lib/pages.ts 的 facetWeight() 算出来（篇数多的大一号） */
+  .facet-chip[data-weight="1"] {
+    font-size: 0.92rem;
+  }
+
+  .facet-chip[data-weight="2"] {
+    font-size: 1rem;
+  }
+
+  .facet-chip[data-weight="3"] {
+    font-size: 1.08rem;
+    border-color: var(--c-accent);
+    color: var(--c-ink);
+  }
+
+  .facet-count {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--c-ink-subtle);
+  }
+
+  .facet-note {
+    margin: 1.4rem 0 0;
+    padding-top: 0.8rem;
+    border-top: 1px dashed var(--c-rule);
+    color: var(--c-ink-subtle);
+    font-size: 0.74rem;
+    line-height: 1.75;
+  }
+
+  /* ---------- 归档（年 → 月 → 文章） ---------- */
+
+  .archive-year {
+    margin-top: 1.8rem;
+  }
+
+  .archive-year-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 0 0 0.6rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--c-rule-strong);
+    font-size: 1.1rem;
+    font-weight: 620;
+  }
+
+  .archive-year-no {
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
+  }
+
+  .archive-year-count {
+    color: var(--c-ink-subtle);
+    font-size: 0.74rem;
+    font-weight: 400;
+  }
+
+  .archive-year-link {
+    margin-left: auto;
+    color: var(--c-accent);
+    font-size: 0.74rem;
+    text-decoration: none;
+  }
+
+  .archive-year-link:hover {
+    text-decoration: underline;
+  }
+
+  .archive-month {
+    margin-top: 0.9rem;
+  }
+
+  .archive-month-head {
+    margin: 0 0 0.3rem;
+    color: var(--c-ink-subtle);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+  }
+
+  .archive-list {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .archive-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem;
+    padding: 0.28rem 0.4rem;
+    border-left: 2px solid transparent;
+  }
+
+  .archive-item:hover {
+    border-left-color: var(--c-accent);
+    background-color: var(--c-surface);
+  }
+
+  .archive-link {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+    min-width: 0;
+    text-decoration: none;
+  }
+
+  .archive-date {
+    color: var(--c-ink-subtle);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+  }
+
+  .archive-title {
+    color: var(--c-ink);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+  }
+
+  .archive-link:hover .archive-title {
+    color: var(--c-accent);
+  }
+
+  .archive-badge {
+    padding: 0.02rem 0.3rem;
+    border: 1px dashed var(--c-rule-strong);
+    border-radius: 3px;
+    color: var(--c-ink-muted);
+    font-size: 0.68rem;
+  }
+
+  .archive-badge[data-badge="ai"] {
+    border-style: solid;
+    border-color: var(--c-accent);
+    color: var(--c-accent);
+  }
+
+  .archive-badge[data-badge="draft"] {
+    border-color: var(--c-danger);
+    color: var(--c-danger);
+  }
+
+  /* ---------- 友链（第 13 项） ---------- */
+
+  .links-list {
+    display: grid;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 40rem) {
+    .links-list {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .links-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .links-name {
+    color: var(--c-ink);
+    font-size: 0.98rem;
+    font-weight: 600;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+
+  .links-name:hover {
+    color: var(--c-accent);
+    text-decoration: underline;
+  }
+
+  .links-note {
+    margin: 0;
+    color: var(--c-ink-muted);
+    font-size: 0.82rem;
+    line-height: 1.7;
+  }
+
+  /* 地址印出来：点不动的时候读者能自己复制（纯文字站的取舍：能读优先） */
+  .links-url {
+    color: var(--c-ink-subtle);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    overflow-wrap: anywhere;
+  }
+
+  /* 设置页（第 13 项）：内容就是抽屉里那一份组件，这里只收一下与页头之间的间距 */
+  .settings-page-body {
+    margin-top: 0.4rem;
+  }
+
+  /* ==========================================================
      6e. 文章页（第 12 项）
      页头 / 悬浮目录 / 阅读进度 / 回顶 / 上下篇 / 评论区。
      版式、文案与阈值都在 lib/article.ts，这里只管画。
@@ -2341,6 +2602,20 @@
 
   .list-page {
     max-width: none;
+  }
+
+  /* 第 13 项的清单页（标签 / 分类 / 归档）与搜索页：清单照印（纸上的链接可以拿去
+     地址栏敲）；搜索页因为复用列表页，工具栏同样不印。
+     归档里只有「看这一年的全部 →」不印 —— 它在纸上是一条带查询串的地址，读起来是噪音；
+     文章本身的链接照印。 */
+  .archive-month,
+  .archive-item,
+  .facet-item {
+    break-inside: avoid;
+  }
+
+  .archive-year-link {
+    display: none;
   }
 
   .list-grid {
