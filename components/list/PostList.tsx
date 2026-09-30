@@ -190,12 +190,17 @@ export default function PostList({
       const fuse = new Fuse(docs, fuseOptions(fields));
       return {
         mode: "index",
-        search: (query) => fuse.search(query).map((result) => fromSearchDoc(result.item)),
+        // 形参必须自己标类型：这个函数的返回类型是联合（Engine | "error"），
+        // 联合里的对象字面量属性拿不到上下文类型，不标就是隐式 any（TS7006）。
+        search: (query: string) => fuse.search(query).map((result) => fromSearchDoc(result.item)),
       };
     }
 
     const fuse = new Fuse(posts, fuseOptions([...INLINE_SEARCH_FIELDS]));
-    return { mode: "inline", search: (query) => fuse.search(query).map((result) => result.item) };
+    return {
+      mode: "inline",
+      search: (query: string) => fuse.search(query).map((result) => result.item),
+    };
   }, [indexVersion, lang, posts]);
 
   const ensureEngine = useCallback(async () => {

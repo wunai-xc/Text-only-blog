@@ -899,6 +899,33 @@ node -e "JSON.parse(require('fs').readFileSync('package.json','utf8')) && consol
 - 也为上一节那句「改了配置文件后先触发一次构建」提供了例证：这类错**只在云构建里暴露**，
   本环境不执行任何命令，所以构建日志是这个项目唯一的集成测试。
 
+### 构建失败 —— 类型检查两处 TS7006（2026-09-30，第七次云构建）
+
+```
+✓ Compiled successfully in 42s
+  Running TypeScript ...
+components/list/PostList.tsx(193,18): error TS7006: Parameter 'query' implicitly has an 'any' type.
+components/list/PostList.tsx(198,39): error TS7006: Parameter 'query' implicitly has an 'any' type.
+Failed to type check.
+```
+
+- 位置：`components/list/PostList.tsx` 的 `loadEngine()`（第 10 项写的代码）—— 两条 `return` 里的
+  `search: (query) => …` 形参。编译（Turbopack）42s 通过，挂在**类型检查**，页面构建照旧没开始。
+- 原因：`loadEngine` 的返回类型写成了**联合** `Promise<Engine | "error">`，两个 `return` 返回的又是
+  **对象字面量**。TypeScript 不会把联合型返回类型顺着联合传给对象字面量的属性当上下文类型，
+  于是 `search` 的形参 `query` 没有类型来源 —— 打开 `noImplicitAny` 就是 TS7006。
+  同样的代码如果返回类型直接写 `Engine`（不带 `"error"`），上下文类型能落到属性上，不会报错；
+  是「**联合**返回类型 + 对象字面量里的**函数属性**」这个组合才丢的上下文。
+- 修法（最小改动、语义不变）：两处形参自己标类型 —— `search: (query: string) => …`，
+  并在原地写了注释说明为什么不能省。**没有**用 `as Engine` 断言，
+  也没有把返回类型收窄成 `Engine`（`"error"` 这个哨兵值后面还要用）。
+- 同类写法在仓库里**没有第二处**：`grep 'Promise<'` 与 `grep 'useCallback(async'` 都核过，
+  返回联合类型的函数只有这一个（其它 `Promise<…>` 都是页面 / metadata 的标准写法）。
+- 顺带确认：本次日志里 `bun install` 之后又是 `Saved lockfile` —— 锁文件仍在构建容器里现生成、
+  随构建丢弃（仓库里没有锁文件），与第 14 项那条待办一致。
+- 仍未验证的：修完这两处之后类型检查与静态导出是否全绿、`out/` 的产物清单，
+  都要等下一次构建（或本机 `npm run typecheck && npm run build`）。
+
 ### 部署失败 —— 命令填错与 token 权限（2026-09-30，第二～四次云构建）
 
 **先记好消息**：第一次构建那两处类型错误（`lib/markdown.ts` 的 `TS2345` 与 `throwOnError`）确实修好了。
@@ -1352,6 +1379,13 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
   `npx wrangler pages deploy out --project-name=text-only-blog`（与 workflow 一致），
   但仍报 `Authentication error [code: 10000]` —— 说明该构建实际使用的 token 依旧没有 Pages 权限，
   报错点早于产物上传。判别办法见第 4 节「怎么确认到底用的哪个 token」。
+- **2026-09-30 的第七次云构建**（改用 Workers 静态资源、`package.json` 尾逗号修掉之后的第一次）：
+  `bun install`（303 个包，6.8s）→ Turbopack 编译 **42s 通过** → **类型检查失败**，
+  两处 `TS7006`（`components/list/PostList.tsx` 的 193 / 198 行，`search` 的形参隐式 any，
+  第 10 项写的代码）；部署这一步没跑到。原因与修法见第 4 节「构建失败 —— 类型检查两处 TS7006」。
+  ⚠️ 这两处**已改但未在本机验证**（本环境无 shell），下一次构建日志见分晓。
+  另一件事仍未验证：`wrangler.toml` 的 `[assets]` 写法（Workers 静态资源）到底能不能把 `out/` 传上去
+  —— 这几轮构建都停在部署之前，从没跑到 `npx wrangler deploy`。
 - **改用 Workers 静态资源（本次提交）**：`wrangler.toml` / `package.json` / workflow 三处已按第 7 节改完，
   云构建的 Deploy command 只要填回默认的 `npx wrangler deploy` 即可，**不涉及任何 token 权限改动**。
   ⚠️ 这次改动**没有在本机跑过 `wrangler deploy`**（本环境无 shell），
@@ -1561,6 +1595,7 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
 | 2026-09-30 | 第五次云构建：命令已完全正确（`pages deploy out --project-name=…`）但 `code 10000` 一字未变，判定为该构建实际使用的 token 仍无 Pages 权限（报错早于产物上传）。台账补「怎么确认用的哪个 token」三条判别法与绕开 token 的两条备选路径 |
 | 2026-09-30 | **部署目标从 Cloudflare Pages 改为 Workers 静态资源**（避开 Pages 鉴权）：`wrangler.toml` 改为 `[assets] directory = "./out"` + `not_found_handling = "404-page"` + `html_handling = "auto-trailing-slash"`；`package.json` 的 `deploy` 改成 `npx --yes wrangler deploy`；workflow 改名并把 Deploy 步骤改成 `command: deploy`，同时把必然失败的 `npm ci` / `cache: npm` 换成 `setup-bun@v2`（bun 1.2.15）+ `bun install`；两处注释里的 Pages 措辞同步。台账第 2、6、7、8 节与第 14 项待办一并更新。⚠️ 未在本机执行过 `wrangler deploy` |
 | 2026-09-30 | 第六次云构建：**构建阶段就失败**（`EJSONPARSE`）—— 上一次提交给 `package.json` 的 `deploy` 留了尾逗号（我的编辑失误，JSON 不允许尾逗号），删掉后重新触发。台账新增「构建失败 —— `package.json` 尾逗号」小节，并记下以后改 JSON 要过 `node -e "JSON.parse(...)"` 这类真正的解析器（`tsc` 不检查 JSON） |
+| 2026-09-30 | 第七次云构建：`bun install` 与 Turbopack 编译（42s）通过，**类型检查报两处 `TS7006`** —— `components/list/PostList.tsx` 两条 `return` 里的 `search: (query) => …` 形参隐式 any（第 10 项的代码）。根因是「联合返回类型 `Promise<Engine \| "error">` + 对象字面量里的函数属性」拿不到上下文类型；修法是两处形参显式标 `query: string`（最小改动、语义不变，未用 `as` 断言）。台账新增该小节，第 8 节补上这次构建的结论，并注明修法与 `[assets]` 部署路径都仍未在本机验证 |
 | 本次提交 | **第 7 项框架 UI 完成**：顶栏（品牌 / 导航 / 图签三段，对齐 wunai-blog）、页脚（联系方式 + 版权 + 左下角齿轮）、设置中心抽屉（外观 / 阅读偏好 / 语言 / 恢复默认）。新增 `lib/icons.ts`（本地打包的 24 个图标）、`lib/prefs.ts`（宽度/字号/行距三档 + 首帧脚本 + 写 `--reading-*`）；`lib/site.ts` 扩全为「路由落地状态表 ROUTES + 顶栏导航 + 联系方式 + i18n 文案表」；新组件 `RouteLink`（按 `ROUTES.status` 决定可点/不可点）、`SiteHeader`、`SiteFooter`、`ThemeSwitcher`、`LangSwitcher`、`SettingsDock`、`SettingsCenter`、`PrefsInit`。框架挂到 `app/[lang]/layout.tsx`（第 9~13 项自动带上）；`globals.css` 新增「6b. 框架 UI」一节与 `--frame-width` 令牌，`.page` 内边距收紧到 `2.5rem 1.5rem 4rem`；`THEME_LABELS.hint` 由中文一句改成 `{ zh, en }`；约定新增第 8 条（链接可用性以 `ROUTES.status` 为唯一事实来源） |
 | 本次提交 | **第 8 项装饰与动效完成**：新增 `lib/decor.ts`（路径 → 图纸的唯一事实来源：`section` / `pattern` / 两位编号 / 图签语言，纯函数 + 两张穷尽表，零依赖）；`components/BlueprintBackground.tsx` 从空 div 变成 `"use client"` 组件，用 `usePathname()` 挂 `data-decor` / `data-route`，并在换页时让纸面重铺一次（0.32s、首帧不播、尊重 `prefers-reduced-motion`）；`app/globals.css` 新增「5b. 图案随路由变」一节 —— 七套图案（sheet / columns / measure / grid / hatch / dots / plain，全是渐变，无图片、无滤镜、不动布局）+ 右下角图签（`TOB-ZH-01` 之类，窄屏不印）+ `[data-route="article"]` 的边缘淡出微调；`lib/site.ts` 新增 `isRouteId()` 与 `SITE.i18n.decor` 三条文案（图签名字复用导航文案，不重复写十二个）。这一项**未改任何颜色与令牌、未动层序**；「纸质颗粒」未做，理由见第 4 节第 8 项 |
 | 本次提交 | **第 10 项列表页 + 第 11 项文章卡片（三档密度）完成**：新增 `app/[lang]/posts/page.tsx`（构建期取文章 / 标签 / 分类 / 年份，零文章出空状态且不出工具栏）、`components/list/PostList.tsx`（客户端：搜索 / 筛选 / 排序 / 密度 / 语言 / 地址栏状态）、`components/list/PostCard.tsx`（三档密度共用卡片）、`lib/list.ts`（筛选状态与默认值、三档密度与排序的选项表、纯函数、查询串读写、密度本机记忆、中英文案 —— 对 `content.ts` / `search-index.ts` 只 `import type`，故客户端可安全引入）；搜索在**第一次输入时**才读 `/search-index.json` 并动态 `import("fuse.js")`，索引读不到 / 版本不匹配时自动退回本页字段并在页面上写明；`ROUTES.posts` 改 `"ready"`（顶栏「文章」可以点了），sitemap 补两行列表页；`lib/site.ts` 新增 `feedAlternatesTypes()`（页面自写 `alternates` 会覆盖根布局那份 RSS 发现表，第 5 项记下的坑先在这里堵上，`app/layout.tsx` 同步改用）；首页第 2 栏换成共用的 `PostCard`（适中档），`lib/home.ts` 删掉 `posts.minutes` / `articlePending`；`lib/icons.ts` 补 11 个图标（筛选 / 时间 / 排序 / 三档密度 / AI / 清除搜索）；`app/globals.css` 新增「6d. 列表页与文章卡片」一节并把 `.home-kicker` 系三个类换成 `home/list` 共用，打印样式隐藏工具栏 |
