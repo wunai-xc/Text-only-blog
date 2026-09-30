@@ -34,7 +34,7 @@
 | 图表 | Mermaid、ECharts、Graphviz（`@hpcc-js/wasm-graphviz`）、abc.js、SmilesDrawer —— 全部按需动态加载 |
 | 图标 | Iconify（`@iconify/react/offline` + `@iconify/icons-mdi`，离线打包，无运行时请求） |
 | 评论 | giscus（GitHub Discussions） |
-| 部署 | Cloudflare Pages（wrangler + GitHub Actions） |
+| 部署 | Cloudflare Workers 静态资源（wrangler + GitHub Actions） |
 
 形态：**纯静态**。无后端、无数据库、无运行时服务端接口；所有数据在构建期生成。
 
@@ -374,7 +374,7 @@ Cloudflare 上第一次真正跑 `npm run build` 时，编译（Turbopack）通�
 还没验证的：改完这些之后**是否真的通过类型检查、静态导出是否产出预期的产物**，
 要等再触发一次构建（或本地 `npm run typecheck && npm run build`）。
 
-### 部署失败 —— 部署命令填错两次（2026-09-30，第二、三次云构建）
+### 部署失败 —— 命令填错与 token 权限（2026-09-30，第二～四次云构建）
 
 **先记好消息**：第一次构建那两处类型错误（`lib/markdown.ts` 的 `TS2345` 与 `throwOnError`）确实修好了。
 第二次日志里 `Running TypeScript ... Finished TypeScript in 3.7s`、`Generating static pages (14/14)`，
@@ -427,14 +427,157 @@ npm error 404  1. name can no longer contain capital letters
 npx wrangler pages deploy out --project-name=text-only-blog
 ```
 
+**第三次尝试（第四次云构建）：命令少一个空格 + 构建环境的 token 没有 Pages 权限**
+
+```
+Executing user deploy command: npx wrangler pages deploy out--project-name=text-only-blog
+✘ [ERROR] A request to the Cloudflare API (/accounts/328952a9b1c048e303952da321c5b23a/pages/projects/text-only-blog) failed.
+  Authentication error [code: 10000]
+  📎 It looks like you are authenticating Wrangler via a custom API token set in an environment variable.
+```
+
+两个独立问题，第二个才是真正的墙：
+
+1. **命令少一个空格**：`deploy out--project-name=...` → 位置参数（产物目录）被拼成
+   `out--project-name=text-only-blog`，一个不存在的目录名。
+   正确：`npx wrangler pages deploy out --project-name=text-only-blog`（`out` 后面必须有空格）。
+2. **`Authentication error [code: 10000]` 与目录名无关** —— Wrangler 会先查项目是否存在，
+   这条报错来自 `GET /accounts/<id>/pages/projects/text-only-blog` 这个 **Pages API**。
+   根因：本构建是 **Workers Builds** 项目（默认 Deploy command 就是 `npx wrangler deploy`，
+   与日志相符），它**自动生成的 API token 里没有任何 Pages 权限**。文档列出的默认权限是：
+   Account 的 Account Settings(read) / Workers Scripts(edit) / Workers KV Storage(edit) /
+   Workers R2 Storage(edit)、Zone 的 Workers Routes(edit)、User 的 User Details(read) / Memberships(read)。
+   而 Pages 的 REST API 要求 token 带 **`Cloudflare Pages: Edit`**，文档还特别注明
+   「用 *Edit Cloudflare Workers* 模板还得在 Custom Token 里自己加上 Pages 权限」。
+   所以只要 deploy 命令还指向 Pages，这个 token 一定认证失败 —— 与命令写法无关。
+   - 依据：`developers.cloudflare.com/workers/ci-cd/builds/configuration/`（API token 小节，含默认权限清单）、
+     `developers.cloudflare.com/pages/configuration/api/`（Get an API token 小节）。
+3. 顺带确认一条之前只是猜测的事：Workers Builds 的文档写明
+   「Workers Builds will use the Wrangler version set in your `package.json`」——
+   也就是说把 `wrangler` 写进 `devDependencies` 能同时钉住云构建与本机 `npm run deploy` 的版本。
+
+**于是当时有两条真正可走的路**（`wrangler.toml` 保持 Pages 不变的那条需要新 token；
+下面 A/B 是当时给出的选项，**最终落地的是 B**，见本节后面「最终决定」）：
+
+- **A. 继续用 Pages（一度选定，随后推翻，留档）**：在 My Profile → API Tokens 建一个自定义 token，权限
+  Account → **Cloudflare Pages → Edit**（Account Resources 选你的账号），
+  然后到这个 Worker 的 **Settings → Build → API token** 里选中它（文档明说可以「select one that you already own」）。
+  再确认 Pages 项目 `text-only-blog` 存在（不存在就先 `npx wrangler pages project create text-only-blog`），
+  Deploy command 保持 `npx wrangler pages deploy out --project-name=text-only-blog`。
+- **B. 改成 Workers 静态资源（最终采用）**：把 `wrangler.toml` 从 Pages 写法改成
+  `[assets] directory = "./out"`（+ `not_found_handling = "404-page"`），
+  Deploy command 留回默认的 `npx wrangler deploy` —— 这个 token 的
+  `Workers Scripts (edit)` 权限正好够用，**不用碰任何 token**。
+  代价是部署目标从 Pages 项目变成同名 Worker（原 Pages 域名/自定义域名要重新绑定），
+  且 `package.json` 的 `deploy`、`.github/workflows/deploy.yml` 要同步改 —— 这三处本次都已改完。
+
+**路径 A 的操作清单（未采用，留档 —— 万一以后要回 Pages 照着做）**：
+
+1. My Profile → API Tokens → *Create Token* → *Create Custom Token*：
+   Permissions 加一条 **Account · Cloudflare Pages · Edit**，Account Resources 选 `3234319738@qq.com's Account`。
+   （文档《Pages → REST API》原话：用 *Edit Cloudflare Workers* 模板还得自己补 Pages 权限。）
+2. 回到这个 Worker 的 **Settings → Build → API token**，把刚建的 token 选上（不要用默认那个自动生成的）。
+   注意：**改完保存后要等下一次构建才生效**，且如果点 *Retry build*，用的是重试那一刻的配置。
+3. 确认 Pages 项目 `text-only-blog` 已存在；不存在就在 Workers & Pages 里先建，
+   或本地 `npx wrangler pages project create text-only-blog`（这两步都要带上刚建的 token）。
+4. Deploy command 里**把空格补回去**：
+
+```
+npx wrangler pages deploy out --project-name=text-only-blog
+```
+
+⚠️ 一个仍未验证、值得留意的点：`wrangler pages deploy` 在项目不存在时是否需要交互确认
+（非交互环境下 Wrangler 会取「默认是」的兜底值，但这条只是从 `wrangler deploy` 的日志行为类推的，
+**没有实测**）。若下一次日志报的是「project not found / must be created」，先做上面第 3 步再重试。
+
+**第四次尝试（第五次云构建）：命令已正确，报错一字未变 → token 没生效**
+
+```
+Executing user deploy command: npx wrangler pages deploy out --project-name=text-only-blog
+✘ [ERROR] A request to the Cloudflare API (/accounts/328952a9b1c048e303952da321c5b23a/pages/projects/text-only-blog) failed.
+  Authentication error [code: 10000]
+```
+
+- 空格已补、项目名已带，命令本身与 `.github/workflows/deploy.yml` 完全一致，
+  但 `Authentication error [code: 10000]` **完全没变**。按 Wrangler 的执行顺序，
+  这条报错发生在**读项目信息**这一步，早于上传产物 —— 也就是说还没碰到 `out/`，是权限判定先挂了。
+- 结论：**这个构建环境实际用的 token 仍然没有 Pages 权限。**
+  可能是新 token 没在这个 Worker 的 Settings → Build → API token 里被选中，
+  也可能选了但权限/账号范围没配对（Pages 权限是 **Account** 级别的，`Cloudflare Pages: Edit`
+  与 Account Resources 缺一不可）。日志里那句「logged in with an User API Token, associated with
+  the email …」对两种 token 都成立，**日志本身分辨不出用的是哪一个**，所以别用日志判断，要用下面的办法。
+
+**怎么确认到底用的哪个 token（三选一，都能定位）**：
+
+1. **看 token 的「最近使用」**：My Profile → API Tokens，列表里每个 token 都有 *Last used* 时间。
+   新 token 若显示 12:11–12:12（这次构建的时刻），说明它确实被用了 → 那就是权限没配够；
+   若新 token 从没被用过、而自动生成的那个刚被用过 → 是 **Settings → Build → API token 没切换成功**。
+2. **把 Deploy command 临时改成探针**：填 `npx wrangler pages project list`，跑一次。
+   它调的是同一套 Pages API —— 能列出项目就说明 token 没问题（那问题在别处），
+   仍然 10000 就说明 token 缺 Pages 权限。这一步**不需要本机环境**，是手机上最省事的判别法。
+3. **本机（或任何有 shell 的地方）用 curl 直接打 API**：
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "https://api.cloudflare.com/client/v4/accounts/328952a9b1c048e303952da321c5b23a/pages/projects"
+```
+
+   返回 `"success": true` 即权限 OK；`code: 10000` 即 token 权限不对。
+   另外 `npx wrangler pages project list`（本机、带同一个 token）等价。
+
+**如果不想继续在 token 上磨**：第 4 节上面那条路径 B（Worker 静态资源）与仓库里现成的
+`.github/workflows/deploy.yml`（路径 C，用你自己带 Pages 权限的仓库 Secret）都能绕开这个 token ——
+两条都是「换一个鉴权主体」，而不是继续猜权限。三者取舍见本节开头两条路 + 第 7 节。
+
+**最终决定：改用路径 B（Workers 静态资源），已落地**
+
+我把选项和日志一起给出后，确认的结果是：**带 Pages 权限的 token 还没建、也没换**（
+也就是说这次的 `code 10000` 用的仍是构建环境自动生成的那个 token，符合预期），
+于是不再在 Pages 鉴权上继续试，直接换到 **Workers 静态资源** ——
+它用的正是那个 token 本来就有的 `Workers Scripts: Edit`。本次改动的文件：
+
+| 文件 | 改动 |
+| --- | --- |
+| `wrangler.toml` | 从 Pages 写法（`pages_build_output_dir`）改成 `[assets] directory = "./out"` + `not_found_handling = "404-page"` + `html_handling = "auto-trailing-slash"`；`name` / `compatibility_date` 不变 |
+| `package.json` | `deploy` 脚本：`wrangler pages deploy out` → `npx --yes wrangler deploy`（与 `preview` 脚本一样用 `npx --yes`，不需要先把 wrangler 装进依赖） |
+| `.github/workflows/deploy.yml` | 标题/并发组改名；Deploy 步骤改成 `command: deploy`（不再传 `pages deploy out --project-name=…`，交给 `wrangler.toml`）；顺带把必然会失败的 `npm ci` + `cache: npm` 换成 `oven-sh/setup-bun@v2`（bun 1.2.15）+ `bun install` |
+| `app/not-found.tsx` / `next.config.ts` | 两处注释里的「Cloudflare Pages」改成 Workers 静态资源（只动注释） |
+
+- **Cloudflare 侧要做的**：Deploy command 改回默认的 **`npx wrangler deploy`**（无参数），
+  API token 保持默认那个自动生成的即可，**不需要新建 token、不需要改权限**。
+- 仍未验证的：`wrangler deploy` 是否会因为构建项目名与 `wrangler.toml` 的 `name` 不一致而报错
+  —— 之前那条 `npx wrangler deploy` 已经读过配置并且只抱怨缺入口点，说明它至少能解析出
+  `name = "text-only-blog"`；但**没有实测过名字不一致的情形**。下一次日志见分晓。
+- 也仍未验证：`not_found_handling = "404-page"` 是否真的把 `out/404.html` 服务出来
+  （这是文档里的标准写法，但本项目没跑过真环境）。
+
 **顺带记两条**：
 
 - `npx wrangler ...` 在云构建里是**临时下载** wrangler（日志里 `will be installed: wrangler@4.144.0`），
-  每次构建版本都可能变。要钉住版本就把 `wrangler` 写进 `devDependencies`（第 14 项待办里也记了这一条），
-  那样 `npm run deploy` 在本机也能直接用 —— 目前仓库里**没有**这个依赖，本地跑 `npm run deploy`
-  会找不到 `wrangler` 命令。这次**故意没加**：钉版本会连带一次依赖变更，等你确认要不要。
+  每次构建版本都可能变；Workers Builds 文档写明它「uses the Wrangler version set in your `package.json`」，
+  所以把 `wrangler` 写进 `devDependencies` 能同时钉住云构建与本机 `npm run deploy` 的版本。
+  目前仓库里**没有**这个依赖，本地跑 `npm run deploy` 会找不到 `wrangler` 命令。
+  这次仍**没加**：要改 `package.json` 就得同步锁文件，而本环境没有 shell（见下一条），
+  写了会造成 `package.json` 与锁文件不一致 —— 要做就一次做干净。
 - 如果 Deploy command 选项里允许填 `npm run deploy`，也可以那样填（等于走仓库里那条脚本）；
   但脚本名与参数分散在两处，改起来反而容易漏，直接把命令写在构建设置里更好查。
+
+**顺带发现的第二个坑：仓库里没有锁文件**（与本次部署报错无关，但迟早会咬人）
+
+`ls` 仓库根目录只有 `package.json`，没有 `package-lock.json` / `bun.lock` / `yarn.lock`；
+云构建日志里那句 `bun install` 之后的 **`Saved lockfile`** 说明锁文件是在构建容器里现生成、随后丢掉的
+（所以每次构建都 `Resolved, downloaded and extracted [1306/1308/1306]` 来回跳，依赖版本每次重新解析）。后果：
+
+1. **`.github/workflows/deploy.yml` 现在跑不起来**：它用 `npm ci` + `setup-node` 的 `cache: npm`，
+   而这两者都要求仓库里有 `package-lock.json` —— 没有锁文件时 `npm ci` 会直接报
+   「can only install with an existing package-lock.json」，`cache: npm` 也会因找不到锁文件而失败。
+   修法二选一：把锁文件提交进仓库（本机 `bun install` 后提交 `bun.lock`，并把 workflow 换成
+   `oven-sh/setup-bun` + `bun install --frozen-lockfile`，与云构建的行为一致），
+   或把 workflow 改成 `npm install`（放弃锁定与缓存）。
+2. **依赖版本不受控**：站点的 `next 16.3.1` 是写死的，但 `^` 区间里的依赖（mermaid / echarts / katex 等）
+   每次云构建都可能换小版本。这个站是纯静态导出，出问题的概率不低，值得早钉。
+3. 这两件事都要在**有 shell 的机器上**做（本环境无 shell，跑不了 `bun install` 生成锁文件），
+   所以留给第 14 项（交付）一并处理，已记进下面的跨项待办。
 
 ### 跨项待办（做到对应项时顺手勾掉）
 
@@ -463,9 +606,15 @@ npx wrangler pages deploy out --project-name=text-only-blog
   （`lib/search-index.ts` 的 `SEARCH_INDEX_VERSION` 与 `SEARCH_FIELDS` 是唯一事实来源）。
 - **第 13 项（其余页面）**：新页面加到 `app/sitemap.ts` 的 `pageRoutes()`；
   离线页的文案也归这一项。
-- **第 14 项（交付）**：把 `wrangler` 写进 devDependencies（`npm run deploy` 现在要靠本机已装的 wrangler）；
+- **第 14 项（交付）**：**把锁文件提交进仓库**（现在仓库里没有锁文件，`next build` 之外的依赖版本
+  每次云构建都重新解析；workflow 已被迫从 `npm ci` 改成 `bun install`，等有锁文件后可以加
+  `--frozen-lockfile` 把版本钉死 —— 详见第 4 节「顺带发现的第二个坑」）；
+  顺手考虑把 `wrangler` 写进 devDependencies 钉住部署工具的版本
+  （现在 `npm run deploy` 是 `npx --yes wrangler deploy`，每次现下载；
+  Workers Builds 也只认 `package.json` 里那个版本）——
+  这两件事都需要在有 shell 的机器上 `bun install` 后一起提交，别只改 `package.json`；
   PNG 图标（192 / 512）如果不打算做，就在 README 里写明「只提供 SVG 图标」；
-  另外核对 Cloudflare 构建设置里的 Deploy command 是 Pages 那条（见第 7 节）。
+  另外确认 Cloudflare 构建设置里的 Deploy command 是默认的 `npx wrangler deploy`（见第 7 节）。
 - `content/README.md` 新增第 9 节（原文第 9 节「常见报错」顺延为第 10 节），
   `content/{zh,en}/posts/README.md` 各加了一行指路。
 
@@ -495,7 +644,7 @@ npm run dev          # 开发服务器，访问 / 会自动分流到 /zh/
 npm run typecheck    # tsc --noEmit：只查类型，不产出（比 build 快，改完代码先跑它）
 npm run build        # 生产构建：搜索索引 / RSS / sitemap / robots / manifest / 更新日志都在这一步生成
 npm run preview      # 本地预览 out/ 静态产物（Service Worker 只在这里能用上）
-npm run deploy       # wrangler 部署到 Cloudflare Pages
+npm run deploy       # wrangler 部署到 Cloudflare Workers（静态资源）
 ```
 
 > 第 5 项之前，`build` 会因为 `prebuild` 指向不存在的 `scripts/*.mjs` 直接失败；
@@ -525,15 +674,32 @@ http://localhost:3000/zh/?theme=dark
 
 ## 7. 部署
 
-- 平台：Cloudflare Pages，产物目录 `out/`（见 `wrangler.toml`）。
+**方案变更（2026-09-30，第五次云构建后）**：部署目标从 **Cloudflare Pages** 改为
+**Cloudflare Workers 静态资源**。原因不是偏好，而是鉴权：本站的云构建是 **Workers Builds** 项目，
+它自动生成的 API token 只含 Workers 权限（没有 Pages），而 Pages 部署必须用带
+`Cloudflare Pages: Edit` 的 token —— 试了四次都没绕过去（详见第 4 节「部署失败」）。
+Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`，**不用碰任何权限设置**。
+代价：站点从 Pages 项目变成同名 Worker，原先 Pages 上的自定义域名/预览链接要重新绑定。
+
+- 平台：Cloudflare Workers（静态资源），产物目录 `out/`（见 `wrangler.toml` 的 `[assets] directory`）。
+- 云构建侧：Deploy command 用回默认的 **`npx wrangler deploy`**（不需要任何参数：
+  Worker 名读 `wrangler.toml` 的 `name`，产物目录读 `assets.directory`）。
+- `wrangler.toml` 的关键三项：`name = "text-only-blog"`、`[assets] directory = "./out"`、
+  `not_found_handling = "404-page"`（让 `out/404.html` 接管未知路径）。
+  `html_handling = "auto-trailing-slash"` 是默认值，与 `next.config.ts` 的 `trailingSlash: true` 一致，写出来只为明确意图。
+  依据：Cloudflare 文档《Workers → Static Assets → Routing → Static Site Generation (SSG) and custom 404 pages》。
+- 本地部署：`npm run deploy`（= `npx --yes wrangler deploy`）。
 - CI：`.github/workflows/deploy.yml`，push 到 `main` 触发；`fetch-depth: 0` 是必须的
   （更新日志在 `next build` 期间读 `git log`，浅克隆会让记录不全 —— 拿不到 git 时构建不会失败，
   但那份 `changelog.json` 会是空的）。
-- 需要在仓库 Secrets 配置：`CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`。
-- `wrangler.toml` 里的 `name`、workflow 里的 `--project-name` 均为 `text-only-blog`，改名请同步两处。
-- **云构建平台的 Deploy command 必须用 Pages 的那条**：`npx wrangler pages deploy out --project-name=text-only-blog`。
-  填成 `npx wrangler deploy`（Workers 的默认值）会在最后一步失败：
-  `Missing entry-point to Worker script or to assets directory`，原因见第 4 节「部署失败」。
+  - 该 workflow 原来用 `npm ci` + `setup-node` 的 `cache: npm`，而仓库里**没有锁文件**，
+    这两者都会直接失败（见第 4 节「顺带发现的第二个坑」）；本次一并改成
+    `oven-sh/setup-bun@v2`（bun 1.2.15，与云构建同版本）+ `bun install`。
+  - Deploy 步骤是 `cloudflare/wrangler-action@v3`，`command: deploy`（不写参数，交给 `wrangler.toml`）。
+  - 需要在仓库 Secrets 配置：`CLOUDFLARE_API_TOKEN`（**Workers Scripts: Edit** 即可，用
+    Cloudflare 的「Edit Cloudflare Workers」模板就行，不再需要 Pages 权限）、`CLOUDFLARE_ACCOUNT_ID`。
+- `wrangler.toml` 里的 `name`（= Worker 名）与云构建项目名必须一致，改名时两处一起改。
+- 若之后要绑自定义域名：Workers & Pages → 该 Worker → Settings → Domains & Routes。
 - 部署前值得自己在本地跑一遍 `npm run build && npm run preview`：静态导出有多少坑（路由产物路径、
   Service Worker、离线页）只有真跑一次才看得见。
 
@@ -555,7 +721,20 @@ http://localhost:3000/zh/?theme=dark
   第三次把 `wrangler` 打成了 `wrangLer`（npm 包名不允许大写，直接 404）。
   两次日志合起来说明：`out/` 确实被静态导出产出（否则 Pages 部署也无从谈起），
   但**产物清单**（`feed.xml` 是否为目录、sitemap/robots/manifest 是否在根）仍需 `ls out` 确认。
-  详见第 4 节「部署失败」。
+- **2026-09-30 的第四次云构建**：构建第四次通过（TS 3.4s、14/14 页，`Success: Build command completed`）；
+  部署失败有两个原因 —— Deploy command 里 `out` 与 `--project-name` 之间**少了空格**，
+  以及**构建环境的 API token 没有 Pages 权限**（`Authentication error [code: 10000]`，
+  这是 Workers Builds 自动生成 token 的固有权限范围）。当时选的路径 A（保留 Pages + 换 token）
+  **随后被推翻** —— 第五次构建后改用 Workers 静态资源，见下面两条。详见第 4 节「部署失败」。
+  ⚠️ 到本文档更新为止，**还没有一次成功的部署**，也就是说 Pages 上线的产物一个都还没被验证过。
+- **2026-09-30 的第五次云构建**：构建照旧通过；Deploy command 已修正成
+  `npx wrangler pages deploy out --project-name=text-only-blog`（与 workflow 一致），
+  但仍报 `Authentication error [code: 10000]` —— 说明该构建实际使用的 token 依旧没有 Pages 权限，
+  报错点早于产物上传。判别办法见第 4 节「怎么确认到底用的哪个 token」。
+- **改用 Workers 静态资源（本次提交）**：`wrangler.toml` / `package.json` / workflow 三处已按第 7 节改完，
+  云构建的 Deploy command 只要填回默认的 `npx wrangler deploy` 即可，**不涉及任何 token 权限改动**。
+  ⚠️ 这次改动**没有在本机跑过 `wrangler deploy`**（本环境无 shell），
+  首次真实上传的结果以你下一次构建日志为准；若报错请把日志贴回来。
 
 已经做过、但只有你本地能确认的事：
 
@@ -621,3 +800,6 @@ http://localhost:3000/zh/?theme=dark
 | 2026-09-30 | 首次云构建的修复：`lib/markdown.ts` 的 autolink / katex 选项改成显式标注 `Options` 的常量（TS2345）、删掉 `rehype-katex` 不允许的 `throwOnError`、把 vfile 消息并进 `warnings`；`tsconfig.json` 按 Next 16 的 mandatory changes 改 `jsx: react-jsx` 并补 include |
 | 2026-09-30 | 第二次云构建：类型检查与静态导出（14/14 页）通过，确认上次修复生效；部署失败定位为**命令填错**——`npx wrangler deploy` 是 Workers 命令，Pages 项目要用 `npx wrangler pages deploy out --project-name=text-only-blog`。台账新增「部署失败」小节与第 7 节相应条目，仓库文件未改动 |
 | 2026-09-30 | 第三次云构建：构建再次通过（TS 3.6s、14/14 页）；部署失败是**命令名拼错**（`wrangLer`，npm 包名不允许大写 → registry 404）。台账补上正确命令与原因，第 8 节合并记两次部署失败 |
+| 2026-09-30 | 第四次云构建：构建通过（TS 3.4s、14/14 页）；部署失败为「命令少空格 + 构建环境 token 无 Pages 权限（`Authentication error [code: 10000]`）」。查文档确认 Workers Builds 自动生成 token 的权限清单与 Pages API 要求的 `Cloudflare Pages: Edit`，据此选定路径 A（保留 Pages + 换 token）并写入操作清单。另发现**仓库无锁文件**（`npm ci` / `cache: npm` 会失败、依赖版本不受控）并记入第 14 项待办。仓库代码与配置仍未改动 |
+| 2026-09-30 | 第五次云构建：命令已完全正确（`pages deploy out --project-name=…`）但 `code 10000` 一字未变，判定为该构建实际使用的 token 仍无 Pages 权限（报错早于产物上传）。台账补「怎么确认用的哪个 token」三条判别法与绕开 token 的两条备选路径 |
+| 2026-09-30 | **部署目标从 Cloudflare Pages 改为 Workers 静态资源**（避开 Pages 鉴权）：`wrangler.toml` 改为 `[assets] directory = "./out"` + `not_found_handling = "404-page"` + `html_handling = "auto-trailing-slash"`；`package.json` 的 `deploy` 改成 `npx --yes wrangler deploy`；workflow 改名并把 Deploy 步骤改成 `command: deploy`，同时把必然失败的 `npm ci` / `cache: npm` 换成 `setup-bun@v2`（bun 1.2.15）+ `bun install`；两处注释里的 Pages 措辞同步。台账第 2、6、7、8 节与第 14 项待办一并更新。⚠️ 未在本机执行过 `wrangler deploy` |

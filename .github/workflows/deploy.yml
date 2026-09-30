@@ -1,4 +1,4 @@
-name: Deploy to Cloudflare Pages
+name: Deploy to Cloudflare Workers
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   deployments: write
 
 concurrency:
-  group: pages
+  group: deploy
   cancel-in-progress: true
 
 jobs:
@@ -22,13 +22,16 @@ jobs:
           # 首页「更新日志」栏在 next build 期间读 git log，浅克隆会让记录不全
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      # 用 bun 而不是 npm ci：仓库里目前**没有锁文件**，npm ci 与 setup-node 的 cache: npm
+      # 都会因为找不到 package-lock.json 直接失败；bun 不需要锁文件也能装。
+      # 版本与 Cloudflare 云构建的那台保持一致（日志里是 bun 1.2.15）。
+      # 等仓库提交了锁文件（见 PROJECTS.md 第 14 项），这里可以加 --frozen-lockfile 把版本钉死。
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 22
-          cache: npm
+          bun-version: 1.2.15
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install
 
       - name: Build（搜索索引 / RSS / sitemap / robots / manifest / 更新日志都在 next build 里生成）
         run: npm run build
@@ -37,6 +40,9 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           # 编辑此处：在仓库 Settings → Secrets 里配置这两个值
+          # CLOUDFLARE_API_TOKEN 需要有 Workers Scripts: Edit 权限（Cloudflare 的
+          # 「Edit Cloudflare Workers」模板即可，不需要 Pages 权限 —— 本站部署的是 Worker）
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy out --project-name=text-only-blog
+          # 不写参数：Worker 名与产物目录都从 wrangler.toml 读（name / assets.directory）
+          command: deploy

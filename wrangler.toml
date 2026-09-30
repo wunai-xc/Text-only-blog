@@ -1,7 +1,18 @@
-# Cloudflare Pages 部署配置
-# 编辑此处：把 name 改成你在 Cloudflare 上想用的项目名
+# Cloudflare Workers 静态资源部署配置
+# 编辑此处：name 就是 Cloudflare 上的 Worker 名（同时决定 <name>.<子域>.workers.dev）
+# 与 .github/workflows/deploy.yml 里的部署目标同名，改名时两处一起改。
 name = "text-only-blog"
 compatibility_date = "2025-09-01"
 
-# next build 的静态产物目录
-pages_build_output_dir = "out"
+# next build 的静态导出产物交给 Workers 直接托管。
+# 纯静态站，不需要 Worker 脚本 —— 没有 main 字段时，Workers 只做静态资源服务（不产生脚本调用计费）。
+[assets]
+directory = "./out"
+
+# 找不到文件时返回目录里最近的 404.html（也就是 app/not-found.tsx 导出出来的 out/404.html），状态码仍是 404。
+# 若不设这一项，未知路径会落到 Cloudflare 的通用 404 页面，站点自己的 404 样式就白做了。
+not_found_handling = "404-page"
+
+# 这是默认值，写出来是为了明确意图：/zh/、/zh/offline/ 这类「目录索引」带尾斜杠提供服务，
+# 与 next.config.ts 的 trailingSlash = true 一致（foo.html 这类单文件仍按不带斜杠访问）。
+html_handling = "auto-trailing-slash"

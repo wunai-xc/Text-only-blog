@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 /**
- * 静态导出配置（Cloudflare Pages 用）。
+ * 静态导出配置（Cloudflare Workers 静态资源用，见 wrangler.toml）。
  *
  * output: "export" 下可用的：Server Component、prerender 出来的 GET Route Handler
  * （必须标 `dynamic = "force-static"`）、sitemap.ts / robots.ts / manifest.ts 这些元数据约定。
