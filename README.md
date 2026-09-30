@@ -115,7 +115,7 @@ app/
   layout.tsx  page.tsx  not-found.tsx  sitemap.ts  robots.ts  manifest.ts
   [lang]/
     layout.tsx              全站框架（顶栏 / 页脚 / 首帧脚本）
-    page.tsx                首页（八栏吸附）
+    page.tsx                首页（八栏吸附，一栏一屏；每栏无卡片外壳、内容多了在栏内滚）
     posts/page.tsx          文章列表（搜索 / 筛选 / 密度）
     posts/[...slug]/page.tsx 文章正文（目录 / 进度 / 上下篇 / 评论）
     tags|categories|archives|search|about|links|settings/page.tsx

@@ -13,7 +13,7 @@ import type { Lang } from "@/lib/site";
  *      滚动动画交给 CSS（`html:has(.home-flow)` 的 `scroll-behavior: smooth`，
  *      且只在 `prefers-reduced-motion: no-preference` 里开），所以这里一行滚动逻辑都不用写；
  *   2. **高亮用 IntersectionObserver**，判定带取「正跨过视口中线」的那一带
- *      （rootMargin -45%）：并排的两栏会一起亮 —— 它们确实在同一屏上，这是预期行为。
+ *      （rootMargin -45%）：一栏一屏，所以带里通常只有一栏 —— 它亮着就是「你在这一栏」。
  *      可见项累积在 ref 的 Set 里：IO 每次只给变化的那几条，不累积就会闪；
  *   3. 栏名常驻 DOM、靠 CSS 展开（不是 `display: none`），所以读屏与键盘用户也读得到；
  *      窄屏整列隐藏（`.home-index`，见 globals.css），那点宽度留给正文 ——

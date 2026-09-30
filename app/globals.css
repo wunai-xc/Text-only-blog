@@ -175,7 +175,8 @@
      注意：顶栏改版后**不再**用它 —— 参考稿的顶栏是通栏（品牌在左、图片位贴右），
      只有页脚与 .page 还用它。 */
   --frame-width: 48rem;
-  /* 首页（第 9 项）：八栏并排要更宽；--home-head-room 是吸附时给吸顶顶栏让出的高度，
+  /* 首页（第 9 项）：一栏一屏，内容最大宽度用 --home-width；
+     --home-head-room 是吸附时给吸顶顶栏让出的高度，
      它同时用于 html 的 scroll-padding-top（吸附位置与锚点跳转都靠它避开顶栏）。
      它**由 --header-h 推出来**，所以顶栏高度变了这里不用跟着调（多出的 0.5rem 是留白）。 */
   --home-width: 68rem;
@@ -1225,17 +1226,25 @@
 
   /* ==========================================================
      6c. 首页 —— 八栏吸附（第 9 项）
-     版面表（顺序 / 并排 / 栏号 / 文案）在 lib/home.ts，这里只管排版与吸附。
+     版面（顺序 / 栏号 / 文案）在 lib/home.ts，这里只管排版与吸附：
+     一栏一屏（`.home-block` 自己就是吸附块）、没有卡片外壳、吸附用原生 scroll-snap。
      约定第 5 条：装饰与动效都不抢字 —— 所以吸附用原生 scroll-snap（没有 JS 滚动、
      没有转场动画），侧边指示器只是一列普通锚点。
      ========================================================== */
 
   /* 吸附只在这个页面生效：`:has()` 认领「页面上有 .home-flow」这件事 ——
      不用给 <html> 挂 class，自然也不需要 JS。
+     用 `mandatory` **配上「每一栏都正好一屏」**（见下面的 .home-block）：吸附点只落在整屏的
+     位置上，停在哪一栏都是栏头，不会停在两栏中间（原先的 `proximity` + 并排行
+     会「有时吸、有时不吸」，看起来就是乱的）。
+     **不加 `scroll-snap-stop: always`**：那会把一次滑动锁成一栏，手机上要去最后一栏得滑七次；
+     吸附点本来就是整屏，落到哪都是栏头，不需要再锁。
      scroll-padding-top 让吸附位置**与锚点跳转**都避开吸顶顶栏：两件事都按这个偏移算，
-     所以侧边指示器点哪一栏，栏头都会停在顶栏下面那条线上。 */
+     所以侧边指示器点哪一栏，栏头都会停在顶栏下面那条线上。
+     ⚠️ 吸附是给整个文档的，所以**文档末尾也必须有一个吸附点**，否则页脚会被吸回去、
+     永远读不到 —— 见下面「页脚 = 首页的最后一屏」那一条。 */
   html:has(.home-flow) {
-    scroll-snap-type: y proximity;
+    scroll-snap-type: y mandatory;
     scroll-padding-top: var(--home-head-room);
   }
 
@@ -1256,48 +1265,70 @@
   .home-flow {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    /* 一栏一屏：行与行之间不留缝（留缝会让「一屏 = 一栏」算不准，滚动时也会看见空档） */
+    gap: 0;
     width: 100%;
     max-width: var(--home-width);
     margin-inline: auto;
-    padding: 2.5rem 1.5rem 4rem;
+    /* 上下不给内边距，只在顶部补一段与吸附让位**同一个值**的留白（--home-head-room）：
+       顶栏是吸顶的，会盖住文档最上面那一截 —— 补上它，第一栏正好从顶栏下面那条线开始，
+       于是「第 N 栏 = 往上翻 N − 1 屏」对每一栏都成立（补 --header-h 的话第一栏会差 0.5rem）。
+       底部不留：最后一栏收在文档末尾，紧接着就是页脚。 */
+    padding: var(--home-head-room) 1.5rem 0;
   }
 
-  /* 一个「吸附块」= 一行（一栏或并排两栏）：
-     宽屏上至少一屏高（减去顶栏那一段），滚到这里就停住。 */
-  .home-row {
-    display: grid;
-    gap: 1.25rem;
-    min-height: calc(100svh - var(--home-head-room));
-    padding-block: 1rem 1.5rem;
+  /* 一栏 = 一屏 = 一个吸附块 + 一个**自己的滚动区**。
+     **没有卡片效果**：不是 .panel，没有边框 / 圆角 / 底色 / 阴影 ——
+     整页同一个底色，一屏就是一块版面，靠吸附与栏头区分，不靠框。
+     高度是**定高**（一屏减去顶栏让位），不是 min-height：内容比一屏多时在这一栏**内部**滚，
+     栏本身仍然正好一屏 —— 吸附点因此永远落在整屏的位置（这是「吸附不乱」的前提）；
+     字号档调大、文章卡片多一张，也不会把版面顶歪。
+     滚动条不画（scrollbar-width + ::-webkit-scrollbar）：栏内滚动是「一栏一屏」的实现细节，
+     不该在版面上多出一条竖线。滚到底继续滑会照常交给页面（不写 overscroll-behavior，
+     默认就会链到外层，然后吸附到下一栏）。 */
+  .home-block {
+    height: calc(100svh - var(--home-head-room));
+    padding: 1.5rem 0;
+    overflow-y: auto;
+    scrollbar-width: none;
     scroll-snap-align: start;
   }
 
-  @media (min-width: 60rem) {
-    .home-row[data-pair="true"] {
-      grid-template-columns: 1fr 1fr;
-    }
+  .home-block::-webkit-scrollbar {
+    width: 0;
+    height: 0;
   }
 
-  /* 窄屏：不强制一屏高（内容折行后会变得很高，硬撑一屏反而难读），只保留「吸附到行首」。
-     顶栏改版后**不再需要**给它一档更高的让位高度：顶栏是三段固定高（--header-h），
-     窄屏只会换一档更矮的值，不会折行变高，--home-head-room 跟着它自动走。 */
-  @media (max-width: 60rem) {
-    .home-row {
-      min-height: auto;
-      padding-block: 0.5rem 1rem;
-    }
-  }
-
-  /* 一栏：面板块（.panel 给边框 / 圆角 / 底色 / 阴影），内部按内容排。
-     宽屏上它会撑满这一屏（行高就是 100svh 减去顶栏那一段），内容垂直居中 ——
-     于是「一屏一张图纸」的观感是稳的，短栏也不会顶在上边留一大片空。 */
-  .home-block {
+  /* 栏内容：短的时候在这一屏里垂直居中；长过一屏就按正常文档流从上往下排，由上面那个
+     滚动区滚出来。**居中放在这一层**是为了绕开那个老坑：在滚动区自己身上写
+     justify-content: center，溢出的那一头（栏头）会永远滚不到 —— 换成这一层撑高度就不会。 */
+  .home-block-body {
     display: flex;
     flex-direction: column;
-    justify-content: center;
     gap: 0.7rem;
-    padding: 1.4rem 1.5rem 1.6rem;
+    justify-content: center;
+    min-height: 100%;
+  }
+
+  /* 页脚 = 首页的最后一屏：吸附是 mandatory，文档末尾没有吸附点的话，滑到页脚会被吸回
+     最后一栏，页脚（导航 / 联系方式 / 版权行）就永远读不到。给它一个 `end` 对齐 ——
+     滚到文档末尾本身就是一个合法的停靠点。 */
+  html:has(.home-flow) .site-footer {
+    scroll-snap-align: end;
+  }
+
+  /* 减少动效的人不吸附，那么「一屏定高 + 栏内滚动」就没有意义了（没有吸附，定高只会把人
+     困在一栏里往下翻不动）—— 放开成一条普通文档：自然高度，页脚照旧在末尾。 */
+  @media (prefers-reduced-motion: reduce) {
+    .home-block {
+      height: auto;
+      min-height: calc(100svh - var(--home-head-room));
+      overflow-y: visible;
+    }
+
+    .home-block-body {
+      min-height: 0;
+    }
   }
 
   /* 栏头：栏号 + 一句小字 + 一条虚线拉到右边（图纸上那种标题栏的气质）。
@@ -2885,12 +2916,19 @@
     display: none;
   }
 
-  /* 第 9 项的首页：吸附块与侧边指示器都是屏幕上的事，纸上要的是一整条连续的文档 */
+  /* 第 9 项的首页：吸附块与侧边指示器都是屏幕上的事，纸上要的是一整条连续的文档
+     （所以一屏定高与栏内滚动都要放开，否则打印只会印出每栏的第一屏） */
   .home-index {
     display: none;
   }
 
-  .home-row {
+  .home-block {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .home-block-body {
     min-height: 0;
   }
 

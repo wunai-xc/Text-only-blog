@@ -116,7 +116,7 @@
 │  ├─ icons.ts               用到的 MDI 图标（第 7 项；本地打包的图标数据，运行时不发请求）
 │  ├─ prefs.ts               阅读偏好（第 7 项：宽度/字号/行距三档，写 --reading-* 令牌 + 首帧脚本）
 │  ├─ decor.ts               装饰层（第 8 项：路径 → 图纸编号 + 图案名 + 图签文字，零依赖）
-│  ├─ home.ts                首页版面与文案（第 9 项：八栏顺序 / 并排 / 栏号 / 中英文案）
+│  ├─ home.ts                首页版面与文案（第 9 项：八栏顺序 / 栏号 / 中英文案；首页改版后一栏一屏）
 │  ├─ list.ts                列表页（第 10/11 项：筛选状态 / 三档密度 / 纯函数 / 地址栏读写 / 中英文案，零依赖）
 │  ├─ article.ts             文章页（第 12 项：目录缩进与阈值 / 上下篇 / typography 字段 / giscus 映射 / 中英文案，零依赖）
 │  ├─ pages.ts               其余页面（第 13 项：标签 / 分类 / 归档 / 搜索 / 关于 / 友链 / 设置的文案 + 字号档 + 地址，零依赖）
@@ -179,7 +179,7 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 | 6 | 设计系统 | `[x]` | 护眼纸质底色、蓝图草图背景层、亮/暗/纸三套令牌（`lib/theme.ts` + `app/globals.css`） |
 | 7 | 框架 UI | `[x]` | 顶栏（对齐 wunai-blog）、Footer（左下角设置图标）、设置中心 |
 | 8 | 装饰与动效 | `[x]` | `lib/decor.ts`：路径 → 图纸（图案 / 编号 / 图签），图案全在 CSS 里；换页纸面重铺一次 + 顶栏光标闪烁 |
-| 9 | 首页 | `[x]` | `lib/home.ts`：八栏顺序 / 并排 / 栏号 / 文案；吸附用原生 scroll-snap，侧边指示器是锚点 + IntersectionObserver |
+| 9 | 首页 | `[x]` | `lib/home.ts`：八栏顺序 / 栏号 / 文案（首页改版后：一栏一屏、无并排、无卡片外壳；每栏定高一屏、内容多了在栏内滚）；吸附用原生 scroll-snap 的 `y mandatory`，侧边指示器是锚点 + IntersectionObserver |
 | 10 | 列表页 | `[x]` | `app/[lang]/posts/` + `lib/list.ts`：搜索（懒读 `/search-index.json`）、筛选（标签/分类/年份/排序）、语言切换、密度切换、AI 默认隐藏 |
 | 11 | 文章卡片 | `[x]` | `components/list/PostCard.tsx`：紧凑 / 适中 / 内容 三档；首页第 2 栏与列表页共用同一个组件 |
 | 12 | 文章页 | `[x]` | `/zh/posts/<slug>/`：构建期渲染全文、悬浮 TOC（含上下篇）、右侧细进度条带百分比、圆形回顶、giscus 评论 |
@@ -561,12 +561,20 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 `components/home/` 下 10 个组件（8 栏 + 栏头 + 侧边指示器）、`app/globals.css` 的「6c. 首页」一节。
 这一项把第 1 项的占位首页换成了**八栏吸附式首页**。
 
+> ⚠️ **首页后来改版过一次**（站长的要求：一个栏目占一屏、去掉栏目卡片、吸附别乱）：
+> 现在是一栏一屏（`.home-block` 自己就是吸附块）、`mandatory` 吸附、**没有并排、没有卡片外壳**，
+> 版面表也从带「哪两栏并排」的 `HOME_ROWS` 简化成 `HOME_ORDER` 一维数组。
+> 而且每栏是**定高一屏**（`height` 而不是 `min-height`）：内容比一屏多就在栏内滚，栏本身仍是一屏，
+> 吸附点永远落在整屏位置；文档末尾的页脚也补了一个吸附点，不然会被吸回去。
+> 本节剩下那些「5 行 / 两栏并排 / `proximity`」的描述是**第 9 项落地当时**的形态，
+> 要理解现在的版面请直接看后面那节「**首页改版 —— 一栏一屏**」。
+
 - **八栏与顺序（作者给的清单 + 顺序优化）**：
 
   | 栏 | 内容 | 数据来源 |
   | --- | --- | --- |
   | 01 本站介绍 | 站名 + 自述（编辑此处）+ 三个入口 | 静态文案；RSS 是第 5 项的真实产物 |
-  | 02 文章卡片 | 最多 6 篇，置顶优先 | `getHomePosts` |
+  | 02 文章卡片 | 最多 4 篇（首页改版后从 6 收到 4：一栏一屏，卡片多了就超过一屏），置顶优先 | `getHomePosts` |
   | 03 数据统计 | 字数 / 累计阅读 / 首次发布 / 最近更新 / 本次构建（+ 有草稿时显示草稿数） | `getContentStats` |
   | 04 更新日志 | 最近 5 条 git 提交 | `getChangelog(5)` |
   | 05 站内内容 | 文章 / 专题 / 标签 / 题材 / 语言 | `getContentStats` + `LANGS` |
@@ -587,7 +595,8 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
   - `:has()` 认领「这一页有首页容器」这件事 —— 所以**不用给 `<html>` 挂 class、也不需要 JS**，
     其它页面完全不受影响；浏览器不支持 `:has()` 时只是不吸附（优雅降级）。
   - 用 `proximity` 而不是 `mandatory`：`mandatory` 在内容比一屏高的行上会把中间的位置锁死，
-    读长一点的栏会很难受。
+    读长一点的栏会很难受。（⚠️ 这两条讲的是当时的 `proximity` + 并排行；
+    首页改版后是 `mandatory` + 一栏一屏，理由见后文那节，`scroll-padding-top` 那部分不变。）
   - `scroll-padding-top` 同时管**吸附位置**与**锚点跳转**：侧边指示器点哪一栏，
     栏头都会停在顶栏下面那条线上。这个偏移是令牌 `--home-head-room` ——
     它**由顶栏高度推出来**（`calc(var(--header-h) + 0.5rem)`，顶栏改版后立的规矩），
@@ -595,12 +604,14 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
     （原因是顶栏改成了固定高、不再折行变高，见后文「顶栏改版」一节）。
   - 宽屏每行至少 `100svh - 顶栏`，面板撑满整行、内容垂直居中（「一屏一张图纸」）；
     窄屏 `min-height: auto`（内容折行后会很高，硬撑一屏反而难读）。
+    （⚠️ 首页改版后：一栏一屏、**没有面板**、窄屏也照旧一屏一栏 —— 见后文那节。）
   - `prefers-reduced-motion: reduce` 的人：不做平滑滚动、也**关掉吸附**（吸附在部分浏览器里
     本身就是一段动画）。打印时同样取消（`@media print` 里 `min-height: 0`）。
 - **侧边指示器**（`components/home/HomeIndex.tsx`）：固定右侧的一列**真锚点**
   （`<a href="#home-…">`）—— 所以没有 JS 也能跳；滚动动画交给 CSS 的 `scroll-behavior: smooth`。
   高亮用 `IntersectionObserver`，判定带取「正跨过视口中线」那一带（`rootMargin: -45% 0 0 -45%`）：
-  **并排的两栏会一起亮**（它们确实在同一屏上，这是预期）。可见项累积在 `useRef` 的 Set 里 ——
+  **并排的两栏会一起亮**（它们确实在同一屏上，这是预期；首页改版后改成了一栏一屏，
+  所以通常只有当前那一栏亮）。可见项累积在 `useRef` 的 Set 里 ——
   IO 每次只给变化的那几条，不累积会闪。栏名常驻 DOM、靠 CSS 展开（不是 `display: none`），
   读屏与键盘用户都读得到；窄屏整列隐藏，那点宽度留给正文（每栏的栏号本来就印在栏头）。
   层序 `z-index: 18`：低于顶栏（20）与设置抽屉（50），抽屉打开时它被盖住。
@@ -1304,6 +1315,56 @@ curl -s -H "Authorization: Bearer $TOKEN" \
   右下角（文章页除外）应当只有图签那两行小字；`view-source` 里
   `data-decor="plain"`、`data-route` 仍然是 `home` / `posts` / `article`……
 
+### 首页改版 —— 一栏一屏（去掉并排与卡片外壳）
+
+**站长要的是**：首页是多栏目页面，**一个栏目占一屏**，栏目不要卡片效果，吸附不要乱。
+原来的实现正好反着：八栏被拼成 5 行（宽屏两栏并排）、吸附是 `proximity`（有时吸有时不吸）、
+每栏还套着 `.panel`（边框 / 圆角 / 阴影 / 面板底色）。三处都改掉了：
+
+- **一栏一屏**：`lib/home.ts` 的 `HOME_ROWS`（带 `pair` 的二维表）换成
+  `HOME_ORDER: HomeBlockId[]`（一维数组，顺序即版面），页面直接
+  `HOME_ORDER.map(...)` 渲染成 8 个 `<section class="home-block">` —— 不再有 `.home-row` 这层
+  包装，也**不再有并排**（并排等于把两栏塞进同一屏，与「一栏一屏」直接冲突）。
+  `homeNumber()` 仍从版面推 01~08，`HOME_BLOCK_COUNT` 跟着走。
+- **去掉栏目卡片效果**：`<section>` 不再带 `panel` 类 —— 没有边框、圆角、阴影、面板底色，
+  整页同一个底色。一屏就是一块版面，靠「吸附 + 栏头（栏号 + 虚线）」区分，不靠框。
+- **吸附改成 `mandatory`，而且每一栏都**正好一屏**：`.home-block` 自己就是吸附块
+  （`height: calc(100svh - var(--home-head-room))`、`scroll-snap-align: start`），
+  `html:has(.home-flow)` 用 `scroll-snap-type: y mandatory` —— 吸附点只落在整屏的位置上。
+- **第二轮修的是「还不够确定」那三处**（第一轮写成 `min-height` + `scroll-snap-stop: always`，
+  仍然会乱，所以又改了一遍）：
+  1. `min-height` → **定高 `height` + `overflow-y: auto`**：栏比一屏高时（手机上的第 2 / 6 栏）
+     原来的写法把整栏拉长，吸附区跟着比一屏高 —— 吸附区比视口高时，滚动中途没有合法停靠点，
+     一松手就被拽回栏首或下一栏，这就是「混乱吸附」的根。改成定高一屏 + 内容**在栏内滚**之后，
+     每个吸附区都正好一屏。栏内的滚动条**不画**（`scrollbar-width: none` + `::-webkit-scrollbar`）：
+     它是实现细节，不该在版面上多一条竖线；滚到底会照常链到外层。
+  2. `scroll-snap-stop: always` **去掉了**：吸附点已经是整屏，落到哪都在栏头上；
+     留着它只会把一次滑动锁成一栏，手机上去最后一栏得滑七次。
+  3. **页脚补一个吸附点**：`html:has(.home-flow) .site-footer { scroll-snap-align: end }`。
+     吸附是给整个文档的，文档末尾没有吸附点的话，滑到页脚会被吸回最后一栏 ——
+     页脚（七个入口 / 联系方式 / 版权行）就永远读不到。这是 mandatory 吸附最常见的坑，
+     不是审美问题。
+- **居中从 `.home-block` 挪到内层 `.home-block-body`**（`min-height: 100%` + 居中 + 0.7rem 间距）：
+  直接在滚动区上写 `justify-content: center`，一旦内容溢出，栏头那一头就**永远滚不到**
+  （不用 `justify-content: safe center` 那种新语法，多一层就绕开了）。页面里因此多了一个
+  `<div class="home-block-body">`，八个栏目共用同一层。
+- **两条容易漏的尺寸细节**：
+  1. `.home-flow` 的 `gap` 与上下内边距都去掉了（留缝会让「一屏 = 一栏」算不准），
+     只在顶部补一段**与吸附让位同值**的留白（`--home-head-room`）—— 顶栏是吸顶的，
+     会盖住文档最上面那一截；补同值才保证「第 N 栏 = 往上翻 N − 1 屏」对每一栏都成立
+     （第一轮补的是 `--header-h`，第一栏与其余七栏差 0.5rem）；
+  2. 窄屏那档 `min-height: auto`（原来为了让手机上好读）**删掉了**：一栏一屏是这次的要求，
+     手机上也一样。
+- **文章栏的条数跟着收了一档**：`app/[lang]/page.tsx` 的 `HOME_POST_LIMIT` 6 → 4 ——
+  一栏一屏之后，卡片多到超过一屏就白搭（手机上尤其明显）。想要更多，改那一个数字。
+- **印刷与减少动效**：`@media print` 里 `.home-block { height: auto; min-height: 0; overflow: visible }`
+  （纸上是连续文档，不然只印得出每栏的第一屏）；`prefers-reduced-motion: reduce` 的人不吸附、
+  不做平滑滚动，同时也把一屏定高放开（`height: auto` + `min-height: 一屏` + `overflow: visible`）——
+  没有吸附还定高，只会把人困在一栏里往下翻不动。
+- **验收**（也在第 8 节那组里）：一次滑动应当正好换一栏、栏头停在顶栏下面；
+  每一栏里没有框、没有底色块；手机上第 2 / 6 栏在栏内滚（滚动条不画、滚到底继续滑会换栏）；
+  滚到最底部能读到整个页脚。
+
 ### 跨项待办（做到对应项时顺手勾掉）
 
 - **第 7 项（框架 UI / 设置中心）—— 已完成**，这条留档并转成「后续项要用到的东西」：
@@ -1314,12 +1375,14 @@ curl -s -H "Authorization: Bearer $TOKEN" \
      档位值就定在 `READING_WIDTHS / SIZES / LEADINGS` 里（34/42/52rem、0.98/1.0625/1.18rem、1.6/1.85/2.1）；
   3. ✅ 顶栏、页脚、抽屉全部用令牌与 `.panel`，没有写死颜色，`dark:` 变体一个也没有。
 - **第 9 项（首页）—— 已完成**，这条留档并转成「后续项要用到的东西」：
-  1. 首页的**版面与文案只有一个事实来源**：`lib/home.ts` 的 `HOME_ROWS`（哪几栏、哪两栏并排）
-     与 `HOME_TEXT`（中英各一份）。`app/[lang]/page.tsx` 只负责「把行渲染成 <section> +
-     把数据传进去」，**不要**在页面里调顺序或加栏 —— 加一栏 = 表里加一行 + 一个组件 + `blocks` 里补一条
-     （`Record<HomeBlockId, ReactNode>` 是穷尽的，漏了 TypeScript 直接报错）；
+  1. 首页的**版面与文案只有一个事实来源**：`lib/home.ts` 的 `HOME_ORDER`（八栏的顺序；
+     首页改版前那张带「哪两栏并排」的 `HOME_ROWS` 已经不需要了，要改顺序就改这一个数组）
+     与 `HOME_TEXT`（中英各一份）。`app/[lang]/page.tsx` 只负责「按顺序渲染成 <section> +
+     把数据传进去」，**不要**在页面里调顺序或加栏 —— 加一栏 = 数组里加一个 id + 一个组件 +
+     `blocks` 里补一条（`Record<HomeBlockId, ReactNode>` 是穷尽的，漏了 TypeScript 直接报错）；
   2. 栏号（01~08）由 `homeNumber()` 从版面表推出来，**别在文案里手写编号**；
-  3. 吸附用 `html:has(.home-flow)` 那一条 CSS（不认 `<html>` 上的 class，也不需要 JS）；
+  3. 吸附用 `html:has(.home-flow)` 那一条 CSS（不认 `<html>` 上的 class，也不需要 JS；
+     首页改版后是 `y mandatory` + `.home-block` 一栏一屏）；
      要加新页面而**不想**让它吸附，什么都不用做 —— `:has()` 只认领首页那个容器；
   4. ✅ 第 11 项（文章卡片三档密度）已落地：卡片是 `components/list/PostCard.tsx`，
      `HomePostCards` 已经换成它 —— 首页用的是**适中档**（与这一栏原来的样子一致），
@@ -1796,6 +1859,26 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
   3. **查看源代码**：那个 div 上应当是 `data-decor="plain" data-route="home"`（首页）——
      `data-route` 仍然随页面变（`posts` / `article` / `tags`…），`data-decor` 全是 `plain`。
      想恢复图案就把 `lib/decor.ts` 的 `DECOR_PATTERNS` 改成 `true`（图案与编号都还在）。
+- **首页改版（一栏一屏）也没在本机看过**，请按这几条看：
+  1. **一次滑动正好换一栏**：不会停在两栏之间、也不会一口气跨过好几栏；
+     点右侧那个指示器（宽屏才有）或直接改地址栏的 `#home-…` 锚点，
+     栏头应当停在顶栏下面那条线上（`scroll-padding-top` 管这件事）。
+     连滑两下、快速甩一下也应当落在某一栏的栏头上，不会歪在半屏。
+  2. **栏目里没有框、没有底色块**：整页同一个底色，只有栏头那条虚线在做分隔 ——
+     这就是「栏目卡片效果去掉」的样子；如果哪里还有一块面板底色，把截图发我（那就是漏改了一处）。
+     （栏**内部**的虚线小格、对比框、文章卡片是内容的一部分，不是栏目外壳，这次没动。）
+  3. **每栏占一屏**：`100svh − 顶栏让位`，内容短就在这一屏里垂直居中、长就多出一屏吗 ——
+     不，长的话**在栏内滚**（栏本身仍是一屏）。第一栏从顶栏下面开始、底部落在视口下沿。
+     手机上（≤60rem）也一样 —— 改版前手机上是 `min-height: auto`。
+  4. **手机上第 2 栏（文章）与第 6 栏（阅读改善）**：内容比一屏多，应当在栏内滚 ——
+     滚动条**故意不画**（看版面上不该多一条竖线）；滚到栏底继续滑会换到下一栏。
+     如果「滑不动」或者「栏内容被裁掉一截滚不出来」，把当时那一屏截图发我。
+  5. **滚到最底部能读到整个页脚**（七个入口 / 联系方式 / 版权行）—— 页脚也补了一个吸附点；
+     如果滑到页脚又被弹回最后一栏，说明这个浏览器的吸附实现不一样，告诉我。
+  6. **系统开「减少动效」时**：不吸附、不做平滑滚动，同时也把一屏定高放开 ——
+     一路自由滚，是普通的长文档（刻意如此）。
+  7. **打印预览**：八栏应当是一条连续文档（`.home-block { height: auto; min-height: 0; overflow: visible }`），
+     不再一屏一栏、也不该只印出每栏的第一屏。
 - **第 8 项（装饰与动效）同样没在本机跑过浏览器**，图案的几何与层叠只能靠推演，请按顺序看：
   1. **十一张图纸现在都能真的看到 —— 但要先把开关打开**（`lib/decor.ts` 的 `DECOR_PATTERNS`）：
      默认是纯色背景，所以这一条现在看不到东西；打开之后编号 01~11 连续（对照表在第 6 节
@@ -1842,3 +1925,4 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
 | 本次提交 | **第 14 项交付（差锁文件）**：新增 `README.md` —— 站点是什么、快速开始（五个脚本 + 打开 `/zh/` 后先做的三件事）、写第一篇短文（YAML / TOML 两种 frontmatter 各一段）、部署到 Workers 静态资源（含 Cloudflare 构建设置与 GitHub Actions 的 Secrets）、目录结构概要、「需要你亲自填的地方」六行清单（每行都写了留空会发生什么）、如实说明的验证状态、三条不能破的约定（完整十条指向本台账）。README 里的事实逐条对着源码核过（脚本名 / `wrangler.toml` / workflow 的 action 与 `command: deploy` / `lib/site.ts` 的 `SITE.description`·`CONTACT`·`COMMENTS`·`LINKS` / `lib/home.ts` 的 `intro.body`·`themes.demo`·`fonts.sample` / `lib/content.ts` 的 `COVER_DIRS`）。台账：进度表第 14 项改 `[~]`（README 与提交 ✅、锁文件 ⏳）、新增「14. 交付」小节、跨项待办里那条「第 14 项」重写成「只剩一件需要 shell 的事」、第 6 节关于 wrangler 的注解与第 8 节的口径同步。**本环境无 shell，锁文件（`bun.lock` / `package-lock.json`）没有生成**，手写等于编造依赖解析结果，留你在本机 `bun install` 后提交 |
 | 本次提交 | **顶栏改版 —— 对齐 wunai-blog 参考稿**（一次修订，不是新的第 15 项）：`components/SiteHeader.tsx` 重写成「品牌 / 友链 / 图片位」三段（品牌区＝外观按钮 + 大号站名 + 闪烁光标 + 两端对齐的小字行「wunai 是谁？ About…… / 全部文章 →」；友链＝图标 + 小字竖排、`margin-left: auto` 右靠；图片位＝`HEADER_IMAGE` 撑满顶栏高，留空时画虚线空位且尺寸与有图时一致）。新增 `components/HeaderIntro.tsx`（客户端：三段错开 90ms 淡入 + 标签页切后台时暂停光标；顺序是「默认可见 → JS 就绪后才淡入」，反过来会让禁用 JS 的读者看不到顶栏）。原先挂在顶栏的**七项导航、语言切换与内容统计搬到页脚**（`components/SiteFooter.tsx` 第一块；统计那行复用 i18n 里已有的 `statsPosts` / `statsWords` / `statsUpdated` / `statsEmpty`，没有第二份文案）—— 不搬就会有四个页面失去入口。`components/RouteLink.tsx` 新增可选 `title`，pending 态把自定义提示与「第 N 项落地」拼起来而不是盖掉它。`lib/site.ts` 新增 `HEADER_IMAGE`（`<img>` 而非 `next/image`：静态导出不优化图片、且构建期不校验文件存在）。`app/globals.css` 新增令牌 `--header-h`（5.5rem / ≤48rem 4.75rem / ≤30rem 4.5rem，**两档窄屏值必须留在未分层的位置**，写进 `@layer` 会被 `:root` 压过），`--home-head-room` 改成由它推导（删掉首页窄屏那档 8.5rem）；顶栏/页脚两节重写，删掉 `.site-header-inner` / `.site-brand` / `.site-logo` / `.site-caret` / `.site-nav` / `.site-nav-entry` / `.site-titleblock`，`--frame-width` 只剩页脚与 `.page` 用。台账同步：进度表下加「追加的一次修订」说明、目录树、第 7 项小节加改版指引、第 9 项里 `--home-head-room` 与「内容统计在哪」两处、新增「顶栏改版」一节、约定新增第 11 条（顶栏只放三段 + 高度只有 `--header-h` 一个来源 + 动效顺序不能反）并扩了第 2 条（图片位）、第 8 节新增 10 条验收清单（并修掉第 8 项验收里那句「只有两张图纸能对照」的过时说法）、第 9 节本行。README 同步：图片位进「需要你亲自填的地方」表、「完整的十条约定」改成十一条并加了指向「顶栏改版」一节的指引（第 1 节「只读文字」那一行的措辞后来又跟着「背景改成纯色」那次再改了一遍） |
 | 本次提交 | **背景改成纯色（图案层关掉）**（站长的要求）：`lib/decor.ts` 新增 `DECOR_PATTERNS = false`，`decorate()` 一律返回 `plain` —— 每页的 `data-decor` 都是 `plain`，纸面只剩 `<html>` 的 `--c-canvas`：没有细格 / 粗格、没有边缘淡出、没有虚线图框。七套图案与 `PATTERNS` 表**一行没删**（开关改成 `true` 即整套恢复）。CSS 补 `.blueprint[data-decor="plain"]::before { display: none }`（连边缘淡出也关掉，这一层真的什么都不画）。顺手修掉一处会被这次改动弄坏的判断：文章页右下角「图签让给回顶按钮」原来判 `data-decor="measure"`，纯色下永远不成立，已改成 **`data-route="article"`**。右下角图签（编号 + 页名）与换页那 0.32s 淡入**保留**（不是背景，随路径变的映射还在）。台账同步：第 8 项小节加「默认已关闭」指引、新增「背景改成纯色（图案层关掉）」一节、第 6 节的图纸对照表与第 8 节验收清单改写（第 8 项验收里那句「十一张图纸都能看到」改成「要先把开关打开」）、本行。README：第 1 节「只读文字」那一行改成「背景是一整块纯色」 |
+| 本次提交 | **首页改版 —— 一栏一屏**（站长的要求：一个栏目占一屏、去掉栏目卡片、吸附别乱）：`lib/home.ts` 的 `HOME_ROWS`（带 `pair` 的二维表）换成 `HOME_ORDER: HomeBlockId[]`（一维数组），页面直接按它渲染 8 个 `<section class="home-block">` —— 去掉 `.home-row` 包装、**去掉并排**、`<section>` 不再带 `panel`（没有边框 / 圆角 / 阴影 / 面板底色）。`.home-block` 自己就是吸附块（`min-height: calc(100svh - var(--home-head-room))` + `scroll-snap-align: start` + `scroll-snap-stop: always`），`html:has(.home-flow)` 的吸附从 `y proximity` 改成 **`y mandatory`**；`.home-flow` 去掉 `gap` 与上下内边距、顶部补一段 `--header-h` 的留白（顶栏吸顶会盖住文档最上面一截），窄屏那档 `min-height: auto` 删掉（手机上也一栏一屏）。`HOME_POST_LIMIT` 6 → 4（卡片多了会超过一屏）。`HomeIndex` / `page.tsx` / `lib/home.ts` 的注释与台账同步；打印仍把八栏摊成连续文档。台账：进度表第 9 项、目录树、第 9 项小节加改版指引与两处内联纠偏、新增「首页改版 —— 一栏一屏」一节、跨项待办里首页那条改成 `HOME_ORDER`、第 8 节新增 7 条验收清单。**同一提交内又修了一轮**（第一轮还是不够确定，会长说「混乱吸附」）：`.home-block` 从 `min-height` 改成**定高 `height: calc(100svh - var(--home-head-room))` + `overflow-y: auto`** —— 吸附区比视口高时滚动中途没有合法停靠点，一松手就被拽回去，这才是「吸附乱」的根；栏内滚动条不画。去掉 `scroll-snap-stop: always`（吸附点已经是整屏，留着只会把一次滑动锁成一栏）。补 `html:has(.home-flow) .site-footer { scroll-snap-align: end }`：文档末尾没有吸附点的话，mandatory 会把页脚吸回去、永远读不到。页面里每栏多一层 `<div class="home-block-body">`：居中挪进这一层 —— 在滚动区自身上写居中，溢出的那一头（栏头）会永远滚不到。`.home-flow` 顶部留白从 `--header-h` 改成 `--home-head-room`（与吸附让位同值，「第 N 栏 = 往上翻 N − 1 屏」才对每一栏成立）。`@media print` 与 `prefers-reduced-motion: reduce` 两处都放开定高与栏内滚动。台账同步：第 9 项那一节、第 8 节那 7 条验收按新做法改写、本行 |
