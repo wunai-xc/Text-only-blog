@@ -1240,6 +1240,13 @@ curl -s -H "Authorization: Bearer $TOKEN" \
   ⚠️ 那两条窄屏的媒体查询**必须留在令牌那一段（未分层）**：`@layer` 里的声明压不过未分层的
   `:root` 规则 —— 写进「6b. 框架 UI」那一层等于没写，表现是「手机上顶栏没变矮，也看不出为什么」。
   顺带删掉了首页窄屏那档 `--home-head-room: 8.5rem`（顶栏现在是固定高，不会再折行变高）。
+  改版时顺手把**最后两处手写的顶栏偏移**收进令牌：文章页悬浮目录的固定定位
+  （原 `top: 6.5rem` / `max-height: calc(100vh - 11rem)`，现在是
+  `calc(var(--header-h) + 1rem)` 与 `calc(100vh - var(--header-h) - 5.5rem)`，宽屏取值与原来一样）
+  与 `.article-body` 标题的兜底 `scroll-margin-top`（原写死 `5rem`，现在读 `--home-head-room`）；
+  加上首页的 `scroll-padding-top` 与文章页那条，全站已经没有手写的「顶栏让位高度」了 ——
+  `grep 'scroll-margin-top\|scroll-padding-top\|top: [0-9]' app/globals.css` 现在只剩百分比与
+  `top: 0` 那几个（与顶栏无关）。
 - **`--frame-width` 只剩页脚与 `.page` 用**：参考稿的顶栏是**通栏**（品牌在左、图片位贴右），
   不再与正文同宽，于是 `.site-header-inner` 那套「居中 + 限宽」连同 `.site-brand` / `.site-logo` /
   `.site-caret` / `.site-nav` / `.site-nav-entry` / `.site-titleblock` 一起删掉；

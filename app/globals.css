@@ -2191,8 +2191,8 @@
     max-width: calc(var(--reading-measure) + 3rem);
   }
 
-  /* 目录跳转时标题停在吸顶顶栏下面。顶栏高度只有一个事实来源：--home-head-room
-     （第 9 项起的叫法，窄屏会折行变高，见「6c. 首页」）。 */
+  /* 目录跳转时标题停在吸顶顶栏下面。顶栏高度只有一个事实来源：
+     --home-head-room（由 --header-h 推出来，顶栏改版后不再折行变高）。 */
   .article-page .article-body :is(h1, h2, h3, h4, h5, h6) {
     scroll-margin-top: var(--home-head-room);
   }
@@ -2297,13 +2297,16 @@
     .article-toc {
       position: fixed;
       z-index: 18;
-      top: 6.5rem;
+      /* 停在吸顶顶栏下面：顶栏高度只有一个事实来源（令牌 --header-h），
+         所以它变高变矮时这里自动跟着走，不手写 rem。下边留 1rem 呼吸。 */
+      top: calc(var(--header-h) + 1rem);
       left: 1.1rem;
       display: flex;
       flex-direction: column;
       gap: 0.45rem;
       width: 12rem;
-      max-height: calc(100vh - 11rem);
+      /* 上下各让出「顶栏 + 1rem」，再留 4.5rem 给视口底部 —— 目录太长时内部滚动 */
+      max-height: calc(100vh - var(--header-h) - 5.5rem);
       overflow-y: auto;
       padding: 0.7rem 0.8rem;
       border: 1px solid var(--c-rule);
@@ -2604,7 +2607,7 @@
     margin: 2rem 0 0.75rem;
     font-weight: 600;
     line-height: 1.35;
-    scroll-margin-top: 5rem; /* 目录跳转时别顶到屏幕上边 */
+    scroll-margin-top: var(--home-head-room); /* 目录 / 锚点跳转时别顶到吸顶顶栏下面 */
   }
 
   .article-body h1 {
