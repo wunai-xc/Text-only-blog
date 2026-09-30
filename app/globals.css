@@ -164,6 +164,11 @@
   --reading-leading: 1.85;
   /* 页面骨架（顶栏 / 页脚 / .page）共用的内容宽度，三者对齐才不歪 */
   --frame-width: 48rem;
+  /* 首页（第 9 项）：八栏并排要更宽；--home-head-room 是吸附时给吸顶顶栏让出的高度，
+     它同时用于 html 的 scroll-padding-top（吸附位置与锚点跳转都靠它避开顶栏）。
+     顶栏在窄屏会折行变高，所以 globals.css 的「6c. 首页」里给它一档更高的值。 */
+  --home-width: 68rem;
+  --home-head-room: 5.5rem;
 }
 
 /* ============================================================
@@ -927,6 +932,417 @@
   }
 
   /* ==========================================================
+     6c. 首页 —— 八栏吸附（第 9 项）
+     版面表（顺序 / 并排 / 栏号 / 文案）在 lib/home.ts，这里只管排版与吸附。
+     约定第 5 条：装饰与动效都不抢字 —— 所以吸附用原生 scroll-snap（没有 JS 滚动、
+     没有转场动画），侧边指示器只是一列普通锚点。
+     ========================================================== */
+
+  /* 吸附只在这个页面生效：`:has()` 认领「页面上有 .home-flow」这件事 ——
+     不用给 <html> 挂 class，自然也不需要 JS。
+     scroll-padding-top 让吸附位置**与锚点跳转**都避开吸顶顶栏：两件事都按这个偏移算，
+     所以侧边指示器点哪一栏，栏头都会停在顶栏下面那条线上。 */
+  html:has(.home-flow) {
+    scroll-snap-type: y proximity;
+    scroll-padding-top: var(--home-head-room);
+  }
+
+  /* 滚动动画只在允许动效时开（锚点跳转默认是「瞬间到位」，这里给一点平滑） */
+  @media (prefers-reduced-motion: no-preference) {
+    html:has(.home-flow) {
+      scroll-behavior: smooth;
+    }
+  }
+
+  /* 减少动效的人连吸附也一起关掉：吸附在部分浏览器里本身就是一段动画 */
+  @media (prefers-reduced-motion: reduce) {
+    html:has(.home-flow) {
+      scroll-snap-type: none;
+    }
+  }
+
+  .home-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    width: 100%;
+    max-width: var(--home-width);
+    margin-inline: auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+
+  /* 一个「吸附块」= 一行（一栏或并排两栏）：
+     宽屏上至少一屏高（减去顶栏那一段），滚到这里就停住。 */
+  .home-row {
+    display: grid;
+    gap: 1.25rem;
+    min-height: calc(100svh - var(--home-head-room));
+    padding-block: 1rem 1.5rem;
+    scroll-snap-align: start;
+  }
+
+  @media (min-width: 60rem) {
+    .home-row[data-pair="true"] {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  /* 窄屏：不强制一屏高（内容折行后会变得很高，硬撑一屏反而难读），
+     只保留「吸附到行首」；顶栏在窄屏折行更高，偏移也调大一档。 */
+  @media (max-width: 60rem) {
+    :root {
+      --home-head-room: 8.5rem;
+    }
+
+    .home-row {
+      min-height: auto;
+      padding-block: 0.5rem 1rem;
+    }
+  }
+
+  /* 一栏：面板块（.panel 给边框 / 圆角 / 底色 / 阴影），内部按内容排。
+     宽屏上它会撑满这一屏（行高就是 100svh 减去顶栏那一段），内容垂直居中 ——
+     于是「一屏一张图纸」的观感是稳的，短栏也不会顶在上边留一大片空。 */
+  .home-block {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.7rem;
+    padding: 1.4rem 1.5rem 1.6rem;
+  }
+
+  /* 栏头：栏号 + 一句小字 + 一条虚线拉到右边（图纸上那种标题栏的气质） */
+  .home-kicker {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--c-ink-subtle);
+    letter-spacing: 0.04em;
+  }
+
+  .home-no {
+    padding: 0.05rem 0.3rem;
+    border: 1px solid var(--c-rule-strong);
+    border-radius: 3px;
+    color: var(--c-accent);
+  }
+
+  .home-rule {
+    flex: 1 1 auto;
+    height: 0;
+    border-top: 1px dashed var(--c-rule);
+  }
+
+  .home-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+
+  .home-lead {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 1.3rem;
+    color: var(--c-ink);
+    overflow-wrap: anywhere;
+  }
+
+  .home-body {
+    margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.75;
+    color: var(--c-ink-muted);
+  }
+
+  .home-note {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.7;
+    color: var(--c-ink-subtle);
+  }
+
+  /* 示范段落：**故意读 --reading-* 令牌** —— 第 8 栏里改宽度 / 字号 / 行距，
+     这一段是当场看得见的那一块（正文在文章页，第 12 项才有）。
+     两栏（7 与 8）都用到它，所以它同时也演示「外观 × 度量」两件事。 */
+  .home-demo {
+    max-width: var(--reading-measure);
+    margin: 0;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--c-rule);
+    border-radius: var(--shape-radius);
+    background-color: var(--c-canvas);
+    font-size: var(--reading-size);
+    line-height: var(--reading-leading);
+  }
+
+  .home-tokens {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    line-height: 1.6;
+    color: var(--c-ink-subtle);
+    overflow-wrap: anywhere;
+  }
+
+  /* 数字格（第 3 栏数据统计 / 第 5 栏站内内容共用） */
+  .home-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+    gap: 0.55rem;
+  }
+
+  .home-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.45rem 0.55rem;
+    border: 1px dashed var(--c-rule);
+    border-radius: var(--shape-radius);
+  }
+
+  .home-cell-value {
+    font-family: var(--font-mono);
+    font-size: 1.05rem;
+    color: var(--c-accent);
+  }
+
+  .home-cell-label {
+    font-size: 0.7rem;
+    line-height: 1.5;
+    color: var(--c-ink-subtle);
+  }
+
+  /* 清单（第 4 栏更新日志 / 第 6 栏两条清单共用） */
+  .home-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.82rem;
+    line-height: 1.65;
+  }
+
+  .home-item {
+    display: flex;
+    align-items: baseline;
+    gap: 0.55rem;
+  }
+
+  .home-item-text {
+    flex: 1 1 auto;
+  }
+
+  .home-item-date,
+  .home-item-hash {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--c-ink-subtle);
+  }
+
+  .home-item-hash {
+    color: var(--c-accent);
+  }
+
+  /* 优化前 / 优化后（第 6 栏） */
+  .home-compare {
+    display: grid;
+    gap: 0.55rem;
+  }
+
+  @media (min-width: 40rem) {
+    .home-compare {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .home-compare-box {
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--c-rule);
+    border-radius: var(--shape-radius);
+    background-color: var(--c-canvas);
+    font-size: 0.86rem;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+  }
+
+  .home-compare-label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--c-ink-subtle);
+  }
+
+  /* 入口链接（第 1 栏）；pending 态由全局的 [data-pending="true"] 压暗 */
+  .home-entries {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+    font-size: 0.85rem;
+  }
+
+  .home-entry {
+    color: var(--c-accent);
+    text-decoration: none;
+  }
+
+  .home-entry:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* 文章卡片（第 2 栏）—— 紧凑的文字卡。
+     第 11 项（文章卡片三档密度）落地后，这里换成那边的「紧凑档」。 */
+  .home-posts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 0.7rem;
+  }
+
+  .home-post-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid var(--c-rule);
+    border-radius: var(--shape-radius);
+    background-color: var(--c-canvas);
+  }
+
+  .home-post-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 620;
+    line-height: 1.5;
+  }
+
+  .home-post-title a {
+    color: var(--c-ink);
+    text-decoration: none;
+  }
+
+  .home-post-title a:hover {
+    color: var(--c-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .home-post-meta,
+  .home-post-tags {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--c-ink-subtle);
+  }
+
+  .home-post-desc {
+    margin: 0;
+    font-size: 0.82rem;
+    line-height: 1.65;
+    color: var(--c-ink-muted);
+  }
+
+  /* 第 8 栏的三个字段（标签 + 选项按钮） */
+  .home-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .home-field-label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    color: var(--c-ink-muted);
+  }
+
+  /* 侧边指示器：固定的一列锚点（第 9 项）。
+     z-index 18 —— 低于顶栏（20）与设置抽屉（50），所以抽屉打开时它被盖住。 */
+  .home-index {
+    position: fixed;
+    z-index: 18;
+    top: 50%;
+    right: 0.7rem;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.3rem;
+  }
+
+  .home-index-note {
+    margin: 0 0 0.15rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--c-ink-subtle);
+    letter-spacing: 0.06em;
+  }
+
+  .home-index-entry {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.08rem 0.28rem;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--c-ink-subtle);
+    text-decoration: none;
+  }
+
+  .home-index-entry[aria-current="true"] {
+    color: var(--c-accent);
+  }
+
+  .home-index-no {
+    padding: 0 0.25rem;
+    border: 1px solid var(--c-rule);
+    border-radius: 3px;
+  }
+
+  /* 栏名平时收起来（不是 display: none —— 读屏与键盘用户照样读得到），悬停 / 聚焦展开 */
+  .home-index-name {
+    max-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .home-index-name {
+      transition: max-width 0.18s ease, opacity 0.18s ease;
+    }
+  }
+
+  .home-index-entry:hover .home-index-name,
+  .home-index-entry:focus-visible .home-index-name {
+    max-width: 10rem;
+    opacity: 1;
+  }
+
+  /* 窄屏不显示指示器：那点宽度留给正文。每栏的栏号本来就在栏头（不会不知道自己在哪一栏） */
+  @media (max-width: 64rem) {
+    .home-index {
+      display: none;
+    }
+  }
+
+  /* 指示器在场时，内容右边多留一点，别让字压到指示器底下 */
+  @media (min-width: 64.001rem) {
+    .home-flow {
+      padding-inline-end: 3.5rem;
+    }
+  }
+
+  /* ==========================================================
      7. 正文（.article-body）—— 第 3 项的渲染输出 + 第 6 项的令牌
      度量（宽度 / 字号 / 行距）走 --reading-* 令牌，不写死。
      ========================================================== */
@@ -1228,6 +1644,15 @@
     position: static;
     border-bottom: 0;
     backdrop-filter: none;
+  }
+
+  /* 第 9 项的首页：吸附块与侧边指示器都是屏幕上的事，纸上要的是一整条连续的文档 */
+  .home-index {
+    display: none;
+  }
+
+  .home-row {
+    min-height: 0;
   }
 
   html,

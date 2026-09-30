@@ -51,7 +51,7 @@
 │  ├─ not-found.tsx          404（导出为 out/404.html）
 │  └─ [lang]/
 │     ├─ layout.tsx          zh | en 静态参数 + 纠正 <html lang> + 全站框架（第 7 项的顶栏/页脚）
-│     └─ page.tsx            占位首页（第 9 项替换为八栏吸附）+ 开发态渲染自检
+│     └─ page.tsx            首页（第 9 项：八栏吸附，版面与文案在 lib/home.ts）+ 开发态渲染自检
 ├─ components/
 │  ├─ ArticleBody.tsx        正文容器：注入 HTML 并按需动态加载五类图表
 │  ├─ charts/
@@ -74,6 +74,17 @@
 │  ├─ LangSwitcher.tsx       语言切换（第 7 项；顶栏图签区与设置中心共用）
 │  ├─ SettingsDock.tsx       左下角齿轮 + 设置抽屉（第 7 项；Esc/遮罩关闭、锁滚动）
 │  ├─ SettingsCenter.tsx     设置中心内容（第 7 项；抽屉用，第 13 项的 /settings/ 页也能直接放）
+│  ├─ home/
+│  │  ├─ HomeBlockHead.tsx   栏头（栏号 + 一句小字 + 栏名；八栏共用，栏号由版面表推出）
+│  │  ├─ HomeIntro.tsx       第 1 栏 本站介绍（站名 / 自述 / 三个入口，RSS 是唯一现在可点的）
+│  │  ├─ HomePostCards.tsx   第 2 栏 文章卡片（正文页落地前渲染成不可点，见 ARTICLE_ROUTE）
+│  │  ├─ HomeStats.tsx       第 3 栏 数据统计（字数 / 累计阅读 / 首末发布 / 构建日期）
+│  │  ├─ HomeChangelog.tsx   第 4 栏 更新日志（构建期读 git log，最多 5 条，有空状态）
+│  │  ├─ HomeInventory.tsx   第 5 栏 站内内容（文章 / 专题 / 标签 / 题材 / 语言）
+│  │  ├─ HomeReading.tsx     第 6 栏 阅读改善（当场跑一遍 lib/typography.ts 的排版函数）
+│  │  ├─ HomeThemes.tsx      第 7 栏 外观切换（客户端；与设置中心同一套 API 与样式）
+│  │  ├─ HomeFonts.tsx       第 8 栏 字体设置（客户端；只写 --reading-* 三个令牌）
+│  │  └─ HomeIndex.tsx       侧边指示器（客户端；IntersectionObserver 高亮，锚点可无 JS 使用）
 │  └─ ServiceWorkerRegistrar.tsx  注册 /sw.js（生产构建才注册，dev 下只清旧 SW）
 ├─ content/
 │  ├─ README.md              写作规范
@@ -83,6 +94,7 @@
 │  ├─ icons.ts               用到的 MDI 图标（第 7 项；本地打包的图标数据，运行时不发请求）
 │  ├─ prefs.ts               阅读偏好（第 7 项：宽度/字号/行距三档，写 --reading-* 令牌 + 首帧脚本）
 │  ├─ decor.ts               装饰层（第 8 项：路径 → 图纸编号 + 图案名 + 图签文字，零依赖）
+│  ├─ home.ts                首页版面与文案（第 9 项：八栏顺序 / 并排 / 栏号 / 中英文案）
 │  ├─ toml.ts                自写 TOML 解析器（`+++` frontmatter 用）
 │  ├─ frontmatter.ts         双格式识别与字段归一化
 │  ├─ content.ts             内容加载 / 查询 API（只读盘，不渲染）
@@ -141,7 +153,7 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 | 6 | 设计系统 | `[x]` | 护眼纸质底色、蓝图草图背景层、亮/暗/纸三套令牌（`lib/theme.ts` + `app/globals.css`） |
 | 7 | 框架 UI | `[x]` | 顶栏（对齐 wunai-blog）、Footer（左下角设置图标）、设置中心 |
 | 8 | 装饰与动效 | `[x]` | `lib/decor.ts`：路径 → 图纸（图案 / 编号 / 图签），图案全在 CSS 里；换页纸面重铺一次 + 顶栏光标闪烁 |
-| 9 | 首页 | `[ ]` | 八栏吸附固定 + 侧边指示器（含顺序优化与并排排版） |
+| 9 | 首页 | `[x]` | `lib/home.ts`：八栏顺序 / 并排 / 栏号 / 文案；吸附用原生 scroll-snap，侧边指示器是锚点 + IntersectionObserver |
 | 10 | 列表页 | `[ ]` | 搜索、筛选（标签/时间/分类）、语言切换、密度切换、AI 筛选默认开启 |
 | 11 | 文章卡片 | `[ ]` | 紧凑 / 适中 / 内容 三档 |
 | 12 | 文章页 | `[ ]` | 悬浮 TOC（含上下篇）、右侧细进度条带百分比、圆形回顶、giscus 评论 |
@@ -491,6 +503,81 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
   所以这一项交出的纸面**是干净的网格**，不带颗粒；真机上试出来觉得需要再加，
   给 `.blueprint` 补第五层背景、透明度再压一档即可，改动只在 CSS 里。
 
+### 9. 首页 —— 已完成 ✅
+
+**交付物**：`lib/home.ts`（版面 + 文案的唯一事实来源）、`app/[lang]/page.tsx`（把版面渲染出来）、
+`components/home/` 下 10 个组件（8 栏 + 栏头 + 侧边指示器）、`app/globals.css` 的「6c. 首页」一节。
+这一项把第 1 项的占位首页换成了**八栏吸附式首页**。
+
+- **八栏与顺序（作者给的清单 + 顺序优化）**：
+
+  | 栏 | 内容 | 数据来源 |
+  | --- | --- | --- |
+  | 01 本站介绍 | 站名 + 自述（编辑此处）+ 三个入口 | 静态文案；RSS 是第 5 项的真实产物 |
+  | 02 文章卡片 | 最多 6 篇，置顶优先 | `getHomePosts` |
+  | 03 数据统计 | 字数 / 累计阅读 / 首次发布 / 最近更新 / 本次构建（+ 有草稿时显示草稿数） | `getContentStats` |
+  | 04 更新日志 | 最近 5 条 git 提交 | `getChangelog(5)` |
+  | 05 站内内容 | 文章 / 专题 / 标签 / 题材 / 语言 | `getContentStats` + `LANGS` |
+  | 06 阅读改善 | 同一句话的「优化前 / 优化后」+ 四条规则 + 已有能力清单 | 当场调 `transformCjkText` |
+  | 07 外观切换 | 四选一，带预览色块 | `lib/theme.ts` |
+  | 08 字体设置 | 宽度 / 字号 / 行距三组 + 现场示范段落 | `lib/prefs.ts` |
+
+  **只动了两处顺序**：把「文章」从第八提到第二（读者是来读文章的）；把两两相关的栏并成一行 ——
+  「数据统计 + 更新日志」（都在说「这里还在长」）、「站内内容 + 阅读改善」（一个说「有多少」、
+  一个说「怎么读得舒服」）、「外观切换 + 字体设置」（偏「玩」的两栏，放最后不挡阅读路径）。
+  于是八栏排成 **5 行**：宽屏两栏并排、窄屏上下堆叠。
+- **版面与文案只有一个事实来源**（`lib/home.ts`）：`HOME_ROWS`（哪几栏、哪两栏并排）+
+  `HOME_TEXT`（中英各一份）。`homeNumber()` 从版面表推出 01~08 —— 调顺序时**不会**出现
+  「编号还对、内容已经换了」的错位。页面里那个 `Record<HomeBlockId, ReactNode>` 是穷尽的：
+  加了栏却忘了写组件，TypeScript 直接报错。
+- **吸附（作者要的「吸附固定」）全部交给 CSS，没有一行 JS 滚动**：
+  `html:has(.home-flow) { scroll-snap-type: y proximity; scroll-padding-top: var(--home-head-room) }`。
+  - `:has()` 认领「这一页有首页容器」这件事 —— 所以**不用给 `<html>` 挂 class、也不需要 JS**，
+    其它页面完全不受影响；浏览器不支持 `:has()` 时只是不吸附（优雅降级）。
+  - 用 `proximity` 而不是 `mandatory`：`mandatory` 在内容比一屏高的行上会把中间的位置锁死，
+    读长一点的栏会很难受。
+  - `scroll-padding-top` 同时管**吸附位置**与**锚点跳转**：侧边指示器点哪一栏，
+    栏头都会停在顶栏下面那条线上。这个偏移是令牌 `--home-head-room`（宽屏 5.5rem、
+    窄屏 8.5rem —— 顶栏在手机上会折行变高）。**顶栏高度变了就调这一个值。**
+  - 宽屏每行至少 `100svh - 顶栏`，面板撑满整行、内容垂直居中（「一屏一张图纸」）；
+    窄屏 `min-height: auto`（内容折行后会很高，硬撑一屏反而难读）。
+  - `prefers-reduced-motion: reduce` 的人：不做平滑滚动、也**关掉吸附**（吸附在部分浏览器里
+    本身就是一段动画）。打印时同样取消（`@media print` 里 `min-height: 0`）。
+- **侧边指示器**（`components/home/HomeIndex.tsx`）：固定右侧的一列**真锚点**
+  （`<a href="#home-…">`）—— 所以没有 JS 也能跳；滚动动画交给 CSS 的 `scroll-behavior: smooth`。
+  高亮用 `IntersectionObserver`，判定带取「正跨过视口中线」那一带（`rootMargin: -45% 0 0 -45%`）：
+  **并排的两栏会一起亮**（它们确实在同一屏上，这是预期）。可见项累积在 `useRef` 的 Set 里 ——
+  IO 每次只给变化的那几条，不累积会闪。栏名常驻 DOM、靠 CSS 展开（不是 `display: none`），
+  读屏与键盘用户都读得到；窄屏整列隐藏，那点宽度留给正文（每栏的栏号本来就印在栏头）。
+  层序 `z-index: 18`：低于顶栏（20）与设置抽屉（50），抽屉打开时它被盖住。
+- **两栏交互件与设置中心共用一套东西**（不重写第二份）：
+  - 外观：`lib/theme.ts` 的 `THEME_CHOICES / THEME_LABELS / setThemeChoice / subscribeTheme`
+    + `.settings-opt` 与 `.theme-chip` 预览色块；顺手把设置中心里那张「预览色块格数」表
+    挪进 `lib/theme.ts`（`THEME_CHIP_DOTS`），两处现在共用一份；
+  - 字体：`lib/prefs.ts` 的选项表与 `setReadingPrefs`，落点仍是那三个 `--reading-*` 令牌
+    （约定第 8 条：阅读偏好只写令牌）；两处都把「只改一项」写成 `Partial<ReadingPrefs>`
+    而不是 `as` 断言。
+  - 首页第 7/8 栏都多放了一段**示范文字**（`.home-demo`，读 `--reading-size` / `--reading-leading`）：
+    改外观或改度量，当场就能看见 —— 不必等到第 12 项的文章页。
+- **第 3 栏「访问数据统计」的实话**：纯静态站没有后端，也就没有真实浏览量。这一栏给的是
+  **构建期数字**（字数 / 累计阅读时长 / 首末发布日期 / 本次构建日期），并在栏内写明要接
+  外部服务（Cloudflare Web Analytics 或自建计数器）才有访问量 —— 位置留好了（编辑此处）。
+  「本次构建」是渲染时的 `new Date()`：静态导出在 `npm run build` 里跑，所以它就是构建那一天。
+- **第 5 栏的「笔记」**：管线里目前只有文章这一种内容类型，所以「笔记数量」映射到
+  **卡组（`_index.md` 定义的专题）**，并在栏内写明这件事。要真正的短笔记型内容，
+  得在 `content/<lang>/` 下加一种目录类型（加载器加一处扫描），说一声就做。
+- **第 4 栏读的是 git 提交**（`git log`，最多 5 条、不含合并提交）：拿不到 git 时
+  `getChangelog()` 返回空数组并打一条警告 —— 这一栏有空状态，**绝不让构建失败**。
+- **第 2 栏的卡片暂时不可点**：正文页是第 12 项。判断与 `RouteLink` 同一个约定，
+  落点只有一个 —— `lib/site.ts` 新增的 `ARTICLE_ROUTE`（`status: "pending", item: 12`），
+  第 12 项做完改一个字，首页与列表页的卡片一起变成真链接。卡片的排版是紧凑文字卡，
+  第 11 项（三档密度）落地后换成那边的「紧凑档」。
+- **约定第 3 条补了一句**：UI 文案仍集中在 `lib/site.ts`，但**首页八栏的文案跟着版面走**
+  （`lib/home.ts`）—— 八栏 × 两语 ×（标题 + 说明 + 空状态 + 示范句子）塞进 site.ts 会把
+  站点配置变成文案仓库，而改一版首页只该动一个文件（与第 6/7 项「选项文案跟着选项走」同理）。
+- 开发态自检仍然在（生产构建里不出现）：现在是首页 `</main>` 之后一块独立的 `.page`，
+  不参与八栏吸附；第 12 项落地后连同 `components/dev/PipelineCheck.tsx` 一起删（约定第 6 条）。
+
 ### 构建修复 —— 首次云构建失败的两处（2026-09-30）
 
 Cloudflare 上第一次真正跑 `npm run build` 时，编译（Turbopack）通过，**类型检查**挂了两处
@@ -757,9 +844,18 @@ curl -s -H "Authorization: Bearer $TOKEN" \
   2. ✅ 阅读偏好在 `lib/prefs.ts`：三档选项表 + 首帧脚本（`PrefsInit`）+ 写入 `--reading-*`。
      档位值就定在 `READING_WIDTHS / SIZES / LEADINGS` 里（34/42/52rem、0.98/1.0625/1.18rem、1.6/1.85/2.1）；
   3. ✅ 顶栏、页脚、抽屉全部用令牌与 `.panel`，没有写死颜色，`dark:` 变体一个也没有。
-- **第 9 项（首页）**：框架在 `app/[lang]/layout.tsx`，**不是**每页各写一遍（与 wunai-blog 的取舍不同）。
-  要改首页外壳（例如八栏吸附不想要页脚）时改 layout，别在 page 里再放一份顶栏；
-  `app/[lang]/page.tsx` 里那三行（「编辑此处：本站介绍」+ 统计 + 开发态自检）整块替换即可。
+- **第 9 项（首页）—— 已完成**，这条留档并转成「后续项要用到的东西」：
+  1. 首页的**版面与文案只有一个事实来源**：`lib/home.ts` 的 `HOME_ROWS`（哪几栏、哪两栏并排）
+     与 `HOME_TEXT`（中英各一份）。`app/[lang]/page.tsx` 只负责「把行渲染成 <section> +
+     把数据传进去」，**不要**在页面里调顺序或加栏 —— 加一栏 = 表里加一行 + 一个组件 + `blocks` 里补一条
+     （`Record<HomeBlockId, ReactNode>` 是穷尽的，漏了 TypeScript 直接报错）；
+  2. 栏号（01~08）由 `homeNumber()` 从版面表推出来，**别在文案里手写编号**；
+  3. 吸附用 `html:has(.home-flow)` 那一条 CSS（不认 `<html>` 上的 class，也不需要 JS）；
+     要加新页面而**不想**让它吸附，什么都不用做 —— `:has()` 只认领首页那个容器；
+  4. 第 11 项（文章卡片三档密度）落地后，把 `HomePostCards` 的紧凑文字卡换成那边的「紧凑档」；
+  5. 第 12 项（文章页）落地后，把 `lib/site.ts` 的 `ARTICLE_ROUTE.status` 改成 `"ready"`
+     —— 首页与列表页的文章卡片会一起变成真链接（约定第 8 条的那套做法）；
+  6. 第 13 项的 `/[lang]/settings/` 页与首页第 7/8 栏用的是同一套组件与 API，别在那边另写一份。
 - **第 10 / 13 项**：页面落地后把 `lib/site.ts` 的 `ROUTES[id].status` 从 `"pending"` 改成 `"ready"`
   —— 顶栏、页脚、`RouteLink` 的入口会一起生效；新页面同时加进 `app/sitemap.ts` 的 `pageRoutes()`。
 - **第 12 项（文章页）**：正文宽度一律用 `--reading-measure`（读者的阅读偏好要能生效），别写死 42rem；

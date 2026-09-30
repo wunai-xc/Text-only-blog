@@ -85,6 +85,19 @@ export const THEME_LABELS: Record<
 };
 
 /**
+ * 外观预览色块的格数（设置中心与首页「外观切换」栏共用，第 7 / 9 项）：
+ * `system` 用两格表示「浅色一套 / 深色一套」，其余三套各三格（底 / 字 / 重点）。
+ * 色值写在 app/globals.css 的 `.theme-chip[data-chip="…"]` 里 —— 那是全站唯一允许
+ * 写死颜色的地方（它预览的是另外两套外观，引用当前令牌就四套长得一样了）。
+ */
+export const THEME_CHIP_DOTS: Record<ThemeChoice, number> = {
+  system: 2,
+  paper: 3,
+  light: 3,
+  dark: 3,
+};
+
+/**
  * 三套主题的**底色**（与 globals.css 的 `--c-canvas` 一一对应）。
  * 只镜像这一个颜色：manifest 与 meta theme-color 必须在构建期就有值。
  */

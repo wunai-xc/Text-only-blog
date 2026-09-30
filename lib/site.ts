@@ -118,6 +118,18 @@ export function routeReady(id: RouteId): boolean {
 }
 
 /**
+ * 文章**正文页**的落地状态（第 12 项；列表页是 ROUTES.posts，第 10 项，两者不是一回事）。
+ *
+ * 首页与列表页的文章卡片按它决定「可点 / 不可点」，与 RouteLink 是同一个约定
+ * （约定第 8 条：没有这一页就不留会 404 的链接）。第 12 项做完把它改成 "ready"，
+ * 所有卡片一起变成真链接，不需要去改各个卡片组件。
+ */
+export const ARTICLE_ROUTE: { status: "ready" | "pending"; item: number } = {
+  status: "pending",
+  item: 12,
+};
+
+/**
  * 字符串是不是一个 RouteId（第 8 项：装饰层要把路径的段落认成「哪一页」）。
  * 用 ROUTES 自己当事实来源，加一条路由这里不用改。
  */

@@ -20,6 +20,7 @@ import {
 } from "@/lib/prefs";
 import {
   DEFAULT_THEME_CHOICE,
+  THEME_CHIP_DOTS,
   THEME_CHOICES,
   THEME_LABELS,
   currentThemeChoice,
@@ -56,8 +57,7 @@ const GROUP_META: Record<ReadingKey, { label: ReadingLabelKey; icon: IconName }>
   leading: { label: "readingLeading", icon: "mdi:format-line-spacing" },
 };
 
-/** 外观预览色块的数量：system 用两格表示「浅色一套 / 深色一套」 */
-const CHIP_DOTS: Record<ThemeChoice, number> = { system: 2, paper: 3, light: 3, dark: 3 };
+/* 外观预览色块的格数共用 lib/theme.ts 的 THEME_CHIP_DOTS（第 9 项起首页也用这一份） */
 
 export default function SettingsCenter({ lang }: { lang: Lang }) {
   const t = SITE.i18n[lang];
@@ -79,7 +79,10 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
   }
 
   function pickReading(key: ReadingKey, id: string) {
-    setPrefs(setReadingPrefs({ [key]: id } as Partial<ReadingPrefs>));
+    // 只给变的那一项：先落到 Partial<ReadingPrefs>（计算键写成 as 断言不够明确）
+    const patch: Partial<ReadingPrefs> = {};
+    patch[key] = id;
+    setPrefs(setReadingPrefs(patch));
   }
 
   function resetAll() {
@@ -123,7 +126,7 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
                   height="1em"
                 />
                 <span className="theme-chip" data-chip={value} aria-hidden="true">
-                  {Array.from({ length: CHIP_DOTS[value] }, (_, index) => (
+                  {Array.from({ length: THEME_CHIP_DOTS[value] }, (_, index) => (
                     <span key={index} />
                   ))}
                 </span>
