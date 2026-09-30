@@ -125,7 +125,8 @@ export function decorCode(decor: Decor): string {
   return `TOB-${decor.lang.toUpperCase()}-${decor.sheet}`;
 }
 
-/** 图签上的名字：RouteId 的图纸复用顶栏导航的名字，其余三张在 SITE.i18n.decor 里 */
+/** 图签上的名字：RouteId 的图纸复用导航文案（`SITE.i18n.nav`，那一排入口现在在页脚），
+    其余三张在 `SITE.i18n.decor` 里 */
 export function decorLabel(section: DecorSection, lang: Lang): string {
   const t = SITE.i18n[lang];
   if (section === "article" || section === "offline" || section === "unknown") {

@@ -16,7 +16,7 @@
 
 import type { IconifyIcon } from "@iconify/react/offline";
 
-/* 顶栏导航 */
+/* 导航（顶栏的品牌小字行与页脚那一排入口都用其中的一部分） */
 import mdiHomeOutline from "@iconify/icons-mdi/home-outline";
 import mdiPostOutline from "@iconify/icons-mdi/post-outline";
 import mdiTagMultipleOutline from "@iconify/icons-mdi/tag-multiple-outline";

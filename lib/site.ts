@@ -177,7 +177,7 @@ export interface SiteStrings {
   brandTagline: string;
   brandAbout: string;
   allPosts: string;
-  /** 顶栏图片位空着时格子里显示的字（把图放进 public/ 后填 lib/site.ts 的 HEADER_IMAGE.src） */
+  /** 顶栏图片位空着时格子里显示的字（作者把图放进 public/ 后填上面的 HEADER_IMAGE.src） */
   headerImage: string;
   langName: string;
   langTitle: (name: string) => string;

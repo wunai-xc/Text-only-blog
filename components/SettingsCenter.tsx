@@ -38,7 +38,7 @@ import {
  *      不在这里碰 localStorage 与 data-theme（约定第 7 条）；
  *   2. 阅读偏好：正文宽度 / 字号 / 行距 —— 写到 `--reading-*` 三个令牌上（lib/prefs.ts），
  *      正文已经在读它们，所以改完立刻生效、不需要通知任何组件；
- *   3. 语言：中英切换（与顶栏共用 components/LangSwitcher.tsx）；
+ *   3. 语言：中英切换（与页脚的导航栏共用 components/LangSwitcher.tsx）；
  *   4. 恢复默认：清掉偏好键 + 移除行内 CSS 变量。
  *
  * 首帧与主题按钮同理：先按默认值渲染（服务端与浏览器算出来的一样），挂载后再读真实值，

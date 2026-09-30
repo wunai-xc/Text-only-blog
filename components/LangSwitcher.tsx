@@ -14,7 +14,7 @@ import { SITE, otherLang, type Lang } from "@/lib/site";
  * 服务端组件拿不到 pathname。静态导出下每一条路径都是构建期就存在的，
  * 所以直接用 <Link> 走客户端跳转。
  *
- * 同一份组件在顶栏的图签区与设置中心都用（外观一致、行为一致）。
+ * 同一份组件在页脚的导航栏与设置中心都用（外观一致、行为一致）。
  */
 export default function LangSwitcher({
   lang,
