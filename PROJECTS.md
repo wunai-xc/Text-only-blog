@@ -374,6 +374,46 @@ Cloudflare 上第一次真正跑 `npm run build` 时，编译（Turbopack）通�
 还没验证的：改完这些之后**是否真的通过类型检查、静态导出是否产出预期的产物**，
 要等再触发一次构建（或本地 `npm run typecheck && npm run build`）。
 
+### 部署失败 —— `wrangler deploy` 用错了命令（2026-09-30，第二次云构建）
+
+**先记好消息**：第一次构建那两处类型错误（`lib/markdown.ts` 的 `TS2345` 与 `throwOnError`）确实修好了。
+第二次日志里 `Running TypeScript ... Finished TypeScript in 3.7s`、`Generating static pages (14/14)`，
+`bun install` → Turbopack 编译 → 类型检查 → 静态导出全部通过，`Success: Build command completed`。
+也就是说**构建阶段已经没有问题**（`out/` 是否如预期含 `feed.xml` / `search-index.json` / `sitemap.xml` /
+`404.html` 仍要你 `ls out` 确认一次，见第 8 节）。
+
+**失败的是部署这一步**，与代码无关：
+
+```
+Executing user deploy command: npx wrangler deploy
+▲ [WARNING] It seems that you have run `wrangler deploy` on a Pages project,
+  `wrangler pages deploy` should be used instead.
+✘ [ERROR] Missing entry-point to Worker script or to assets directory
+```
+
+- 原因：`wrangler deploy` 是 **Workers** 的部署命令，它只认 `main`（Worker 脚本）或 `[assets] directory`
+  两种「要传什么上去」的写法；本站 `wrangler.toml` 里写的是 **Pages** 的字段
+  `pages_build_output_dir = "out"`，Workers 那条路径根本不读它 ——
+  于是 Wrangler 一边警告「你这是在 Pages 项目上跑 Worker 部署」，一边找不到入口点，两步自相矛盾地报错。
+  提示里的 `main = "src/index.ts"` / `[assets]` 是 Workers 的模板，**本站不需要**，别照着加。
+- 结论：这不是配置缺失，是**命令选错了**。部署目标仍旧是 Cloudflare Pages（本仓库的设计如此：
+  `wrangler.toml` 的 `pages_build_output_dir`、`package.json` 的 `deploy`、GitHub Actions 里的
+  `pages deploy out --project-name=text-only-blog` 三处是一致的）。
+- **修法（两处任选其一，都在 Cloudflare 构建设置里改，仓库不用动）**：
+  1. 构建设置里的 **Deploy command 改成** `npx wrangler pages deploy` ——
+     不带参数时它会自己读 `wrangler.toml`：`pages_build_output_dir` 当产物目录、`name` 当项目名；
+  2. 或者填成本仓库已有的那条：`npx wrangler pages deploy out --project-name=text-only-blog`
+     （与 `.github/workflows/deploy.yml` 完全一致，项目名写死、报错更直白；本项目推荐这条）。
+
+**顺带记两条**：
+
+- `npx wrangler ...` 在云构建里是**临时下载** wrangler（日志里 `will be installed: wrangler@4.144.0`），
+  每次构建版本都可能变。要钉住版本就把 `wrangler` 写进 `devDependencies`（第 14 项待办里也记了这一条），
+  那样 `npm run deploy` 在本机也能直接用 —— 目前仓库里**没有**这个依赖，本地跑 `npm run deploy`
+  会找不到 `wrangler` 命令。这次**故意没加**：钉版本会连带一次依赖变更，等你确认要不要。
+- 如果 Deploy command 选项里允许填 `npm run deploy`，也可以那样填（等于走仓库里那条脚本）；
+  但脚本名与参数分散在两处，改起来反而容易漏，直接把命令写在构建设置里更好查。
+
 ### 跨项待办（做到对应项时顺手勾掉）
 
 - **第 7 项（框架 UI / 设置中心）**：
@@ -402,7 +442,8 @@ Cloudflare 上第一次真正跑 `npm run build` 时，编译（Turbopack）通�
 - **第 13 项（其余页面）**：新页面加到 `app/sitemap.ts` 的 `pageRoutes()`；
   离线页的文案也归这一项。
 - **第 14 项（交付）**：把 `wrangler` 写进 devDependencies（`npm run deploy` 现在要靠本机已装的 wrangler）；
-  PNG 图标（192 / 512）如果不打算做，就在 README 里写明「只提供 SVG 图标」。
+  PNG 图标（192 / 512）如果不打算做，就在 README 里写明「只提供 SVG 图标」；
+  另外核对 Cloudflare 构建设置里的 Deploy command 是 Pages 那条（见第 7 节）。
 - `content/README.md` 新增第 9 节（原文第 9 节「常见报错」顺延为第 10 节），
   `content/{zh,en}/posts/README.md` 各加了一行指路。
 
@@ -468,6 +509,9 @@ http://localhost:3000/zh/?theme=dark
   但那份 `changelog.json` 会是空的）。
 - 需要在仓库 Secrets 配置：`CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`。
 - `wrangler.toml` 里的 `name`、workflow 里的 `--project-name` 均为 `text-only-blog`，改名请同步两处。
+- **云构建平台的 Deploy command 必须用 Pages 的那条**：`npx wrangler pages deploy out --project-name=text-only-blog`。
+  填成 `npx wrangler deploy`（Workers 的默认值）会在最后一步失败：
+  `Missing entry-point to Worker script or to assets directory`，原因见第 4 节「部署失败」。
 - 部署前值得自己在本地跑一遍 `npm run build && npm run preview`：静态导出有多少坑（路由产物路径、
   Service Worker、离线页）只有真跑一次才看得见。
 
@@ -482,8 +526,12 @@ http://localhost:3000/zh/?theme=dark
 - 有报错直接把日志贴给我，我按证据修；
 - 每次交付后本文件的进度表与「已完成 / 进行中」小节会同步更新。
 - **2026-09-30 的首次云构建**：`bun install` → Turbopack 编译 → 内容管线都通过了，
-  挂在**类型检查**（`lib/markdown.ts` 两处 `TS2345`，详见第 4 节「构建修复」）；
-  修完还没重新跑过 —— 下一次构建的日志是最有说服力的证据。
+  挂在**类型检查**（`lib/markdown.ts` 两处 `TS2345`，详见第 4 节「构建修复」）。
+- **2026-09-30 的第二次云构建**：上面那两处类型错误**确认修好**（`Finished TypeScript in 3.7s`），
+  静态导出 14/14 页全部生成，构建阶段 `Success`；失败点是**部署命令填错**
+  （`npx wrangler deploy` 而非 `npx wrangler pages deploy`），详见第 4 节「部署失败」。
+  这次日志同时证明：`out/` 确实被静态导出产出（否则 Pages 部署也无从谈起），
+  但**产物清单**（`feed.xml` 是否为目录、sitemap/robots/manifest 是否在根）仍需 `ls out` 确认。
 
 已经做过、但只有你本地能确认的事：
 
@@ -547,3 +595,4 @@ http://localhost:3000/zh/?theme=dark
 | 本次提交 | 第 5 项构建产物完成（方案改为在 `next build` 内生成：`/search-index.json`、`/feed.xml` + 每语言 RSS、`/sitemap.xml`、`/robots.txt`、`/manifest.webmanifest`、`/changelog.json`；PWA：`public/sw.js` + `/offline/` + 注册组件 + `favicon.svg`）；删除失效的 `prebuild`/`predev`（它们一直是 `build` 失败的根因）并新增 `typecheck`；新增「跨项待办」小节 |
 | 本次提交 | 第 6 项设计系统完成（`app/globals.css` 三套令牌：纸/亮/暗 + `@theme inline` 映射成语义色工具类；`lib/theme.ts`：选择解析、首帧脚本、运行时 API、令牌读取；蓝图草图背景层；`.page`/`.panel` 原子件与正文度量 `--reading-*`；占位页面改用令牌）。图表跟随主题：`ChartContext` 扩成 `{theme, dark, colors}`，ArticleBody 订阅外观变化后重绘，mermaid/echarts/graphviz/smiles 改用令牌（abc 留作待办）。manifest 配色改用 `THEME_CHROME` |
 | 2026-09-30 | 首次云构建的修复：`lib/markdown.ts` 的 autolink / katex 选项改成显式标注 `Options` 的常量（TS2345）、删掉 `rehype-katex` 不允许的 `throwOnError`、把 vfile 消息并进 `warnings`；`tsconfig.json` 按 Next 16 的 mandatory changes 改 `jsx: react-jsx` 并补 include |
+| 2026-09-30 | 第二次云构建：类型检查与静态导出（14/14 页）通过，确认上次修复生效；部署失败定位为**命令填错**——`npx wrangler deploy` 是 Workers 命令，Pages 项目要用 `npx wrangler pages deploy out --project-name=text-only-blog`。台账新增「部署失败」小节与第 7 节相应条目，仓库文件未改动 |
