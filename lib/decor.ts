@@ -6,6 +6,10 @@
  * `components/BlueprintBackground.tsx` —— 静态导出下服务端不知道当前路径，
  * 只有客户端的 `usePathname()` 能给出（构建期那一次由 Next 自己渲染，见组件的注释）。
  *
+ * ⚠️ **背景现在是纯色**（站长的要求）：图案整套代码都还在，只是被 `DECOR_PATTERNS` 这一个
+ * 开关关掉了 —— 每页拿到的都是 `plain`（什么都不画），所以纸面只有 `--c-canvas` 一个颜色。
+ * 想恢复「图纸图案随路由变」，把下面那个常量改成 `true` 即可，别的都不用动。
+ *
  * 图案本身画在 `app/globals.css` 的第 5 节（按 `data-decor` 选层：没有图片、没有 JS 计算，
  * 所以断网 / PWA 离线时装饰也在）。**新增一个图案 = 这里加一行 + globals.css 加一条规则**，
  * 别在组件里写 if (pathname === …)。
@@ -39,8 +43,24 @@ export interface Decor {
 }
 
 /**
+ * 背景图案总开关。
+ *
+ * `false` = **全站纯色背景**：每一页拿到的都是 `plain`（CSS 里那一条就是
+ * `background-image: none`），所以纸面只有 `--c-canvas` 一个颜色 ——
+ * 没有网格、没有边缘淡出、没有虚线图框。右下角那张「图纸图签」不受这个开关影响
+ * （它是内容里的装饰字，不是背景；嫌它碍眼就把 components/BlueprintBackground.tsx 里
+ * 那个 `.blueprint-tag` 删掉，或给 globals.css 加一条 `.blueprint-tag { display: none }`）。
+ *
+ * `true` = 恢复第 8 项那套「一页一张图纸」：首页整幅网格、列表页分栏线、文章页刻度尺……
+ * 图案与编号的对应表就在下面（`PATTERNS` / `SHEETS`），CSS 全在 globals.css 第 5 节，
+ * 一行都没删 —— 关掉只是为了把背景做成纯色。
+ */
+export const DECOR_PATTERNS = false;
+
+/**
  * 路由 → 图案。顺序与 lib/site.ts 的 ROUTES 无关（这里按 DecorSection 排），
  * 改一张图纸的图案只动这一行。
+ * ⚠️ 这张表只在 `DECOR_PATTERNS` 为 `true` 时生效。
  */
 const PATTERNS: Record<DecorSection, DecorPattern> = {
   home: "sheet",
@@ -114,7 +134,8 @@ export function decorate(pathname: string): Decor {
   const section = sectionFromPath(pathname);
   return {
     section,
-    pattern: PATTERNS[section],
+    // 图案关了（背景纯色）就给每页同一个 plain；开关见上面的 DECOR_PATTERNS
+    pattern: DECOR_PATTERNS ? PATTERNS[section] : "plain",
     sheet: SHEETS[section],
     lang: langFromPath(pathname),
   };

@@ -498,6 +498,10 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 **交付物**：`lib/decor.ts`（路径 → 图纸的唯一事实来源）、`components/BlueprintBackground.tsx` 接上路由、
 `app/globals.css` 第 5 节的七套图案。这一项**没有新页面**，改的全是「纸面」。
 
+> ⚠️ **本节描述的图案默认已经关掉了**（站长的要求：全站背景改成纯色）——
+> `lib/decor.ts` 的 `DECOR_PATTERNS = false` 让每页都是 `plain`，代码一行没删。
+> 开关与理由见后面的「**背景改成纯色（图案层关掉）**」一节。
+
 - **一张图纸 = 编号 + 图案 + 图签名字**。`lib/decor.ts` 把路径翻成四样东西：
   `section`（哪一页，`RouteId | "article" | "offline" | "unknown"`）、`pattern`（图案名）、
   `sheet`（两位编号）、`lang`（图签上的语言）。规则只有两条：
@@ -1274,6 +1278,32 @@ curl -s -H "Authorization: Bearer $TOKEN" \
   `white-space: nowrap`，最值得确认的是它会不会把图片位顶出屏幕；以及入场那一下
   （渐进增强的代价是「先可见 → 再淡入」，慢设备上可能看得到这一瞬）。
 
+### 背景改成纯色（图案层关掉）
+
+**站长要的是「全站背景纯色」**，所以第 8 项那套「一页一张图纸」的背景图案**默认关掉了** ——
+每页的 `data-decor` 都是 `plain`，纸面只剩 `<html>` 上那一层 `--c-canvas`：
+没有网格、没有粗格、没有边缘淡出、没有虚线图框。
+
+- **改法是一个开关，不是删代码**：`lib/decor.ts` 新增 `export const DECOR_PATTERNS = false;`，
+  `decorate()` 里 `pattern: DECOR_PATTERNS ? PATTERNS[section] : "plain"`。
+  图案表（`PATTERNS`）与 `app/globals.css` 第 5 节那七套图案**一行都没删**，
+  把那个常量改成 `true` 就整套恢复（编号、图签、`data-route` 微调都跟着回来）。
+- **CSS 侧补了一条**：`.blueprint[data-decor="plain"]::before { display: none }` ——
+  边缘淡出那一层也关掉，这样这一层是**真的**什么都不画（否则它会在纯色上再画一遍同色渐变，
+  看不出差别，但没有必要留着）。
+- **还留着的东西**（不是背景，没动）：
+  1. **右下角的图签**（`TOB-ZH-01` + 这一页的名字）：它随路径变，所以「哪一页印哪张图纸」这件事
+     没丢 —— 想连它也去掉，删 `components/BlueprintBackground.tsx` 里那个 `.blueprint-tag`
+     或给 CSS 加一条 `.blueprint-tag { display: none }` 即可（说一声我来做）；
+  2. **换页时那一层 0.32s 的淡入**：图案没了之后看得见的效果只剩图签淡一下，仍然不做转场动画。
+- **顺手修掉一处会因为这次改动而失效的判断**：文章页原来靠
+  `.blueprint[data-decor="measure"] .blueprint-tag { display: none }` 把右下角让给回顶按钮 ——
+  背景关掉后每页的 `data-decor` 都是 `plain`，这条就永远不成立了（图签会跑到回顶按钮底下）。
+  判据改成 **`data-route="article"`**（这一页是哪张图纸，与图案名无关），行为回到原样。
+- **验收**（也在第 8 节那组里）：随便逛几页，背景应当是一整块纯色、滚动时不变；
+  右下角（文章页除外）应当只有图签那两行小字；`view-source` 里
+  `data-decor="plain"`、`data-route` 仍然是 `home` / `posts` / `article`……
+
 ### 跨项待办（做到对应项时顺手勾掉）
 
 - **第 7 项（框架 UI / 设置中心）—— 已完成**，这条留档并转成「后续项要用到的东西」：
@@ -1455,14 +1485,15 @@ http://localhost:3000/zh/?theme=light
 http://localhost:3000/zh/?theme=dark
 ```
 
-外观之外，第 8 项的「一张图纸」也能这样对照（对照表在 `lib/decor.ts`）：
+外观之外，第 8 项的「一张图纸」原本也能这样对照（对照表在 `lib/decor.ts`）：
 `/zh/` 整幅图纸 · `/zh/posts/` 分栏线（图签 `TOB-ZH-02`）· 文章页（`/zh/posts/<slug>/`，第 12 项）
 左边缘刻度尺（图签那两行小字在这一页让给了回顶按钮）·
 `/zh/tags/` 密格 · `/zh/categories/` 剖面线 · `/zh/archives/` 分栏线 · `/zh/search/` 点阵 ·
-`/zh/about/` 密格 · `/zh/links/` 剖面线 · `/zh/settings/` 分栏线 · `/offline/` 空纸；
-第 13 项之后**十一张图纸都能真的看到**（编号 01~11 连续）。
-敲一个不存在的路径（例如 `/zh/nope/`）会落到 `out/404.html`，
-此时蓝图层按 `unknown` 画、图签印 `TOB-ZH-00` —— 这是预期行为。
+`/zh/about/` 密格 · `/zh/links/` 剖面线 · `/zh/settings/` 分栏线 · `/offline/` 空纸。
+⚠️ **背景现在是纯色**（`lib/decor.ts` 的 `DECOR_PATTERNS = false`），所以这一串图案**默认看不到**、
+每页都是空纸；把那个开关改成 `true` 就全部回来（十一张图纸编号 01~11 连续）。
+无论开关如何，**右下角图签的编号与名字照旧随页面变**：敲一个不存在的路径（例如 `/zh/nope/`）
+会落到 `out/404.html`，那一页按 `unknown` 画、图签印 `TOB-ZH-00` —— 这是预期行为。
 
 **开发态渲染自检已经删掉了**（第 12 项落地时连同 `components/dev/PipelineCheck.tsx`、
 首页里那三行、以及 `.pipeline-check` 的 CSS 一起删）。它原来的任务是把第 3 项的 GFM / 公式 /
@@ -1755,25 +1786,33 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
      已在 `@media print` 里 `display: none`）；如果你希望补了图之后把它印上，说一声，删掉那一条即可。
   10. **`npm run typecheck`**：这次改动新增一个客户端组件、给 `RouteLink` 加了可选 `title` 入参、
      `SiteFooter` 多读了 `getContentStats` / `NAV` / `ROUTES` —— 先跑一遍类型检查最省事。
+- **背景改成纯色（图案层关掉）也没在本机看过**，请按这几条看（前两条最要紧）：
+  1. **背景是不是一整块纯色**：随便逛几页（首页 / 列表 / 文章 / 标签 / 离线页），背景应当只有
+     `<html>` 那一层 `--c-canvas` —— 没有网格、没有虚线图框、边缘没有渐隐；滚动时它不动、不闪。
+     三套外观各看一遍（纸 / 亮 / 暗），各是一块纯色。
+  2. **右下角图签还在**（这是刻意的，它不是背景）：桌面宽屏应看到 `TOB-ZH-01` + 「首页」两行小字，
+     窄于 48rem 不印；**文章页那一页不印**（右下角让给回顶按钮，判据已改成 `data-route="article"`）。
+     若连图签也不想要，说一声，一行 CSS 就能去掉。
+  3. **查看源代码**：那个 div 上应当是 `data-decor="plain" data-route="home"`（首页）——
+     `data-route` 仍然随页面变（`posts` / `article` / `tags`…），`data-decor` 全是 `plain`。
+     想恢复图案就把 `lib/decor.ts` 的 `DECOR_PATTERNS` 改成 `true`（图案与编号都还在）。
 - **第 8 项（装饰与动效）同样没在本机跑过浏览器**，图案的几何与层叠只能靠推演，请按顺序看：
-  1. **十一张图纸现在都能真的看到**（编号 01~11 连续；对照表在第 6 节 `npm run dev` 那一段）：
-     首页整幅图纸 + 虚线图框 · `/zh/posts/` 分栏线 · 文章页左边缘刻度尺 · 标签密格 ·
-     分类剖面线 · 归档分栏线 · 搜索点阵 · 关于密格 · 友链剖面线 · 设置分栏线 · `/offline/` 空纸。
-     ⚠️ 这一条在写的时候（第 8 项刚落地）只有首页与「未知路径」两张能对照，
-     第 10~13 项落地后那句已经过时 —— 现在随便点顶栏或页脚的同文档跳转就能看换页重铺那 0.32s。
-     地址栏硬敲一个不存在的路径（`/zh/nope/`）仍会落到 `out/404.html`，
-     此时蓝图层按 `unknown` 画、图签印 `TOB-ZH-00` —— **这是预期，不是 bug**。
+  1. **十一张图纸现在都能真的看到 —— 但要先把开关打开**（`lib/decor.ts` 的 `DECOR_PATTERNS`）：
+     默认是纯色背景，所以这一条现在看不到东西；打开之后编号 01~11 连续（对照表在第 6 节
+     `npm run dev` 那一段）。地址栏硬敲一个不存在的路径（`/zh/nope/`）仍会落到 `out/404.html`，
+     那一页按 `unknown` 画、图签印 `TOB-ZH-00` —— **这是预期，不是 bug**。
   2. **`data-decor` 是否真的落在首屏 HTML 上**：`curl` 或查看源代码，应能在那个 div 上看到
-     `data-decor="sheet" data-route="home"`（首页）。如果水合之后才出现图案，
-     说明构建期那次 `usePathname()` 给了别的值 —— 把那一段 HTML 贴给我。
-  3. **右下角图签**：桌面宽屏应看到 `TOB-ZH-01` + 「首页」两行小字，窄于 48rem 不印；
-     它与页脚重叠时被盖住是预期的（它在 `z-index: -1` 那一层）。
+     `data-decor="plain" data-route="home"`（首页）；把开关打开后应当是 `data-decor="sheet"`。
+     如果水合之后才出现属性，说明构建期那次 `usePathname()` 给了别的值 —— 把那一段 HTML 贴给我。
+  3. **右下角图签**：见上面那组第 2 条（编号与名字跟着页面变，它是装饰、在 `z-index: -1` 那一层，
+     与页脚重叠时被盖住是预期的）。
   4. **印刷与动效**：`prefers-reduced-motion: reduce` 下不应有任何淡入
      （顶栏三段的淡入与站名后的光标一起停）；
-     打印预览里蓝图层整层不出现（第 6 项的 `@media print` 已关掉它）。
-  5. **手机上滚动是否掉帧**：装饰层是「固定定位 + 最多四层 CSS 渐变」，没有图片与滤镜
-     （全站唯一的 `backdrop-filter` 是顶栏那个 `blur(8px)`）。若滚动发涩，
-     先把粗格那一层（`--bp-grid-major`）从 `.blueprint` 的 `background-image` 里去掉再看 —— 那层最费。
+     打印预览里蓝图层整层不出现（第 6 项的 `@media print` 已关掉它）——
+     背景改纯色之后这一条更没什么可印的了。
+  5. **手机上滚动是否掉帧**：纯色之后这一项应该彻底没问题（那一层已经不画任何东西）；
+     真把图案开关打开再遇到发涩，先把粗格那一层（`--bp-grid-major`）从 `.blueprint` 的
+     `background-image` 里去掉 —— 那层最费。
 
 ---
 
@@ -1801,4 +1840,5 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
 | 本次提交 | **第 12 项文章页完成**：新增 `app/[lang]/posts/[...slug]/page.tsx`（构建期 `getPostWithBody` → `renderMarkdown`，正文进 HTML；`generateStaticParams` 按语言列出全部 slug、`dynamicParams = false`）、`lib/article.ts`（目录缩进档与阈值 / 上下篇 `articleNeighbors` / frontmatter 的 `typography` 翻成渲染选项 / giscus 主题与 term 映射 / 中英文案；对 `markdown.ts` 等一律只 `import type`，因为客户端组件会值导入它）、`components/article/` 四个组件（`ArticleToc` 悬浮目录 —— 真锚点 + IntersectionObserver 且底部带 compact 档上下篇；`ArticleProgress` 右侧 2px 进度线 + 宽屏百分比 + 圆形回顶；`ArticlePager` 无 hook 的上下篇，full/compact 共用；`GiscusComments` 滚到附近才加载、换外观走 postMessage 不重载）、`app/globals.css` 新增「6e. 文章页」一节（宽度 = `calc(var(--reading-measure) + 3rem)`，不写死 42rem；四个 `<head>` 系类与首页 / 列表页共用；文章页右下角图签让给回顶按钮；打印隐藏悬浮件与评论区）；`lib/site.ts` 新增 `COMMENTS` + `commentsReady()`，`ARTICLE_ROUTE.status` 改 `"ready"`（首页与列表页的卡片标题**一行没改**就变成真链接）；`lib/icons.ts` 补 5 个图标（目录 / 上下箭头 / 回顶 / 评论）；补上第 6 项留下的 abc 五线谱配色缺口（`components/charts/abc.ts` 渲染后只把近黑的 `stroke` / `fill` 换成 `--c-ink`）；删掉开发态自检 `components/dev/PipelineCheck.tsx`、首页里那三行与 `.pipeline-check` 的 CSS（约定第 6 条兑现）；`lib/list.ts` 的 `fullNote` 与首页第 6 栏的一行旧文案同步成「正文页已落地」的说法。台账同步：目录树、进度表（12/14）、新增第 12 项小节、约定第 6 条、跨项待办、第 8 节的 11 条验收清单 |
 | 本次提交 | **第 13 项其余页面完成**：新增七个页面 —— `app/[lang]/{tags,categories,archives,search,about,links,settings}/page.tsx`。主线是「不写第二份」：标签 / 分类页共用 `components/pages/FacetIndex.tsx`（服务端组件、零状态，点标签就是普通链接），搜索页**整份复用** `components/list/PostList.tsx`（只多传 `autoFocusSearch`，且读者已点到别处就不抢焦点），设置页**整份复用** `components/SettingsCenter`（同一份界面现在四处共用：顶栏按钮 / 首页两栏 / 抽屉 / 这一页），关于页渲染 frontmatter 里 `about: true` 的最新一篇（走第 3 项那条渲染管线 + `ArticleBody`，`typography` 也照第 12 项接上），友链页读 `lib/site.ts` 新增的 `LINKS`（空数组则显示「编辑此处」与填法，不渲染空清单），归档页是年 → 月 → 文章的时间线（月份只分组不筛选，只有年那一行有 `?year=` 链接）。新增 `lib/pages.ts`（这几页的文案与纯函数：`facetWeight` 字号四档 / `monthName` / `archiveYearHref` / `tagHref` / `categoryHref`）；`facetHref()` 挪进 `lib/list.ts` 成为**唯一**的「跳到某一类文章」地址实现（文章页那份私有的删掉了）；`app/globals.css` 新增「6f. 其余页面」一节（标签云 / 归档时间线 / 友链 / 设置页壳，打印时 `archive-year-link` 不印、清单避免跨页断开）；`ROUTES` 七个页面全部改 `"ready"`（顶栏不再有压暗项，没动顶栏代码）；sitemap 新增 `FACET_PAGES` 小表（标签 / 分类 / 归档 / 关于 / 友链；搜索与设置 `noindex` 故意不进）；`/offline/` 的缓存清单补上两个语言的列表页并写明「打开过的文章断网时通常也打得开」。台账同步：目录树、进度表（13/14）、新增第 13 项小节、约定第 2 / 8 / 9 条、跨项待办、第 8 节的 9 条验收清单 |
 | 本次提交 | **第 14 项交付（差锁文件）**：新增 `README.md` —— 站点是什么、快速开始（五个脚本 + 打开 `/zh/` 后先做的三件事）、写第一篇短文（YAML / TOML 两种 frontmatter 各一段）、部署到 Workers 静态资源（含 Cloudflare 构建设置与 GitHub Actions 的 Secrets）、目录结构概要、「需要你亲自填的地方」六行清单（每行都写了留空会发生什么）、如实说明的验证状态、三条不能破的约定（完整十条指向本台账）。README 里的事实逐条对着源码核过（脚本名 / `wrangler.toml` / workflow 的 action 与 `command: deploy` / `lib/site.ts` 的 `SITE.description`·`CONTACT`·`COMMENTS`·`LINKS` / `lib/home.ts` 的 `intro.body`·`themes.demo`·`fonts.sample` / `lib/content.ts` 的 `COVER_DIRS`）。台账：进度表第 14 项改 `[~]`（README 与提交 ✅、锁文件 ⏳）、新增「14. 交付」小节、跨项待办里那条「第 14 项」重写成「只剩一件需要 shell 的事」、第 6 节关于 wrangler 的注解与第 8 节的口径同步。**本环境无 shell，锁文件（`bun.lock` / `package-lock.json`）没有生成**，手写等于编造依赖解析结果，留你在本机 `bun install` 后提交 |
-| 本次提交 | **顶栏改版 —— 对齐 wunai-blog 参考稿**（一次修订，不是新的第 15 项）：`components/SiteHeader.tsx` 重写成「品牌 / 友链 / 图片位」三段（品牌区＝外观按钮 + 大号站名 + 闪烁光标 + 两端对齐的小字行「wunai 是谁？ About…… / 全部文章 →」；友链＝图标 + 小字竖排、`margin-left: auto` 右靠；图片位＝`HEADER_IMAGE` 撑满顶栏高，留空时画虚线空位且尺寸与有图时一致）。新增 `components/HeaderIntro.tsx`（客户端：三段错开 90ms 淡入 + 标签页切后台时暂停光标；顺序是「默认可见 → JS 就绪后才淡入」，反过来会让禁用 JS 的读者看不到顶栏）。原先挂在顶栏的**七项导航、语言切换与内容统计搬到页脚**（`components/SiteFooter.tsx` 第一块；统计那行复用 i18n 里已有的 `statsPosts` / `statsWords` / `statsUpdated` / `statsEmpty`，没有第二份文案）—— 不搬就会有四个页面失去入口。`components/RouteLink.tsx` 新增可选 `title`，pending 态把自定义提示与「第 N 项落地」拼起来而不是盖掉它。`lib/site.ts` 新增 `HEADER_IMAGE`（`<img>` 而非 `next/image`：静态导出不优化图片、且构建期不校验文件存在）。`app/globals.css` 新增令牌 `--header-h`（5.5rem / ≤48rem 4.75rem / ≤30rem 4.5rem，**两档窄屏值必须留在未分层的位置**，写进 `@layer` 会被 `:root` 压过），`--home-head-room` 改成由它推导（删掉首页窄屏那档 8.5rem）；顶栏/页脚两节重写，删掉 `.site-header-inner` / `.site-brand` / `.site-logo` / `.site-caret` / `.site-nav` / `.site-nav-entry` / `.site-titleblock`，`--frame-width` 只剩页脚与 `.page` 用。台账同步：进度表下加「追加的一次修订」说明、目录树、第 7 项小节加改版指引、第 9 项里 `--home-head-room` 与「内容统计在哪」两处、新增「顶栏改版」一节、约定新增第 11 条（顶栏只放三段 + 高度只有 `--header-h` 一个来源 + 动效顺序不能反）并扩了第 2 条（图片位）、第 8 节新增 10 条验收清单（并修掉第 8 项验收里那句「只有两张图纸能对照」的过时说法）、第 9 节本行。README 同步：图片位进「需要你亲自填的地方」表（并写明留空时是虚线空位）、顶部那条「没有图片、没有视频、没有头像位」改成「正文与卡片里没有任何图片位 …… 唯一能放图的地方是顶栏右上角那一格」、「完整的十条约定」改成十一条并加了指向「顶栏改版」一节的指引 |
+| 本次提交 | **顶栏改版 —— 对齐 wunai-blog 参考稿**（一次修订，不是新的第 15 项）：`components/SiteHeader.tsx` 重写成「品牌 / 友链 / 图片位」三段（品牌区＝外观按钮 + 大号站名 + 闪烁光标 + 两端对齐的小字行「wunai 是谁？ About…… / 全部文章 →」；友链＝图标 + 小字竖排、`margin-left: auto` 右靠；图片位＝`HEADER_IMAGE` 撑满顶栏高，留空时画虚线空位且尺寸与有图时一致）。新增 `components/HeaderIntro.tsx`（客户端：三段错开 90ms 淡入 + 标签页切后台时暂停光标；顺序是「默认可见 → JS 就绪后才淡入」，反过来会让禁用 JS 的读者看不到顶栏）。原先挂在顶栏的**七项导航、语言切换与内容统计搬到页脚**（`components/SiteFooter.tsx` 第一块；统计那行复用 i18n 里已有的 `statsPosts` / `statsWords` / `statsUpdated` / `statsEmpty`，没有第二份文案）—— 不搬就会有四个页面失去入口。`components/RouteLink.tsx` 新增可选 `title`，pending 态把自定义提示与「第 N 项落地」拼起来而不是盖掉它。`lib/site.ts` 新增 `HEADER_IMAGE`（`<img>` 而非 `next/image`：静态导出不优化图片、且构建期不校验文件存在）。`app/globals.css` 新增令牌 `--header-h`（5.5rem / ≤48rem 4.75rem / ≤30rem 4.5rem，**两档窄屏值必须留在未分层的位置**，写进 `@layer` 会被 `:root` 压过），`--home-head-room` 改成由它推导（删掉首页窄屏那档 8.5rem）；顶栏/页脚两节重写，删掉 `.site-header-inner` / `.site-brand` / `.site-logo` / `.site-caret` / `.site-nav` / `.site-nav-entry` / `.site-titleblock`，`--frame-width` 只剩页脚与 `.page` 用。台账同步：进度表下加「追加的一次修订」说明、目录树、第 7 项小节加改版指引、第 9 项里 `--home-head-room` 与「内容统计在哪」两处、新增「顶栏改版」一节、约定新增第 11 条（顶栏只放三段 + 高度只有 `--header-h` 一个来源 + 动效顺序不能反）并扩了第 2 条（图片位）、第 8 节新增 10 条验收清单（并修掉第 8 项验收里那句「只有两张图纸能对照」的过时说法）、第 9 节本行。README 同步：图片位进「需要你亲自填的地方」表、「完整的十条约定」改成十一条并加了指向「顶栏改版」一节的指引（第 1 节「只读文字」那一行的措辞后来又跟着「背景改成纯色」那次再改了一遍） |
+| 本次提交 | **背景改成纯色（图案层关掉）**（站长的要求）：`lib/decor.ts` 新增 `DECOR_PATTERNS = false`，`decorate()` 一律返回 `plain` —— 每页的 `data-decor` 都是 `plain`，纸面只剩 `<html>` 的 `--c-canvas`：没有细格 / 粗格、没有边缘淡出、没有虚线图框。七套图案与 `PATTERNS` 表**一行没删**（开关改成 `true` 即整套恢复）。CSS 补 `.blueprint[data-decor="plain"]::before { display: none }`（连边缘淡出也关掉，这一层真的什么都不画）。顺手修掉一处会被这次改动弄坏的判断：文章页右下角「图签让给回顶按钮」原来判 `data-decor="measure"`，纯色下永远不成立，已改成 **`data-route="article"`**。右下角图签（编号 + 页名）与换页那 0.32s 淡入**保留**（不是背景，随路径变的映射还在）。台账同步：第 8 项小节加「默认已关闭」指引、新增「背景改成纯色（图案层关掉）」一节、第 6 节的图纸对照表与第 8 节验收清单改写（第 8 项验收里那句「十一张图纸都能看到」改成「要先把开关打开」）、本行。README：第 1 节「只读文字」那一行改成「背景是一整块纯色」 |

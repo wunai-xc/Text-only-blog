@@ -243,7 +243,10 @@
 
 /* ============================================================
    5. 蓝图草图背景层（第 6 项）
-   固定在最底：细格 + 每 5 格一条粗格 + 边缘淡出 + 大屏上的虚线图纸边框。
+   ⚠️ **背景现在是纯色**：`lib/decor.ts` 的 `DECOR_PATTERNS = false`，所以每页都是
+   `[data-decor="plain"]` —— 不画网格、不画图框、不做边缘淡出，纸面只有 `<html>` 上那一层
+   `--c-canvas`。下面这套「细格 + 每 5 格一条粗格 + 边缘淡出 + 虚线图框」与「5b」那七套图案
+   一行都没删，把那个开关改回 `true` 就全部恢复。
    约定第 5 条：装饰层必须 aria-hidden、pointer-events: none，且不得影响正文可读性
    —— 所以线是 1px、透明度不超过 0.26，边框只做大屏、手机上直接不显示。
    第 8 项已按这个约定接上路由：元素上挂 data-decor / data-route / data-redraw
@@ -294,6 +297,10 @@
   }
 
   /* ---------- 5b. 图案随路由变（第 8 项：装饰与动效） ----------
+     ⚠️ 这一节现在**默认不生效**（背景是纯色，见文件头第 5 节那句）：
+     `lib/decor.ts` 的 `DECOR_PATTERNS = false` 让每页都是 `plain`。
+     把那个开关改成 `true`，下面七套图案与对应的编号立刻回来。
+
      谁是哪一张图纸由 lib/decor.ts 决定，这里只按 data-decor 选层。
      想看全部图案：/zh/（整幅图纸）→ /zh/posts/（分栏线）→ 文章页（刻度尺）→
      /zh/tags/（密格）→ /zh/categories/（剖面线）→ /zh/search/（点阵）→ /offline/（空纸）。
@@ -350,6 +357,12 @@
   /* 11 离线页：什么都不画 —— 断网时纸面最干净，也最省电 */
   .blueprint[data-decor="plain"] {
     background-image: none;
+  }
+
+  /* 纯色背景（默认状态）：`lib/decor.ts` 的 `DECOR_PATTERNS = false` 让每一页都是 plain，
+     连边缘淡出也一并关掉 —— 这一层于是彻底不画任何东西，页面只剩 <html> 的 --c-canvas。 */
+  .blueprint[data-decor="plain"]::before {
+    display: none;
   }
 
   /* 近景图案不配图框：一页一眼就能看出「换了一张图纸」 */
@@ -2461,8 +2474,10 @@
   }
 
   /* 文章页右下角让给回顶按钮：图签是装饰、回顶是功能，两者都在这个角上会叠在一起。
-     图纸编号在这页的页头（decor.sheet）照样印着，信息没丢。 */
-  .blueprint[data-decor="measure"] .blueprint-tag {
+     图纸编号在这页的页头（decor.sheet）照样印着，信息没丢。
+     ⚠️ 判据是 **data-route**（这一页是哪一张图纸）而不是 data-decor（图案名）：
+     背景改纯色之后每页的 data-decor 都是 plain，用图案名判断就再也不成立了。 */
+  .blueprint[data-route="article"] .blueprint-tag {
     display: none;
   }
 
