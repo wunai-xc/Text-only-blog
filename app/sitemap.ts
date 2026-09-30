@@ -6,8 +6,9 @@ import { LANGS, SITE, type Lang } from "@/lib/site";
 /**
  * sitemap.xml（第 5 项：构建产物）
  *
- * 静态导出下 sitemap.ts 会被求值成 out/sitemap.xml（不用写 dynamic，
- * 它默认就是缓存的静态 Route Handler，只要不读 Request 数据）。
+ * 静态导出下 sitemap.ts 会被求值成 out/sitemap.xml；
+ * `dynamic = "force-static"` 必须显式写（同 app/manifest.ts、app/robots.ts）：
+ * output: "export" 下不写它会在构建的「Collecting page data」阶段报错。
  *
  * 目前列出的页面：
  *   /                        语言分流页（app/page.tsx）
@@ -20,6 +21,8 @@ import { LANGS, SITE, type Lang } from "@/lib/site";
  * ⚠️ 文章 URL 依赖第 12 项的文章页：在它落地之前，这些链接会指向 404（构建本身照常成功，
  * 只有真的部署了、且 content/ 里有文章时才会被爬虫看到）。台账里记成了第 12 项的待办。
  */
+
+export const dynamic = "force-static";
 
 /** 每语言的首页 */
 function pageRoutes(): MetadataRoute.Sitemap {

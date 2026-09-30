@@ -12,7 +12,12 @@ import { SITE } from "@/lib/site";
  *   /search-index.json 搜索索引（几百 KB 的数据文件，站内自己取）
  *   /changelog.json    更新日志的 JSON 副本
  * 正文、标签、归档这些页面一律允许。
+ *
+ * `dynamic = "force-static"`：output: "export" 下元数据约定也必须显式声明静态求值，
+ * 与 app/manifest.ts、app/sitemap.ts 一致（少了它在云构建里会直接失败）。
  */
+export const dynamic = "force-static";
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [

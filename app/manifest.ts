@@ -17,7 +17,14 @@ import { THEME_CHROME } from "@/lib/theme";
  * 图标只有一个 SVG（`sizes: "any"`）：本仓库不能凭空生成 PNG 二进制文件。
  * 想装到手机上更稳，就把 192 / 512 的 PNG 放进 public/ 并在这里补两条 ——
  * 细节见 PROJECTS.md 第 4 节「第 5 项：构建产物 / PWA」里标了「编辑此处」的那一条。
+ *
+ * `dynamic = "force-static"` 是静态导出的硬要求，和 app/feed.xml/route.ts 同理：
+ * 不写这一行，`next build` 会在「Collecting page data」阶段直接失败
+ * （Error: export const dynamic = "force-static"/export const revalidate not configured
+ * on route "/manifest.webmanifest" with "output: export"）。
  */
+export const dynamic = "force-static";
+
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: SITE.title,
