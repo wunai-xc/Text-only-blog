@@ -374,6 +374,32 @@ Cloudflare 上第一次真正跑 `npm run build` 时，编译（Turbopack）通�
 还没验证的：改完这些之后**是否真的通过类型检查、静态导出是否产出预期的产物**，
 要等再触发一次构建（或本地 `npm run typecheck && npm run build`）。
 
+### 构建失败 —— `package.json` 尾逗号（2026-09-30，第六次云构建）
+
+改部署目标那次提交里，`scripts` 的最后一项（`deploy`）被我留了个**尾逗号**，
+于是 `npm run build` 在读 `package.json` 时就挂了 —— **页面构建根本没开始**：
+
+```
+Executing user build command: npm run build
+npm error code EJSONPARSE
+npm error JSON.parse Invalid package.json: JSONParseError: Expected double-quoted property name in JSON
+  at position 474 (line 13 column 3) while parsing near "...wrangler deploy\",\n  },\n  \"dependencies\":..."
+```
+
+- 原因：JSON **不允许**尾逗号（JS 对象字面量允许，这是两者最容易混的一处）。
+  位置 `474 / line 13 column 3` 指的就是 `"deploy": "npx --yes wrangler deploy",` 那个逗号。
+- 修法：删掉该逗号，`scripts` 的 `deploy` 成为最后一项。**已修并推送**。
+- 教训（以后改 `package.json` 必做）：改完的 JSON 一定要过一遍真正的解析器。
+  `npm run typecheck` / `tsc --noEmit` **不会**检查 JSON，能拦住这一步的是：
+
+```bash
+node -e "JSON.parse(require('fs').readFileSync('package.json','utf8')) && console.log('ok')"
+```
+
+  本环境没有 shell（跑不了上面这条），只能靠逐行读、对着括号与逗号核 —— 这次就是漏了这一眼。
+- 也为上一节那句「改了配置文件后先触发一次构建」提供了例证：这类错**只在云构建里暴露**，
+  本环境不执行任何命令，所以构建日志是这个项目唯一的集成测试。
+
 ### 部署失败 —— 命令填错与 token 权限（2026-09-30，第二～四次云构建）
 
 **先记好消息**：第一次构建那两处类型错误（`lib/markdown.ts` 的 `TS2345` 与 `throwOnError`）确实修好了。
@@ -803,3 +829,4 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
 | 2026-09-30 | 第四次云构建：构建通过（TS 3.4s、14/14 页）；部署失败为「命令少空格 + 构建环境 token 无 Pages 权限（`Authentication error [code: 10000]`）」。查文档确认 Workers Builds 自动生成 token 的权限清单与 Pages API 要求的 `Cloudflare Pages: Edit`，据此选定路径 A（保留 Pages + 换 token）并写入操作清单。另发现**仓库无锁文件**（`npm ci` / `cache: npm` 会失败、依赖版本不受控）并记入第 14 项待办。仓库代码与配置仍未改动 |
 | 2026-09-30 | 第五次云构建：命令已完全正确（`pages deploy out --project-name=…`）但 `code 10000` 一字未变，判定为该构建实际使用的 token 仍无 Pages 权限（报错早于产物上传）。台账补「怎么确认用的哪个 token」三条判别法与绕开 token 的两条备选路径 |
 | 2026-09-30 | **部署目标从 Cloudflare Pages 改为 Workers 静态资源**（避开 Pages 鉴权）：`wrangler.toml` 改为 `[assets] directory = "./out"` + `not_found_handling = "404-page"` + `html_handling = "auto-trailing-slash"`；`package.json` 的 `deploy` 改成 `npx --yes wrangler deploy`；workflow 改名并把 Deploy 步骤改成 `command: deploy`，同时把必然失败的 `npm ci` / `cache: npm` 换成 `setup-bun@v2`（bun 1.2.15）+ `bun install`；两处注释里的 Pages 措辞同步。台账第 2、6、7、8 节与第 14 项待办一并更新。⚠️ 未在本机执行过 `wrangler deploy` |
+| 2026-09-30 | 第六次云构建：**构建阶段就失败**（`EJSONPARSE`）—— 上一次提交给 `package.json` 的 `deploy` 留了尾逗号（我的编辑失误，JSON 不允许尾逗号），删掉后重新触发。台账新增「构建失败 —— `package.json` 尾逗号」小节，并记下以后改 JSON 要过 `node -e "JSON.parse(...)"` 这类真正的解析器（`tsc` 不检查 JSON） |

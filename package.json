@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit",
     "preview": "npx --yes serve out -l 4173",
     "clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true});require('fs').rmSync('out',{recursive:true,force:true})\"",
-    "deploy": "npx --yes wrangler deploy",
+    "deploy": "npx --yes wrangler deploy"
   },
   "dependencies": {
     "@hpcc-js/wasm-graphviz": "^1",
