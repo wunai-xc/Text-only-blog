@@ -20,25 +20,36 @@ export default function RouteLink({
   route,
   lang,
   className,
+  title,
   children,
 }: {
   route: RouteId;
   lang: Lang;
   className?: string;
+  /** 悬停提示。顶栏的图标 + 小字入口（友链）用它给一个说得清楚的说明 */
+  title?: string;
   children: ReactNode;
 }) {
   const entry = ROUTES[route];
 
   if (entry.status === "ready") {
     return (
-      <Link className={className} href={routeHref(route, lang)}>
+      <Link className={className} href={routeHref(route, lang)} {...(title ? { title } : {})}>
         {children}
       </Link>
     );
   }
 
+  // pending 时**不吞掉**这个提示，而是两句拼起来：否则顶栏那样「自己带了 title 的入口」
+  // 会让读者以为这一页已经做好了、只是点了没反应（提示是 pending 态唯一说理的地方）。
+  const pendingHint = SITE.i18n[lang].navPending(entry.item);
+
   return (
-    <span className={className} data-pending="true" title={SITE.i18n[lang].navPending(entry.item)}>
+    <span
+      className={className}
+      data-pending="true"
+      title={title ? `${title} —— ${pendingHint}` : pendingHint}
+    >
       {children}
     </span>
   );

@@ -9,7 +9,9 @@
  *                 状态是 `pending` 的入口在 UI 里渲染成不可点（见 components/RouteLink.tsx），
  *                 哪一项做完了，把这里的状态改成 `"ready"` 就行 —— 顶栏、页脚、首页会一起生效，
  *                 不需要去各页面找链接；
- *   3. `NAV`      顶栏导航的顺序与图标（就是 ROUTES 里标了 nav 的那些，按书写顺序）；
+ *   3. `NAV`      站内导航的顺序与图标（就是 ROUTES 里标了 nav 的那些，按书写顺序）。
+ *                 顶栏改版（对齐 wunai-blog 参考稿）之后，这排入口挂在**页脚**
+ *                 （components/SiteFooter.tsx 的第一块）；顶栏只留品牌 / 友链 / 图片位三段。
  *   4. `CONTACT`  联系方式。**全部留空**，由你亲笔填 —— 没填的条目在页脚显示「编辑此处」，
  *                 不会生成一个点不动的空链接。
  *
@@ -56,15 +58,15 @@ export interface SiteRoute {
   status: "ready" | "pending";
   /** 由哪一项落地 —— 用来在悬停提示里说清楚，也是回头核对的清单 */
   item: number;
-  /** 是否进顶栏导航 */
+  /** 是否进站内导航（页脚那一排入口，顺序即书写顺序） */
   nav?: boolean;
-  /** 顶栏导航图标（nav 项才有） */
+  /** 导航图标（nav 项才有） */
   icon?: IconName;
 }
 
 /**
  * ⚠️ 改这里就能切换「待落地」标记：做完第 10~13 项的某一个页面，
- * 把对应项的 status 从 "pending" 改成 "ready" 即可（顺序即顶栏导航顺序）。
+ * 把对应项的 status 从 "pending" 改成 "ready" 即可（顺序即站内导航顺序）。
  */
 export const ROUTES: Record<RouteId, SiteRoute> = {
   home: { path: "/{lang}/", status: "ready", item: 1, nav: true, icon: "mdi:home-outline" },
@@ -137,13 +139,31 @@ export function isRouteId(value: string): value is RouteId {
   return Object.prototype.hasOwnProperty.call(ROUTES, value);
 }
 
-/** 顶栏导航（顺序即 ROUTES 里的书写顺序） */
+/** 站内导航（顺序即 ROUTES 里的书写顺序）。页脚的导航栏读它，顶栏不再用它 */
 export const NAV: RouteId[] = (Object.keys(ROUTES) as RouteId[]).filter((id) => ROUTES[id].nav);
+
+/**
+ * 顶栏右侧那张图（顶栏第三段，对齐 wunai-blog 参考稿的 `image-placeholder`）。
+ *
+ * 怎么用：把图片放进 `public/`（例如 `public/header.jpg`），再把文件名填到下面的 `src`，
+ * 例如 `src: "/header.jpg"`。**留空时**这一格画成一个虚线空位、写着「图片位 · 编辑此处」，
+ * 尺寸与有图时完全一致 —— 所以以后补图不会让顶栏高度跳一下。
+ *
+ * 尺寸建议：横构图、主体居中。桌面上这一格是 15rem × 顶栏高（约 240 × 88px），
+ * 按 2 倍屏准备 480×176 左右就够；窄屏收窄到 140px / 80px，由 `object-fit: cover` 居中裁切。
+ *
+ * `alt` 留空 = 它是**装饰**（整格带 `aria-hidden`，与 wunai-blog 一致）；
+ * 想让读屏读出来（例如这是站标）就填上 alt，那时它不再被当作装饰。
+ */
+export const HEADER_IMAGE: { src: string; alt: string } = {
+  src: "", // 编辑此处：例如 "/header.jpg"
+  alt: "",
+};
 
 /* ------------------------------ i18n 文案 ------------------------------ */
 
 export interface SiteStrings {
-  /* 顶栏 */
+  /* 品牌与导航（顶栏的小字行 + 页脚那一排入口共用这套文案） */
   navLabel: string;
   /** 悬停提示：这一页还没做，由第 N 项落地 */
   navPending: (item: number) => string;
@@ -157,6 +177,8 @@ export interface SiteStrings {
   brandTagline: string;
   brandAbout: string;
   allPosts: string;
+  /** 顶栏图片位空着时格子里显示的字（把图放进 public/ 后填 lib/site.ts 的 HEADER_IMAGE.src） */
+  headerImage: string;
   langName: string;
   langTitle: (name: string) => string;
   statsPosts: (count: number) => string;
@@ -210,6 +232,7 @@ const I18N: Record<Lang, SiteStrings> = {
     brandTagline: "wunai 是谁？",
     brandAbout: "About……",
     allPosts: "全部文章 →",
+    headerImage: "图片位 · 编辑此处",
     langName: "English",
     langTitle: (name) => `切换到 ${name}`,
     statsPosts: (count) => `${count} 篇`,
@@ -261,6 +284,7 @@ const I18N: Record<Lang, SiteStrings> = {
     brandTagline: "Who is wunai?",
     brandAbout: "About…",
     allPosts: "All posts →",
+    headerImage: "Image · edit here",
     langName: "中文",
     langTitle: (name) => `Switch to ${name}`,
     statsPosts: (count) => `${count} post${count === 1 ? "" : "s"}`,

@@ -15,7 +15,7 @@
 
 | 想要什么 | 这里的做法 |
 | --- | --- |
-| 只读文字 | 没有图片、没有视频、没有头像位；装饰全是 CSS 渐变 |
+| 只读文字 | 正文与卡片里没有任何图片位；装饰全是 CSS 渐变。唯一能放图的地方是顶栏右上角那一格（`HEADER_IMAGE`，可以一直空着） |
 | 中文读得舒服 | 渲染时自动优化排版（中英之间补空格、半角标点转全角……），四条规则可单篇关掉 |
 | 版面可调 | 正文宽度 / 字号 / 行距各三档，写在本机 localStorage，瞬时生效 |
 | 护眼 | 三套外观：纸（默认，暖白）、亮、暗；没有 JS 时就是「纸」 |
@@ -140,6 +140,7 @@ public/                     sw.js、favicon.svg
 | `lib/site.ts` 的 `CONTACT` | 邮箱 / GitHub / 本站源码地址（**留空则页脚显示「编辑此处」且不可点**） |
 | `lib/site.ts` 的 `COMMENTS` | giscus 的 repo / repoId / category / categoryId（**留空则文章页显示「编辑此处」**，不加载任何第三方脚本） |
 | `lib/site.ts` 的 `LINKS` | 友链（空数组时 `/links/` 只显示说明） |
+| `lib/site.ts` 的 `HEADER_IMAGE` | 顶栏右上角那张图（**留空时是一格虚线空位，写着「图片位 · 编辑此处」**；尺寸与有图时一样，补图不会让顶栏跳一下） |
 | `lib/home.ts` 的 `intro.body`、`themes.demo`、`fonts.sample` | 首页第 1 / 7 / 8 栏的示范文字 |
 | `content/zh/posts/` 与 `content/en/posts/` | 文章本体（这里没有测试文章，一条都没有） |
 
@@ -180,4 +181,6 @@ public/                     sw.js、favicon.svg
    文章卡片只有 `components/list/PostCard.tsx` 一份；「跳到某一类文章」只有 `lib/list.ts` 的
    `facetHref()` 一处。新页面先看能不能复用，而不是先动手写。
 
-完整的十条约定在 [PROJECTS.md](./PROJECTS.md) 第 5 节。
+完整的十一条约定在 [PROJECTS.md](./PROJECTS.md) 第 5 节。另外顶栏与页脚长什么样、
+为什么改成「品牌 / 友链 / 图片位」三段、导航为什么在页脚 —— 见 PROJECTS.md 的
+「顶栏改版 —— 对齐 wunai-blog 参考稿」那一节。
