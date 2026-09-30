@@ -117,6 +117,14 @@ export function routeReady(id: RouteId): boolean {
   return ROUTES[id].status === "ready";
 }
 
+/**
+ * 字符串是不是一个 RouteId（第 8 项：装饰层要把路径的段落认成「哪一页」）。
+ * 用 ROUTES 自己当事实来源，加一条路由这里不用改。
+ */
+export function isRouteId(value: string): value is RouteId {
+  return Object.prototype.hasOwnProperty.call(ROUTES, value);
+}
+
 /** 顶栏导航（顺序即 ROUTES 里的书写顺序） */
 export const NAV: RouteId[] = (Object.keys(ROUTES) as RouteId[]).filter((id) => ROUTES[id].nav);
 
@@ -129,6 +137,11 @@ export interface SiteStrings {
   navPending: (item: number) => string;
   /** 导航项的名字，按 RouteId 索引 */
   nav: Record<RouteId, string>;
+  /**
+   * 图签名字（第 8 项：右下角那张「图纸标题栏」）里 RouteId 之外的三张图纸。
+   * RouteId 那几张直接复用上面的 nav，不另写一份。
+   */
+  decor: Record<"article" | "offline" | "unknown", string>;
   brandTagline: string;
   brandAbout: string;
   allPosts: string;
@@ -181,6 +194,7 @@ const I18N: Record<Lang, SiteStrings> = {
       about: "关于",
       settings: "设置",
     },
+    decor: { article: "正文", offline: "离线", unknown: "未编号" },
     brandTagline: "wunai 是谁？",
     brandAbout: "About……",
     allPosts: "全部文章 →",
@@ -231,6 +245,7 @@ const I18N: Record<Lang, SiteStrings> = {
       about: "About",
       settings: "Settings",
     },
+    decor: { article: "Article", offline: "Offline", unknown: "Unnumbered" },
     brandTagline: "Who is wunai?",
     brandAbout: "About…",
     allPosts: "All posts →",

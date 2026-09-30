@@ -45,7 +45,7 @@
 ```
 .
 ├─ app/
-│  ├─ globals.css            样式入口（第 6 项：三套令牌 + 蓝图背景层 + 正文与原子件；颜色唯一事实来源）
+│  ├─ globals.css            样式入口（第 6 项：三套令牌 + 蓝图背景层 + 正文与原子件；第 8 项：图案随路由变；颜色唯一事实来源）
 │  ├─ layout.tsx             根布局 / metadata / viewport
 │  ├─ page.tsx               根路径语言分流
 │  ├─ not-found.tsx          404（导出为 out/404.html）
@@ -63,7 +63,7 @@
 │  ├─ dev/PipelineCheck.tsx  开发态渲染自检（生产构建里不出现，可删）
 │  ├─ LangRedirect.tsx       浏览器端语言跳转
 │  ├─ HtmlLang.tsx           客户端纠正 <html lang>
-│  ├─ BlueprintBackground.tsx 蓝图草图背景层（第 6 项；图案全在 globals.css，这里只是个空 div）
+│  ├─ BlueprintBackground.tsx 蓝图草图背景层（第 6 项建立，第 8 项接上路由：路径 → data-decor + 右下角图签）
 │  ├─ ThemeInit.tsx          首帧主题脚本（第 6 项；body 第一个元素，避免暗色读者看到闪白）
 │  ├─ PrefsInit.tsx          首帧阅读偏好脚本（第 7 项；body 第二个元素，避免版面跳动）
 │  ├─ ThemeSync.tsx          跟随系统深浅色变化（第 6 项；只在「跟随系统」时重新解析）
@@ -82,6 +82,7 @@
 │  ├─ site.ts                站点配置（第 7 项扩全：路由表 ROUTES + 落地状态、顶栏导航、联系方式、i18n 文案表）
 │  ├─ icons.ts               用到的 MDI 图标（第 7 项；本地打包的图标数据，运行时不发请求）
 │  ├─ prefs.ts               阅读偏好（第 7 项：宽度/字号/行距三档，写 --reading-* 令牌 + 首帧脚本）
+│  ├─ decor.ts               装饰层（第 8 项：路径 → 图纸编号 + 图案名 + 图签文字，零依赖）
 │  ├─ toml.ts                自写 TOML 解析器（`+++` frontmatter 用）
 │  ├─ frontmatter.ts         双格式识别与字段归一化
 │  ├─ content.ts             内容加载 / 查询 API（只读盘，不渲染）
@@ -139,7 +140,7 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 | 5 | 构建产物 | `[x]` | 搜索索引 `/search-index.json`、RSS（`/feed.xml` + 每语言）、sitemap、robots、PWA（`sw.js` + 离线页 + manifest + 图标）、更新日志 `/changelog.json`；全部在 `next build` 里生成 |
 | 6 | 设计系统 | `[x]` | 护眼纸质底色、蓝图草图背景层、亮/暗/纸三套令牌（`lib/theme.ts` + `app/globals.css`） |
 | 7 | 框架 UI | `[x]` | 顶栏（对齐 wunai-blog）、Footer（左下角设置图标）、设置中心 |
-| 8 | 装饰与动效 | `[ ]` | 全站低干扰图形，随路由切换而变化 |
+| 8 | 装饰与动效 | `[x]` | `lib/decor.ts`：路径 → 图纸（图案 / 编号 / 图签），图案全在 CSS 里；换页纸面重铺一次 + 顶栏光标闪烁 |
 | 9 | 首页 | `[ ]` | 八栏吸附固定 + 侧边指示器（含顺序优化与并排排版） |
 | 10 | 列表页 | `[ ]` | 搜索、筛选（标签/时间/分类）、语言切换、密度切换、AI 筛选默认开启 |
 | 11 | 文章卡片 | `[ ]` | 紧凑 / 适中 / 内容 三档 |
@@ -335,11 +336,12 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
   —— 「纸」就是本站的浅色，读者不必再挑一次。没存过选择时默认 `system`；localStorage 键是 `tob:theme`。
 - **没有 JS 时**：没有任何 `data-theme`，页面落到 `:root` 的「纸」，`meta theme-color` 也是纸的底色
   （`viewport` 里故意只给一条不带宽度的值 —— 读者显式选过外观后，带 `media` 的两条反而会挑错颜色）。
-- **蓝图草图背景层**：`components/BlueprintBackground.tsx` 只是个空 div，图案全在 CSS 里
+- **蓝图草图背景层**：`components/BlueprintBackground.tsx` 本身只画图案的「容器」，图案全在 CSS 里
   （细格 24px + 每 5 格一条粗格 + 边缘用底色径向淡出 + 大屏上的虚线图框，手机上隐藏图框）。
   它固定在最底（`z-index: -1`）、`aria-hidden`、`pointer-events: none`，线透明度 ≤ 0.26：
   约定第 5 条要的是「有气质但不抢字」。底色画在 `<html>` 上、`body` 保持透明，所以不用给内容加任何包装层。
-  第 8 项要让它随路由变化时，往这个 div 上挂 `data-*` 即可。
+  第 8 项已把它接上路由（`data-decor` 换图案、`data-route` 微调淡出、换页时 `data-redraw` 重铺一次）
+  —— 它因此变成了 `"use client"` 组件（只有 `usePathname()` 知道当前路径），细节见第 4 节第 8 项。
 - **正文与原子件**：`.article-body` 的颜色全部换成令牌（第 3 项那套 `--body-*` 局部变量没了）；
   新增两个原子件 `.page`（页面外壳：宽度/内边距/最小高度）与 `.panel`（面板块），
   并且**已经在用**：首页、404、离线页、语言分流页都换成了 `.page` + 令牌工具类
@@ -432,6 +434,62 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
   那一页把它放进 `.page` 里即可（抽屉与页面共用同一份组件）。
 - 尚未在本机验证的（第 8 节有清单）：吸顶顶栏与蓝图层叠在一起好不好看、齿轮在手机上挡不挡内容、
   抽屉的键盘/读屏行为、阅读偏好首帧不跳动。
+
+### 8. 装饰与动效 —— 已完成 ✅
+
+**交付物**：`lib/decor.ts`（路径 → 图纸的唯一事实来源）、`components/BlueprintBackground.tsx` 接上路由、
+`app/globals.css` 第 5 节的七套图案。这一项**没有新页面**，改的全是「纸面」。
+
+- **一张图纸 = 编号 + 图案 + 图签名字**。`lib/decor.ts` 把路径翻成四样东西：
+  `section`（哪一页，`RouteId | "article" | "offline" | "unknown"`）、`pattern`（图案名）、
+  `sheet`（两位编号）、`lang`（图签上的语言）。规则只有两条：
+  1. **先摘语言段**：静态导出下每页都在 `/{lang}/…` 下；`/zh`、`/zh/`、`/zh/?a=1` 是同一张图纸
+     （尾斜杠 / 查询串 / 哈希都先规范化掉）；没有语言段（`/offline/`、`/404.html`）退回 `SITE.defaultLang`；
+  2. **再看第一段**：空 → `home`；`posts` 且后面还有一段 → `article`（正文）；`offline` → 离线纸；
+     认得的 RouteId → 它自己；其它 → `unknown`（编号印 `00`，一眼看出这是张「没编号的纸」）。
+- **图案全在 CSS 里，运行期零计算**：`app/globals.css` 的「5b. 图案随路由变」按 `[data-decor="…"]` 选层。
+  七套：`sheet`（整幅图纸 —— 就是第 6 项那套基线图案：细格 + 每 5 格一条粗格 + 虚线图框）、
+  `columns`（每 16rem 一根竖向分栏线 + 正中一条虚线中轴，像一栏栏的文稿纸）、
+  `measure`（左边缘一把刻度尺，短刻度 8px / 长刻度 40px，文章页「在图纸上排版」的感觉）、
+  `grid`（16px 密格，没有粗格）、`hatch`（45° 剖面线）、`dots`（18px 点阵）、
+  `plain`（什么都不画 —— 断网时纸面最干净，也最省电）。
+  全部是 `repeating-linear-gradient` / `radial-gradient`：**没有图片、没有滤镜、不改布局尺寸**，
+  所以 PWA 离线时装饰也在（与第 5 项的外壳预缓存不冲突），滚动时也不用重算。
+  近景图案（`grid` / `dots` / `hatch` / `plain`）顺手关掉外圈虚线图框 —— 一页一眼就能看出换了张纸。
+- **图案与路由的对应**（`PATTERNS` / `SHEETS` 两张表，改一行就换）：
+  01 首页 `sheet` · 02 文章列表 `columns` · 03 正文 `measure` · 04 标签 `grid` · 05 分类 `hatch` ·
+  06 归档 `columns` · 07 搜索 `dots` · 08 友链 `hatch` · 09 关于 `grid` · 10 设置 `columns` ·
+  11 离线 `plain` · 00 未知 `sheet`。
+  编号连续说明没落下哪张图纸；图案重复是**故意的**（列表 / 归档 / 设置都是「一栏栏的文稿纸」，
+  气质本来就接近）。这两张表写在**页面还没做出来之前**，与第 7 项提前写好 `ROUTES` 是同一个做法：
+  第 10~13 项落地时不用回头补装饰。
+- **为什么是客户端组件**：静态导出下服务端不知道当前路径，只有 `usePathname()` 知道。
+  首屏 HTML 里就已经是这一页的图案（构建期渲染那一页时路径就是那一页的），不是「先画一张再换一张」。
+  `BlueprintBackground` 因此从第 6 项的那个空 div 变成 `"use client"` 组件 ——
+  但它仍然只是一个 div：**图案的解释权在 CSS 与 `lib/decor.ts`，不在组件里**（组件里没有任何 `if`）。
+- **动效只有两处**（第 8 项的全部）：换页时纸面重铺一次，加上第 7 项就写好的顶栏光标闪烁。
+  重铺的做法是跳转后在**同一个 div** 上挂 `data-redraw="true"`，0.32s 内 `opacity: 0.45 → 1`，
+  360ms 后摘掉属性（比动画长一点，免得停在中间帧）；**首帧不播**（首屏是一次「已经铺好的图纸」，
+  没有「换页」这回事），`prefers-reduced-motion: reduce` 的读者完全不参与。
+  刻意**没有**做页面转场动画：阅读站抢注意力，代价大于收获。
+- **右下角的图签（图纸标题栏）**：等宽小字两行 —— 编号 `TOB-ZH-04`（TOB = Text-Only-Blog）
+  + 这一页的名字。名字里 RouteId 那几张**复用顶栏导航的文案**，`SITE.i18n.decor` 只补
+  `正文 / 离线 / 未编号` 三条，不在两份文案表里各写一遍十二个名字（约定第 3 条）。
+  它画在蓝图层**里面**（`z-index: -1`），所以永远在正文与页脚下面 —— 与页脚重叠时被盖住是预期的；
+  窄于 48rem 直接不印，手机上那几平方厘米留给正文。
+  **它是装饰、不是信息**：整层 `aria-hidden`，无障碍树里没有它，真正的内容统计在顶栏图签区。
+- **`data-route` 也没闲着**：`[data-route="article"]` 把边缘淡出的半径收小一点
+  （`radial-gradient(115% 105% at 50% 0% …)`），读正文时视线落在中间；其余图纸用基线那条。
+  要再加一处就写 `[data-route="…"]`，别在组件里写判断。
+- **新增一张图纸 = 两步**（`lib/decor.ts` 与 `globals.css` 的注释里都写了）：
+  `PATTERNS` / `SHEETS` 各加一行 + CSS 加一条 `[data-decor="…"]`。
+  两张表都是 `Record<DecorSection, …>`（穷尽类型）：新加一个 `RouteId` 却忘了补图案，TypeScript 直接报错。
+- 这一项**没有**改颜色与令牌（线仍然只用第 6 项的 `--bp-line` / `--bp-line-strong` / `--bp-frame`，
+  透明度 ≤ 0.26），也**没有**动层序（装饰整层仍是 `z-index: -1`）。
+- **「纸质颗粒」没做，理由留档**：CSS 造噪点只有两条路 —— 内联一张 SVG 湍流图（多一个资源，
+  与「纯文字站不加图片」的取舍矛盾），或高频渐变叠层（渲染开销 + 手机上容易出摩尔纹）。
+  所以这一项交出的纸面**是干净的网格**，不带颗粒；真机上试出来觉得需要再加，
+  给 `.blueprint` 补第五层背景、透明度再压一档即可，改动只在 CSS 里。
 
 ### 构建修复 —— 首次云构建失败的两处（2026-09-30）
 
@@ -708,11 +766,13 @@ curl -s -H "Authorization: Bearer $TOKEN" \
   frontmatter 的 `typography` 字段接到 `renderMarkdown` 的 `RenderOptions.typography`（渲染层已支持）。
 - **第 13 项（设置页）**：`/[lang]/settings/` 直接复用 `components/SettingsCenter.tsx`（它不管容器），
   不要另写一套；落地后把 `ROUTES.settings.status` 改成 `"ready"`。
-- **第 8 项（装饰与动效）**：框架件已经占了几层 z-index —— 蓝图层 `-1`、吸顶顶栏 `20`、
-  齿轮 `40`、遮罩 `45`、抽屉 `50`；新增装饰层别再插到 20 以上，否则会盖住顶栏或抽屉。
-- **第 8 项（装饰与动效）**：蓝图背景层已经就位（`components/BlueprintBackground.tsx` + CSS），
-  要让它随路由变化就往那个 div 上挂 `data-*`（比如 `data-route`），CSS 里按属性换图案；
-  另外「纸质颗粒」这次没有做（不想为一个噪点引入图片资源），想加的话在这一项里做。
+- **第 8 项（装饰与动效）—— 已完成**，这两条留档并转成「后续项要用到的东西」：
+  1. 新增一张图纸 = `lib/decor.ts` 的 `PATTERNS` / `SHEETS` 各加一行 + `app/globals.css` 加一条
+     `[data-decor="…"]`；**不要**在组件里写 `if (pathname === …)`，图签名字也别在页面里手抄；
+  2. 层序没变：蓝图层 `-1`（装饰整层 + 右下角图签都在里面）、吸顶顶栏 `20`、齿轮 `40`、
+     遮罩 `45`、抽屉 `50` —— 新的装饰层别插到 20 以上；
+  3. 「纸质颗粒」没做（理由见第 4 节第 8 项末条）：要加就给 `.blueprint` 补第五层背景，
+     只动 `app/globals.css`，别为它引图片资源。
 - **第 6 项留下的已知缺口**：
   1. **abc（五线谱）在暗色外观下仍是深色线条**（abcjs 用自己画出来的 `<path>`，颜色不跟令牌）。
      没有真浏览器确认过它的配色入口（是 `foregroundColor` 之类的选项还是靠 `add_classes` 出来的 CSS 类），
@@ -790,6 +850,12 @@ http://localhost:3000/zh/?theme=paper
 http://localhost:3000/zh/?theme=light
 http://localhost:3000/zh/?theme=dark
 ```
+
+外观之外，第 8 项的「一张图纸」也能这样对照（对照表在 `lib/decor.ts`）：
+`/zh/` 整幅图纸 · `/zh/posts/` 分栏线 · 文章页左边缘刻度尺 · `/zh/tags/` 密格 ·
+`/zh/categories/` 剖面线 · `/zh/search/` 点阵 · `/offline/` 空纸；
+第 10~13 项落地之前，只有首页能真的看到（其余路径还不存在，敲进去会落到 404 页，
+此时蓝图层按 `unknown` 画、图签印 `TOB-ZH-00` —— 这是预期行为）。
 
 除了首页占位，还会看到一块「渲染管线自检」，
 里面把第 3 项的 GFM、公式、代码高亮、五类图表、参考文献角标、目录抽取，
@@ -940,6 +1006,22 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
   9. **未落地的入口**：顶栏除了「首页」以外都应该是压暗、点不动、悬停有「第 N 项落地」提示；
      页脚的邮箱 / GitHub / 源码三行显示「编辑此处」不可点，RSS 那一行可以点开（`/zh/feed.xml`）；
   10. **打印预览**（Ctrl+P）：设置入口与抽屉不应出现在纸上，顶栏不再吸顶。
+- **第 8 项（装饰与动效）同样没在本机跑过浏览器**，图案的几何与层叠只能靠推演，请按顺序看：
+  1. **能对照的只有两张图纸**：第 10~13 项还没落地，所以「首页（整幅图纸 + 虚线图框）」与
+     「未知路径（`unknown`，图签印 `TOB-ZH-00`）」之外都点不到 —— 顶栏其余入口是 `RouteLink`
+     的 pending 态（压暗、不可点）。想在地址栏硬敲 `/zh/tags/` 看密格图案，静态导出里那条路径
+     还不存在，服务器会给 `out/404.html`，此时蓝图层按 `unknown` 画 —— **这是预期，不是 bug**；
+     换页重铺那 0.32s 也因此暂时只能用浏览器前进/后退（同文档内的客户端跳转）来看。
+  2. **`data-decor` 是否真的落在首屏 HTML 上**：`curl` 或查看源代码，应能在那个 div 上看到
+     `data-decor="sheet" data-route="home"`（首页）。如果水合之后才出现图案，
+     说明构建期那次 `usePathname()` 给了别的值 —— 把那一段 HTML 贴给我。
+  3. **右下角图签**：桌面宽屏应看到 `TOB-ZH-01` + 「首页」两行小字，窄于 48rem 不印；
+     它与页脚重叠时被盖住是预期的（它在 `z-index: -1` 那一层）。
+  4. **印刷与动效**：`prefers-reduced-motion: reduce` 下不应有任何淡入（顶栏光标也不再闪）；
+     打印预览里蓝图层整层不出现（第 6 项的 `@media print` 已关掉它）。
+  5. **手机上滚动是否掉帧**：装饰层是「固定定位 + 最多四层 CSS 渐变」，没有图片与滤镜
+     （全站唯一的 `backdrop-filter` 是顶栏那个 `blur(8px)`）。若滚动发涩，
+     先把粗格那一层（`--bp-grid-major`）从 `.blueprint` 的 `background-image` 里去掉再看 —— 那层最费。
 
 ---
 
@@ -960,3 +1042,4 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
 | 2026-09-30 | **部署目标从 Cloudflare Pages 改为 Workers 静态资源**（避开 Pages 鉴权）：`wrangler.toml` 改为 `[assets] directory = "./out"` + `not_found_handling = "404-page"` + `html_handling = "auto-trailing-slash"`；`package.json` 的 `deploy` 改成 `npx --yes wrangler deploy`；workflow 改名并把 Deploy 步骤改成 `command: deploy`，同时把必然失败的 `npm ci` / `cache: npm` 换成 `setup-bun@v2`（bun 1.2.15）+ `bun install`；两处注释里的 Pages 措辞同步。台账第 2、6、7、8 节与第 14 项待办一并更新。⚠️ 未在本机执行过 `wrangler deploy` |
 | 2026-09-30 | 第六次云构建：**构建阶段就失败**（`EJSONPARSE`）—— 上一次提交给 `package.json` 的 `deploy` 留了尾逗号（我的编辑失误，JSON 不允许尾逗号），删掉后重新触发。台账新增「构建失败 —— `package.json` 尾逗号」小节，并记下以后改 JSON 要过 `node -e "JSON.parse(...)"` 这类真正的解析器（`tsc` 不检查 JSON） |
 | 本次提交 | **第 7 项框架 UI 完成**：顶栏（品牌 / 导航 / 图签三段，对齐 wunai-blog）、页脚（联系方式 + 版权 + 左下角齿轮）、设置中心抽屉（外观 / 阅读偏好 / 语言 / 恢复默认）。新增 `lib/icons.ts`（本地打包的 24 个图标）、`lib/prefs.ts`（宽度/字号/行距三档 + 首帧脚本 + 写 `--reading-*`）；`lib/site.ts` 扩全为「路由落地状态表 ROUTES + 顶栏导航 + 联系方式 + i18n 文案表」；新组件 `RouteLink`（按 `ROUTES.status` 决定可点/不可点）、`SiteHeader`、`SiteFooter`、`ThemeSwitcher`、`LangSwitcher`、`SettingsDock`、`SettingsCenter`、`PrefsInit`。框架挂到 `app/[lang]/layout.tsx`（第 9~13 项自动带上）；`globals.css` 新增「6b. 框架 UI」一节与 `--frame-width` 令牌，`.page` 内边距收紧到 `2.5rem 1.5rem 4rem`；`THEME_LABELS.hint` 由中文一句改成 `{ zh, en }`；约定新增第 8 条（链接可用性以 `ROUTES.status` 为唯一事实来源） |
+| 本次提交 | **第 8 项装饰与动效完成**：新增 `lib/decor.ts`（路径 → 图纸的唯一事实来源：`section` / `pattern` / 两位编号 / 图签语言，纯函数 + 两张穷尽表，零依赖）；`components/BlueprintBackground.tsx` 从空 div 变成 `"use client"` 组件，用 `usePathname()` 挂 `data-decor` / `data-route`，并在换页时让纸面重铺一次（0.32s、首帧不播、尊重 `prefers-reduced-motion`）；`app/globals.css` 新增「5b. 图案随路由变」一节 —— 七套图案（sheet / columns / measure / grid / hatch / dots / plain，全是渐变，无图片、无滤镜、不动布局）+ 右下角图签（`TOB-ZH-01` 之类，窄屏不印）+ `[data-route="article"]` 的边缘淡出微调；`lib/site.ts` 新增 `isRouteId()` 与 `SITE.i18n.decor` 三条文案（图签名字复用导航文案，不重复写十二个）。这一项**未改任何颜色与令牌、未动层序**；「纸质颗粒」未做，理由见第 4 节第 8 项 |

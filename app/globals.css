@@ -213,7 +213,8 @@
    固定在最底：细格 + 每 5 格一条粗格 + 边缘淡出 + 大屏上的虚线图纸边框。
    约定第 5 条：装饰层必须 aria-hidden、pointer-events: none，且不得影响正文可读性
    —— 所以线是 1px、透明度不超过 0.26，边框只做大屏、手机上直接不显示。
-   第 8 项要让它随路由变化时，在元素上挂 data-* 钩子即可（元素见 components/BlueprintBackground.tsx）。
+   第 8 项已按这个约定接上路由：元素上挂 data-decor / data-route / data-redraw
+   （路径 → 图纸的映射在 lib/decor.ts，图案在下面「5b. 图案随路由变」一节）。
    ============================================================ */
 @layer components {
   .blueprint {
@@ -255,6 +256,130 @@
 
   @media (max-width: 48rem) {
     .blueprint::after {
+      display: none;
+    }
+  }
+
+  /* ---------- 5b. 图案随路由变（第 8 项：装饰与动效） ----------
+     谁是哪一张图纸由 lib/decor.ts 决定，这里只按 data-decor 选层。
+     想看全部图案：/zh/（整幅图纸）→ /zh/posts/（分栏线）→ 文章页（刻度尺）→
+     /zh/tags/（密格）→ /zh/categories/（剖面线）→ /zh/search/（点阵）→ /offline/（空纸）。
+
+     ⚠️ 线宽一律 1px、颜色只用 --bp-line / --bp-line-strong（透明度 ≤ 0.26）：
+     装饰不得抢正文的字，也不得让手机上的滚动变卡（全是 CSS 渐变，没有图片与滤镜）。
+     新增一个图案 = lib/decor.ts 的 PATTERNS 加一行 + 这里加一条 [data-decor="…"]。 */
+
+  /* 01 首页 / 未知路径：整幅图纸 —— 就是上面 .blueprint 的默认图案（细格 + 粗格 + 图框） */
+
+  /* 02 列表页：每 16rem 一根竖向分栏线 + 正中一条虚线中轴（像一栏栏的文稿纸） */
+  .blueprint[data-decor="columns"] {
+    background-image:
+      repeating-linear-gradient(to right, var(--bp-line) 0 1px, transparent 1px 16rem),
+      repeating-linear-gradient(to bottom, var(--bp-line-strong) 0 8px, transparent 8px 16px);
+    background-size: auto, 1px 100%;
+    background-position: 0 0, center top;
+    background-repeat: repeat, no-repeat;
+  }
+
+  /* 03 文章页：左边缘一把刻度尺（短刻度 8px、长刻度 40px）—— 在纸上排版的感觉 */
+  .blueprint[data-decor="measure"] {
+    background-image:
+      repeating-linear-gradient(to bottom, var(--bp-line-strong) 0 1px, transparent 1px 40px),
+      repeating-linear-gradient(to bottom, var(--bp-line) 0 1px, transparent 1px 8px);
+    background-size: 11px 100%, 6px 100%;
+    background-position: left top, left top;
+    background-repeat: no-repeat, no-repeat;
+  }
+
+  /* 04 标签页：只有细格，格子更小更密（近景翻阅一张索引纸） */
+  .blueprint[data-decor="grid"] {
+    --bp-grid: 16px;
+    background-image:
+      repeating-linear-gradient(to right, var(--bp-line) 0 1px, transparent 1px var(--bp-grid)),
+      repeating-linear-gradient(to bottom, var(--bp-line) 0 1px, transparent 1px var(--bp-grid));
+  }
+
+  /* 05 分类页：45° 剖面线（图纸上表示「剖开看」的那种线） */
+  .blueprint[data-decor="hatch"] {
+    background-image: repeating-linear-gradient(
+      45deg,
+      var(--bp-line) 0 1px,
+      transparent 1px 18px
+    );
+  }
+
+  /* 07 搜索页：点阵（像坐标纸上的取样点） */
+  .blueprint[data-decor="dots"] {
+    background-image: radial-gradient(var(--bp-line-strong) 1px, transparent 1.6px);
+    background-size: 18px 18px;
+  }
+
+  /* 11 离线页：什么都不画 —— 断网时纸面最干净，也最省电 */
+  .blueprint[data-decor="plain"] {
+    background-image: none;
+  }
+
+  /* 近景图案不配图框：一页一眼就能看出「换了一张图纸」 */
+  .blueprint[data-decor="grid"]::after,
+  .blueprint[data-decor="dots"]::after,
+  .blueprint[data-decor="hatch"]::after,
+  .blueprint[data-decor="plain"]::after {
+    display: none;
+  }
+
+  /* 图框与边缘淡出按「哪一页」微调（data-route 的唯一用处）：
+     文章页收得更紧一点，读正文时视线落在中间；其余图纸用基线那条淡出。
+     想再加一处就写 [data-route="…"]，别在组件里做判断。 */
+  .blueprint[data-route="article"]::before {
+    background-image: radial-gradient(115% 105% at 50% 0%, transparent 45%, var(--c-canvas) 100%);
+  }
+
+  /* 换页时的「纸面重铺」：只淡一次，不做转场动画（第 8 项的全部动效就这一处 + 顶栏光标） */
+  @media (prefers-reduced-motion: no-preference) {
+    .blueprint[data-redraw="true"] {
+      animation: blueprint-redraw 0.32s ease-out both;
+    }
+  }
+
+  @keyframes blueprint-redraw {
+    from {
+      opacity: 0.45;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* 右下角的图签（图纸标题栏）：编号 + 这一页的名字。
+     它挂在这一层里（z-index: -1），所以永远在正文下面 —— 角落通常没有内容，
+     真被压住也无所谓：这是装饰，不是信息（信息在顶栏的图签区）。 */
+  .blueprint-tag {
+    position: absolute;
+    right: 1.9rem;
+    bottom: 1.9rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.1rem;
+    padding: 0.3rem 0.55rem;
+    border: 1px dashed var(--bp-frame);
+    border-radius: var(--shape-radius);
+    color: var(--c-ink-subtle);
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    line-height: 1.4;
+    letter-spacing: 0.06em;
+    opacity: 0.8;
+  }
+
+  .blueprint-tag-name {
+    color: var(--c-ink-muted);
+    letter-spacing: 0.02em;
+  }
+
+  /* 手机上不印图签：屏幕小，角落那几平方厘米留给正文（图框本来也隐掉了） */
+  @media (max-width: 48rem) {
+    .blueprint-tag {
       display: none;
     }
   }
