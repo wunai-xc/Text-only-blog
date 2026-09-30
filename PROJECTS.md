@@ -50,7 +50,7 @@
 │  ├─ page.tsx               根路径语言分流
 │  ├─ not-found.tsx          404（导出为 out/404.html）
 │  └─ [lang]/
-│     ├─ layout.tsx          zh | en 静态参数 + 纠正 <html lang>
+│     ├─ layout.tsx          zh | en 静态参数 + 纠正 <html lang> + 全站框架（第 7 项的顶栏/页脚）
 │     └─ page.tsx            占位首页（第 9 项替换为八栏吸附）+ 开发态渲染自检
 ├─ components/
 │  ├─ ArticleBody.tsx        正文容器：注入 HTML 并按需动态加载五类图表
@@ -65,13 +65,23 @@
 │  ├─ HtmlLang.tsx           客户端纠正 <html lang>
 │  ├─ BlueprintBackground.tsx 蓝图草图背景层（第 6 项；图案全在 globals.css，这里只是个空 div）
 │  ├─ ThemeInit.tsx          首帧主题脚本（第 6 项；body 第一个元素，避免暗色读者看到闪白）
+│  ├─ PrefsInit.tsx          首帧阅读偏好脚本（第 7 项；body 第二个元素，避免版面跳动）
 │  ├─ ThemeSync.tsx          跟随系统深浅色变化（第 6 项；只在「跟随系统」时重新解析）
+│  ├─ SiteHeader.tsx         顶栏（第 7 项；品牌 / 导航 / 图签三段，服务端组件，构建期读内容统计）
+│  ├─ SiteFooter.tsx         页脚（第 7 项；联系方式 + 版权 + 左下角设置入口）
+│  ├─ RouteLink.tsx          「按落地状态渲染」的站内链接（第 7 项；pending 渲染成不可点）
+│  ├─ ThemeSwitcher.tsx      顶栏外观按钮（第 7 项；四态循环，落点是 lib/theme.ts）
+│  ├─ LangSwitcher.tsx       语言切换（第 7 项；顶栏图签区与设置中心共用）
+│  ├─ SettingsDock.tsx       左下角齿轮 + 设置抽屉（第 7 项；Esc/遮罩关闭、锁滚动）
+│  ├─ SettingsCenter.tsx     设置中心内容（第 7 项；抽屉用，第 13 项的 /settings/ 页也能直接放）
 │  └─ ServiceWorkerRegistrar.tsx  注册 /sw.js（生产构建才注册，dev 下只清旧 SW）
 ├─ content/
 │  ├─ README.md              写作规范
 │  └─ {zh,en}/posts/README.md 各语言的目录提示（加载器跳过 README.md）
 ├─ lib/
-│  ├─ site.ts                站点配置（第 7 项扩全：菜单、i18n 文案表、阅读偏好默认值等）
+│  ├─ site.ts                站点配置（第 7 项扩全：路由表 ROUTES + 落地状态、顶栏导航、联系方式、i18n 文案表）
+│  ├─ icons.ts               用到的 MDI 图标（第 7 项；本地打包的图标数据，运行时不发请求）
+│  ├─ prefs.ts               阅读偏好（第 7 项：宽度/字号/行距三档，写 --reading-* 令牌 + 首帧脚本）
 │  ├─ toml.ts                自写 TOML 解析器（`+++` frontmatter 用）
 │  ├─ frontmatter.ts         双格式识别与字段归一化
 │  ├─ content.ts             内容加载 / 查询 API（只读盘，不渲染）
@@ -128,7 +138,7 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 | 4 | 中文排版优化 | `[x]` | `lib/typography.ts`：中英之间补空格、半角标点/成对括号转全角、`...`→`……`，代码/公式/链接地址自动跳过；四条规则可单独开关 |
 | 5 | 构建产物 | `[x]` | 搜索索引 `/search-index.json`、RSS（`/feed.xml` + 每语言）、sitemap、robots、PWA（`sw.js` + 离线页 + manifest + 图标）、更新日志 `/changelog.json`；全部在 `next build` 里生成 |
 | 6 | 设计系统 | `[x]` | 护眼纸质底色、蓝图草图背景层、亮/暗/纸三套令牌（`lib/theme.ts` + `app/globals.css`） |
-| 7 | 框架 UI | `[ ]` | 顶栏（对齐 wunai-blog）、Footer（左下角设置图标）、设置中心 |
+| 7 | 框架 UI | `[x]` | 顶栏（对齐 wunai-blog）、Footer（左下角设置图标）、设置中心 |
 | 8 | 装饰与动效 | `[ ]` | 全站低干扰图形，随路由切换而变化 |
 | 9 | 首页 | `[ ]` | 八栏吸附固定 + 侧边指示器（含顺序优化与并排排版） |
 | 10 | 列表页 | `[ ]` | 搜索、筛选（标签/时间/分类）、语言切换、密度切换、AI 筛选默认开启 |
@@ -347,6 +357,81 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 - **改了令牌要同步的三处**（CSS 与 TS 之间没有桥）：`lib/theme.ts` 的 `THEME_CHROME`（三套底色镜像）、
   `THEME_INIT_SCRIPT`（`applyTheme()` 的内联版本：首帧脚本与运行时 API 必须同一套判定逻辑）、
   `FALLBACK_TOKENS`（读不到 CSS 变量时的兜底）。三处都在 `lib/theme.ts` 顶部注释里写明了。
+
+### 7. 框架 UI —— 已完成 ✅
+
+**交付物**：顶栏（`SiteHeader`）、页脚（`SiteFooter`）、设置中心（`SettingsDock` + `SettingsCenter`），
+以及它们依赖的三块地基：路由落地状态表（`lib/site.ts` 的 `ROUTES`）、图标表（`lib/icons.ts`）、
+阅读偏好（`lib/prefs.ts`）。全部挂在 `app/[lang]/layout.tsx` 上，第 9~13 项每加一页自动带上框架。
+
+- **顶栏**：结构与 wunai-blog 对齐 —— 三段：
+  ① 品牌区（外观按钮 + 大号站名 + 闪烁光标 + 小字行「wunai 是谁？ About…… 全部文章 →」）；
+  ② 导航区（首页 / 文章 / 标签 / 分类 / 归档 / 搜索 / 友链）；
+  ③ 图签区。**唯一的结构改动是第 ③ 段**：wunai-blog 那里是图片位，本站是**纯文字**站，
+  于是换成「图纸标题栏」的气质 —— 等宽小字 + 虚线左边框，放语言切换与内容统计
+  （构建期读一次 `getContentStats`，所以顶栏是**服务端组件**、页面 HTML 里就有，不发请求）。
+  顶栏吸顶、半透明 + `backdrop-filter`（不支持 `color-mix` 时退回不透明）。
+  外观按钮点一下循环四态（跟随系统 → 纸 → 亮 → 暗），图标与悬停说明跟着走 —— 与 wunai-blog 的
+  ThemeToggle 同一个交互模型；精确挑某一套、或调阅读偏好，走左下角的设置中心。
+- **`RouteLink` —— 框架 UI 与后续页面的解耦点**：第 7 项做框架，第 9~13 项才做页面。
+  为了照最终形态写链接又不留 404 死链，站内链接统一过 `components/RouteLink.tsx`：
+  `lib/site.ts` 里 `status: "ready"` → 真 `<Link>`；`"pending"` → 不可点的 `<span data-pending>`
+  （CSS 统一压暗，悬停提示「这一页还没做（第 N 项落地）」）。
+  **现在能点的只有「首页」与页脚的 RSS**；做完第 10 / 13 项，把对应 `status` 改成 `"ready"` 即可，
+  顶栏、页脚、首页一起生效。这条已写进第 5 节约定（第 8 条）。
+- **页脚**：联系方式（邮箱 / GitHub / 本站源码 / RSS）+ 一句话说明 + 版权行（构建时的年份）。
+  联系方式与说明都在 `lib/site.ts`（`CONTACT` 与 `i18n.*`），**值全部留空**：空着的条目只显示
+  「编辑此处」且不可点（不生成点不动的空链接）。RSS 是第 5 项已有的真实产物 `/{lang}/feed.xml`，
+  所以现在就能订阅。
+- **设置中心**：左下角一颗 **fixed 定位的齿轮**（视口左下角，任何页面、任何滚动位置都能摸到），
+  点开从左侧滑出抽屉（`role="dialog"` + `aria-modal`、打开时移焦点、Esc 关闭、点遮罩关闭、
+  打开期间锁 body 滚动、0.18s 滑入且只写在 `prefers-reduced-motion: no-preference` 里）。
+  抽屉里四块：
+  1. **外观**：四选一，直接调 `lib/theme.ts` 的 `setThemeChoice()` —— 没有在这里重写一遍
+     localStorage 与 `data-theme`（第 6 项留的跨项待办就是这么要求的），每项带一枚三色预览色块；
+  2. **阅读偏好**：正文宽度 / 字号 / 行距，各三档，值直接写 `--reading-measure` /
+     `--reading-size` / `--reading-leading` —— 正文（`.article-body`）已经在读这三个令牌，
+     所以改完立刻生效，**不需要通知任何组件**；面板底部还把当前三个令牌的实际取值印出来
+     （`--reading-measure: 42rem · …`），调完能当场看到数字变化；
+  3. **语言**：与顶栏图签区共用 `LangSwitcher`；
+  4. **恢复默认**：清偏好键 + 移除行内变量 + 外观回到「跟随系统」。
+  另外一句话说明这些偏好**只存在本机**（localStorage，不上传、不跨设备）——纯静态站的实话。
+- **`lib/prefs.ts` 的三个设计决定**（写下来免得以后当 bug 改）：
+  1. **存的是档位 id**（`narrow` / `normal` / `wide`…）而不是 rem 值 —— 以后把「宽」从 52rem 调到
+     56rem 只改一行，读者已存的偏好不用迁移；
+  2. **写到 `<html>` 的行内样式上**：行内样式一定赢过 `globals.css` 的 `:root` 规则，
+     不用给三套外观各写一份、也不用跟层叠较劲；「恢复默认」是**移除**行内变量（不是设回默认值），
+     让 CSS 的初值重新说了算；
+  3. **首帧脚本 `READING_INIT_SCRIPT` 由选项表生成**（`JSON.stringify`，见 `optionValues()`），
+     不手抄第二份 —— 与 `THEME_INIT_SCRIPT` 的做法一致，但连数据都不重复。
+  脚本由 `components/PrefsInit.tsx` 内联，是 **body 的第二个元素**（紧跟主题脚本）：
+  不做这一步，存了「窄 + 大字号」的读者会先看到一帧默认版面的文字再跳成他的设置（版面跳动比闪白更烦）。
+  键名：`tob:reading-width` / `tob:reading-size` / `tob:reading-leading`；
+  改了值或加一档只动 `lib/prefs.ts`。
+- **`lib/icons.ts`（新）**：把用到的 24 个 MDI 图标集中一处、按用途分组（导航 / 外观 / 设置 / 页脚），
+  只从 `@iconify/icons-mdi` 深路径导入（本地打包、运行时不发请求），图标名都对着
+  `api.iconify.design/mdi/<name>.svg` 核过存在。图标名与数据的对应只有这一份，
+  拼错字符串键时 TypeScript 会直接报错。
+- **`lib/theme.ts` 的一处改动**：`THEME_LABELS` 的 `hint` 从「一句中文」升级成 `{ zh, en }`。
+  设置中心与顶栏按钮都要显示这句话，英文界面下不该冒出中文。这是第 7 项对第 6 项文件唯一的功能性改动
+  （其余只加注释），`THEME_LABELS` 此前没有别的使用者，所以不涉及兼容。
+- **`app/globals.css`**：新增「6b. 框架 UI」一节（顶栏 / 页脚 / 设置抽屉 / 图标小按钮 / 选项按钮 /
+  外观预览色块 / 窄屏收紧），全部走令牌、放在 `@layer components` 里。
+  另外三处小改：
+  1. 新增令牌 `--frame-width: 48rem`，顶栏、页脚与 `.page` 共用它（三者同宽才对得齐）；
+  2. `.page` 的内边距从 `4.5rem 1.5rem` 改成 `2.5rem 1.5rem 4rem`：顶上有了吸顶顶栏，
+     再留 4.5rem 首屏会空一大块；下面留 4rem 是给左下角那颗固定的齿轮让位；
+  3. 打印样式里隐藏设置入口/遮罩/抽屉，顶栏改成 `position: static`。
+  `.theme-chip` 那几组写死的色值是本文件里**唯一**允许写死的地方（它预览的是另外两套外观，
+  引用当前令牌就四套长得一样了），已在注释里标明「改令牌时同步这里」。
+- **文案分两处**：页面骨架的文案集中在 `lib/site.ts` 的 `I18N`（`SITE.i18n[lang]`，
+  中英各一份、缺一边 TypeScript 直接报错，不会出现某一侧 undefined）；**选项文案跟着选项走**
+  ——外观在 `lib/theme.ts` 的 `THEME_LABELS`、阅读偏好在 `lib/prefs.ts` 的 `READING_*` 表
+  （与第 6 项的做法一致）。第 5 节约定第 3 条据此补了一句说明。
+- **第 13 项的 /[lang]/settings/ 页不需要新写**：`SettingsCenter` 只负责内容、不管容器，
+  那一页把它放进 `.page` 里即可（抽屉与页面共用同一份组件）。
+- 尚未在本机验证的（第 8 节有清单）：吸顶顶栏与蓝图层叠在一起好不好看、齿轮在手机上挡不挡内容、
+  抽屉的键盘/读屏行为、阅读偏好首帧不跳动。
 
 ### 构建修复 —— 首次云构建失败的两处（2026-09-30）
 
@@ -607,13 +692,24 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 
 ### 跨项待办（做到对应项时顺手勾掉）
 
-- **第 7 项（框架 UI / 设置中心）**：
-  1. 外观选择器直接调 `lib/theme.ts` 的 `setThemeChoice()` 与 `THEME_CHOICES` / `THEME_LABELS`
-     （中英文案、每个选项的一句话说明都在里面），当前选中项读 `data-theme-choice` / `currentThemeChoice()`；
-     **不要**再写一遍 localStorage 与 `data-theme` 的读写；
-  2. 阅读偏好控件（宽度 / 字号 / 行距）把值写到 `--reading-measure` / `--reading-size` / `--reading-leading`
-     三个令牌上即可 —— 正文已经在读它们了；属性名 / 档位值先别急着定，做到这一步时一起定；
-  3. 顶栏、页脚这些新面板块用 `.panel` / 令牌工具类，别引入写死的颜色（`dark:` 变体在这个站里表达不了三套外观）。
+- **第 7 项（框架 UI / 设置中心）—— 已完成**，这条留档并转成「后续项要用到的东西」：
+  1. ✅ 外观选择器走 `lib/theme.ts` 的 `setThemeChoice()` / `THEME_CHOICES` / `THEME_LABELS`，
+     当前选中项读 `currentThemeChoice()`；**没有**第二份 localStorage 与 `data-theme` 读写；
+     `THEME_LABELS.hint` 已从「一句中文」改成 `{ zh, en }`（英文界面不该冒中文）；
+  2. ✅ 阅读偏好在 `lib/prefs.ts`：三档选项表 + 首帧脚本（`PrefsInit`）+ 写入 `--reading-*`。
+     档位值就定在 `READING_WIDTHS / SIZES / LEADINGS` 里（34/42/52rem、0.98/1.0625/1.18rem、1.6/1.85/2.1）；
+  3. ✅ 顶栏、页脚、抽屉全部用令牌与 `.panel`，没有写死颜色，`dark:` 变体一个也没有。
+- **第 9 项（首页）**：框架在 `app/[lang]/layout.tsx`，**不是**每页各写一遍（与 wunai-blog 的取舍不同）。
+  要改首页外壳（例如八栏吸附不想要页脚）时改 layout，别在 page 里再放一份顶栏；
+  `app/[lang]/page.tsx` 里那三行（「编辑此处：本站介绍」+ 统计 + 开发态自检）整块替换即可。
+- **第 10 / 13 项**：页面落地后把 `lib/site.ts` 的 `ROUTES[id].status` 从 `"pending"` 改成 `"ready"`
+  —— 顶栏、页脚、`RouteLink` 的入口会一起生效；新页面同时加进 `app/sitemap.ts` 的 `pageRoutes()`。
+- **第 12 项（文章页）**：正文宽度一律用 `--reading-measure`（读者的阅读偏好要能生效），别写死 42rem；
+  frontmatter 的 `typography` 字段接到 `renderMarkdown` 的 `RenderOptions.typography`（渲染层已支持）。
+- **第 13 项（设置页）**：`/[lang]/settings/` 直接复用 `components/SettingsCenter.tsx`（它不管容器），
+  不要另写一套；落地后把 `ROUTES.settings.status` 改成 `"ready"`。
+- **第 8 项（装饰与动效）**：框架件已经占了几层 z-index —— 蓝图层 `-1`、吸顶顶栏 `20`、
+  齿轮 `40`、遮罩 `45`、抽屉 `50`；新增装饰层别再插到 20 以上，否则会盖住顶栏或抽屉。
 - **第 8 项（装饰与动效）**：蓝图背景层已经就位（`components/BlueprintBackground.tsx` + CSS），
   要让它随路由变化就往那个 div 上挂 `data-*`（比如 `data-route`），CSS 里按属性换图案；
   另外「纸质颗粒」这次没有做（不想为一个噪点引入图片资源），想加的话在这一项里做。
@@ -659,6 +755,12 @@ curl -s -H "Authorization: Bearer $TOKEN" \
    工具类（`text-ink-muted` / `bg-surface` / `border-rule` / `text-accent`）；
    不写 `dark:` 变体（三套外观，两态表达不了）、不写死色值、不动 `<html>` 上的 `data-theme`
    （要切换外观就调 `lib/theme.ts` 的 `setThemeChoice()`）。
+   唯一的例外是设置中心那几颗**外观预览色块**（`.theme-chip`）：它预览的是另外两套外观，
+   只能写死，改令牌时要同步那一处（见第 4 节第 7 项）。
+8. **链接的可用性只有一个事实来源**（第 7 项起）：站内链接一律走 `components/RouteLink.tsx`，
+   而它读 `lib/site.ts` 的 `ROUTES[id].status`。页面还没做就写 `"pending"`（渲染成不可点、悬停说明
+   由第几项落地），做完改成 `"ready"` —— 不在页面里写死 href、也不留会 404 的死链。
+   阅读偏好同理：只写 `--reading-*` 令牌（`lib/prefs.ts`），别在组件里直接改字体大小。
 
 ---
 
@@ -678,7 +780,9 @@ npm run deploy       # wrangler 部署到 Cloudflare Workers（静态资源）
 > 另注：`npm run deploy` 用的 `wrangler` 目前**没有写进 devDependencies**，
 > 本机部署前先 `npx wrangler --version` 或全局装一个（这事留给第 14 项一并处理）。
 
-`npm run dev` 后打开 `/zh/`，想看第 6 项的三套外观就带一个调试参数（不写 localStorage，刷新即失效）：
+`npm run dev` 后打开 `/zh/`：第 7 项之后**左下角有一颗齿轮**，点开就是设置中心 ——
+外观（四选一）、正文宽度 / 字号 / 行距、语言切换、恢复默认都在里面，这是读者的正式路径。
+下面这个 `?theme=` 调试参数仍然有效（它不写 localStorage、刷新即失效），用来快速对照三套令牌：
 
 ```bash
 # 纸（默认）/ 亮 / 暗
@@ -811,6 +915,31 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
      在 `<html>` 有底色的前提下各家浏览器表现一致；如果你在手机上看到底色被盖住或者整页变灰，告诉我。
 - 第 6 项里唯一「查过文档」的是 Tailwind 4 的 `@theme inline`（用它才能让工具类引用变量、
   而不是把颜色值烤进 CSS）；其余都是照 CSS 规范写的，没跑过构建，`npm run typecheck` 先跑一遍。
+- **第 7 项（框架 UI）也没在本机跑过浏览器**，下面这几件事请你按顺序看一遍：
+  1. **`npm run typecheck`** —— 这一项新增 8 个组件与 2 个 lib 文件，类型面比前几项大；
+     特别留意 `lib/icons.ts` 的 24 个深路径导入（名字都对着 iconify 的 API 核过，
+     但包里文件是否齐全只有装完依赖才知道）；
+  2. **顶栏三段在桌面与手机上的换行**：窄屏时品牌 / 导航 / 图签会逐段折行 ——
+     图签区的虚线左边框折行后可能显得突兀，觉得碍眼就把 `.site-titleblock` 的
+     `border-left` 在窄屏媒体查询里去掉（那一条已经写好了，加两行即可）；
+  3. **吸顶顶栏 + 蓝图背景层**：顶栏是半透明底 + `blur(8px)`，滚过蓝图网格时会不会显得脏
+     （嫌脏就把 `color-mix` 的那个 88% 调高，见 `.site-header`）；
+  4. **左下角齿轮**：手机上（尤其带手势条的机型）会不会挡住正文最后一行或与浏览器自己的
+     悬浮控件打架；页脚专门留了 4.75rem 下边距，其他页面的 `.page` 留了 4rem；
+  5. **设置抽屉**：Esc 能关、点遮罩能关、打开时背景不跟着滚、Tab 焦点不会跑到抽屉后面
+     （目前没有做完整的焦点陷阱，只把焦点移进抽屉 —— 觉得不够严谨告诉我，我加一层循环）；
+  6. **阅读偏好**：选「窄 + 大 + 宽松」后**硬刷新**，正文应当一帧就是设置好的版面，
+     不该先看到默认版面再跳（若跳，说明 `PrefsInit` 被挪到了 body 非第二个位置）；
+     再开 DevTools → Elements 看 `<html style="--reading-measure: 34rem …">` 是不是写上了；
+     「恢复默认」后这几个行内变量应当**被移除**（不是设回默认值）；
+  7. **外观按钮**：连点四下应当依次是 跟随系统 → 纸 → 亮 → 暗 → 跟随系统，
+     图标与悬停提示跟着变；在设置中心里点某一套，顶栏那颗按钮的图标也要跟着变
+     （两者通过 `subscribeTheme` 同步，这条没跑过真浏览器）；
+  8. **语言切换**：在 `/zh/` 点进设置抽屉里的「English」，应当到 `/en/`（带尾斜杠），
+     回来时偏好设置保持不变；
+  9. **未落地的入口**：顶栏除了「首页」以外都应该是压暗、点不动、悬停有「第 N 项落地」提示；
+     页脚的邮箱 / GitHub / 源码三行显示「编辑此处」不可点，RSS 那一行可以点开（`/zh/feed.xml`）；
+  10. **打印预览**（Ctrl+P）：设置入口与抽屉不应出现在纸上，顶栏不再吸顶。
 
 ---
 
@@ -830,3 +959,4 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
 | 2026-09-30 | 第五次云构建：命令已完全正确（`pages deploy out --project-name=…`）但 `code 10000` 一字未变，判定为该构建实际使用的 token 仍无 Pages 权限（报错早于产物上传）。台账补「怎么确认用的哪个 token」三条判别法与绕开 token 的两条备选路径 |
 | 2026-09-30 | **部署目标从 Cloudflare Pages 改为 Workers 静态资源**（避开 Pages 鉴权）：`wrangler.toml` 改为 `[assets] directory = "./out"` + `not_found_handling = "404-page"` + `html_handling = "auto-trailing-slash"`；`package.json` 的 `deploy` 改成 `npx --yes wrangler deploy`；workflow 改名并把 Deploy 步骤改成 `command: deploy`，同时把必然失败的 `npm ci` / `cache: npm` 换成 `setup-bun@v2`（bun 1.2.15）+ `bun install`；两处注释里的 Pages 措辞同步。台账第 2、6、7、8 节与第 14 项待办一并更新。⚠️ 未在本机执行过 `wrangler deploy` |
 | 2026-09-30 | 第六次云构建：**构建阶段就失败**（`EJSONPARSE`）—— 上一次提交给 `package.json` 的 `deploy` 留了尾逗号（我的编辑失误，JSON 不允许尾逗号），删掉后重新触发。台账新增「构建失败 —— `package.json` 尾逗号」小节，并记下以后改 JSON 要过 `node -e "JSON.parse(...)"` 这类真正的解析器（`tsc` 不检查 JSON） |
+| 本次提交 | **第 7 项框架 UI 完成**：顶栏（品牌 / 导航 / 图签三段，对齐 wunai-blog）、页脚（联系方式 + 版权 + 左下角齿轮）、设置中心抽屉（外观 / 阅读偏好 / 语言 / 恢复默认）。新增 `lib/icons.ts`（本地打包的 24 个图标）、`lib/prefs.ts`（宽度/字号/行距三档 + 首帧脚本 + 写 `--reading-*`）；`lib/site.ts` 扩全为「路由落地状态表 ROUTES + 顶栏导航 + 联系方式 + i18n 文案表」；新组件 `RouteLink`（按 `ROUTES.status` 决定可点/不可点）、`SiteHeader`、`SiteFooter`、`ThemeSwitcher`、`LangSwitcher`、`SettingsDock`、`SettingsCenter`、`PrefsInit`。框架挂到 `app/[lang]/layout.tsx`（第 9~13 项自动带上）；`globals.css` 新增「6b. 框架 UI」一节与 `--frame-width` 令牌，`.page` 内边距收紧到 `2.5rem 1.5rem 4rem`；`THEME_LABELS.hint` 由中文一句改成 `{ zh, en }`；约定新增第 8 条（链接可用性以 `ROUTES.status` 为唯一事实来源） |

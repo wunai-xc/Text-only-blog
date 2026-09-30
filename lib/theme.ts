@@ -45,27 +45,42 @@ export const THEME_STORAGE_KEY = "tob:theme";
 /** 主题真的变了才派发（同一套外观重复 apply 不派发） */
 export const THEME_EVENT = "tob:themechange";
 
-/** 设置中心（第 7 项）用的文案，中英各一份；`hint` 是一句话说明 */
-export const THEME_LABELS: Record<ThemeChoice, { zh: string; en: string; hint: string }> = {
+/** 设置中心（第 7 项）用的文案，中英各一份；`hint` 是一句话说明（也是中英各一份） */
+export const THEME_LABELS: Record<
+  ThemeChoice,
+  { zh: string; en: string; hint: { zh: string; en: string } }
+> = {
   system: {
     zh: "跟随系统",
     en: "System",
-    hint: "系统是浅色时用「纸」，深色时用「暗」",
+    hint: {
+      zh: "系统是浅色时用「纸」，深色时用「暗」",
+      en: "Paper on a light system, Dark on a dark one",
+    },
   },
   paper: {
     zh: "纸（护眼）",
     en: "Paper",
-    hint: "默认。暖白纸质底色，长文阅读用",
+    hint: {
+      zh: "默认。暖白纸质底色，长文阅读用",
+      en: "Default. Warm paper tone, made for long reads",
+    },
   },
   light: {
     zh: "亮色",
     en: "Light",
-    hint: "冷白底色，偏「屏幕上的文档」",
+    hint: {
+      zh: "冷白底色，偏「屏幕上的文档」",
+      en: "Cool white, closer to a document on screen",
+    },
   },
   dark: {
     zh: "暗色",
     en: "Dark",
-    hint: "夜间用；代码块本来就是深色，不会突变",
+    hint: {
+      zh: "夜间用；代码块本来就是深色，不会突变",
+      en: "For night; code blocks are dark already, so nothing jumps",
+    },
   },
 };
 

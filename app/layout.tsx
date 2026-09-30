@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import BlueprintBackground from "@/components/BlueprintBackground";
+import PrefsInit from "@/components/PrefsInit";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import ThemeInit from "@/components/ThemeInit";
 import ThemeSync from "@/components/ThemeSync";
@@ -45,6 +46,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {/* 必须是 body 第一个元素：在任何内容之前把 data-theme 写好，避免首帧闪白 */}
         <ThemeInit />
+        {/* 阅读偏好（宽度/字号/行距）也要在首帧之前落好，否则会看到一次版面跳动（第 7 项） */}
+        <PrefsInit />
         {/* 装饰层：整页蓝图网格，固定在最底、不接鼠标事件、不进无障碍树 */}
         <BlueprintBackground />
         {/* 跟随系统深浅色变化（只在读者选择「跟随系统」时生效） */}
