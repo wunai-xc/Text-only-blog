@@ -65,6 +65,7 @@ export const render: ChartRenderer = async (target, source, context) => {
   canvas.style.maxWidth = `${BASE_SIZE}px`;
   canvas.style.height = "auto";
 
+  // SmilesDrawer 只有 light / dark 两套内置配色：第 6 项的「纸」与「亮色」共用 light
   const theme = context.dark ? "dark" : "light";
   const drawer = new api.Drawer({
     width: size,

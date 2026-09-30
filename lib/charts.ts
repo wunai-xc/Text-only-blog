@@ -7,7 +7,10 @@
  *
  * 因此它必须保持「零依赖、不导入任何 node: 模块」，否则会污染客户端包。
  * 真正的渲染代码在 components/charts/*.ts（只在文章里真的出现图表时才加载）。
+ * 对 lib/theme.ts 的引用是 **仅类型**（`import type`），编译后被抹掉，运行时不留痕迹。
  */
+
+import type { Theme, ThemeTokens } from "./theme";
 
 export type ChartKind = "mermaid" | "echarts" | "graphviz" | "abc" | "smiles";
 
@@ -65,8 +68,16 @@ export function chartLanguage(lang: string | null | undefined): ChartLanguage | 
 }
 
 export interface ChartContext {
-  /** 是否暗色外观（各渲染器自己决定用哪个主题名） */
+  /** 当前外观（第 6 项的三套令牌：paper / light / dark） */
+  theme: Theme;
+  /** 是否暗色外观：mermaid / echarts / smiles 用它挑内置主题 */
   dark: boolean;
+  /**
+   * 站点令牌（第 6 项）—— 需要自己配色的渲染器（echarts / graphviz）读它，
+   * 不要在渲染器里写死颜色（暗色下会看不见）。值由 lib/theme.ts 的
+   * readThemeTokens() 从 CSS 变量读出来，主题一换就是新的。
+   */
+  colors: ThemeTokens;
 }
 
 export type ChartCleanup = () => void;

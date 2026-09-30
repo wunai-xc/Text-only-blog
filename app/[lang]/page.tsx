@@ -10,6 +10,7 @@ export const metadata: Metadata = { title: SITE.title };
  * 占位首页：第 9 项会换成八栏吸附式首页。
  * 这里顺手读一次内容统计，用来验证第 2 项的内容管线在 dev / build 里真的能跑通；
  * 开发环境再挂一个渲染管线自检（第 3 项的渲染器），生产构建里整块会被摇掉。
+ * 样式走第 6 项的 `.page` 原子件与令牌工具类（text-ink-muted 等）。
  */
 export default async function LangHome({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
@@ -27,10 +28,10 @@ export default async function LangHome({ params }: { params: Promise<{ lang: str
       : (await import("@/components/dev/PipelineCheck")).default;
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center gap-4 px-6 py-16">
+    <main className="page flex flex-col justify-center gap-4">
       <h1 className="text-3xl font-semibold tracking-tight">{SITE.title}</h1>
-      <p className="text-sm opacity-70">编辑此处：本站介绍</p>
-      <p className="font-mono text-xs opacity-50">{pipeline}</p>
+      <p className="text-sm text-ink-muted">编辑此处：本站介绍</p>
+      <p className="font-mono text-xs text-ink-subtle">{pipeline}</p>
       {DevPipelineCheck ? <DevPipelineCheck /> : null}
     </main>
   );

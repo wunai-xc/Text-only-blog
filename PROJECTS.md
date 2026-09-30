@@ -45,7 +45,7 @@
 ```
 .
 ├─ app/
-│  ├─ globals.css            样式入口（Tailwind 4 + KaTeX + monokai + 第 3 项渲染样式）
+│  ├─ globals.css            样式入口（第 6 项：三套令牌 + 蓝图背景层 + 正文与原子件；颜色唯一事实来源）
 │  ├─ layout.tsx             根布局 / metadata / viewport
 │  ├─ page.tsx               根路径语言分流
 │  ├─ not-found.tsx          404（导出为 out/404.html）
@@ -63,17 +63,21 @@
 │  ├─ dev/PipelineCheck.tsx  开发态渲染自检（生产构建里不出现，可删）
 │  ├─ LangRedirect.tsx       浏览器端语言跳转
 │  ├─ HtmlLang.tsx           客户端纠正 <html lang>
+│  ├─ BlueprintBackground.tsx 蓝图草图背景层（第 6 项；图案全在 globals.css，这里只是个空 div）
+│  ├─ ThemeInit.tsx          首帧主题脚本（第 6 项；body 第一个元素，避免暗色读者看到闪白）
+│  ├─ ThemeSync.tsx          跟随系统深浅色变化（第 6 项；只在「跟随系统」时重新解析）
 │  └─ ServiceWorkerRegistrar.tsx  注册 /sw.js（生产构建才注册，dev 下只清旧 SW）
 ├─ content/
 │  ├─ README.md              写作规范
 │  └─ {zh,en}/posts/README.md 各语言的目录提示（加载器跳过 README.md）
 ├─ lib/
-│  ├─ site.ts                站点配置（第 6 项扩全）
+│  ├─ site.ts                站点配置（第 7 项扩全：菜单、i18n 文案表、阅读偏好默认值等）
 │  ├─ toml.ts                自写 TOML 解析器（`+++` frontmatter 用）
 │  ├─ frontmatter.ts         双格式识别与字段归一化
 │  ├─ content.ts             内容加载 / 查询 API（只读盘，不渲染）
 │  ├─ charts.ts              图表语言名登记表（服务端与浏览器共用，零依赖）
 │  ├─ typography.ts          中文排版优化（第 4 项，纯字符串函数 + remark 插件，零依赖）
+│  ├─ theme.ts               主题与设计令牌（第 6 项：三套外观、首帧脚本、运行时读写、令牌读取）
 │  ├─ markdown.ts            Markdown → HTML 管线（第 3 项）
 │  ├─ search-index.ts        搜索索引条目构建（第 5 项，Fuse.js 字段约定在这里）
 │  ├─ feeds.ts               RSS 2.0 生成（第 5 项）
@@ -123,7 +127,7 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 | 3 | Markdown 渲染 | `[x]` | GFM、highlight.js(monokai)、KaTeX + mhchem + 自定义宏、五类图表、`[reference:N]` 角标 |
 | 4 | 中文排版优化 | `[x]` | `lib/typography.ts`：中英之间补空格、半角标点/成对括号转全角、`...`→`……`，代码/公式/链接地址自动跳过；四条规则可单独开关 |
 | 5 | 构建产物 | `[x]` | 搜索索引 `/search-index.json`、RSS（`/feed.xml` + 每语言）、sitemap、robots、PWA（`sw.js` + 离线页 + manifest + 图标）、更新日志 `/changelog.json`；全部在 `next build` 里生成 |
-| 6 | 设计系统 | `[ ]` | 护眼纸质底色、蓝图草图背景层、亮/暗/纸三套令牌 |
+| 6 | 设计系统 | `[x]` | 护眼纸质底色、蓝图草图背景层、亮/暗/纸三套令牌（`lib/theme.ts` + `app/globals.css`） |
 | 7 | 框架 UI | `[ ]` | 顶栏（对齐 wunai-blog）、Footer（左下角设置图标）、设置中心 |
 | 8 | 装饰与动效 | `[ ]` | 全站低干扰图形，随路由切换而变化 |
 | 9 | 首页 | `[ ]` | 八栏吸附固定 + 侧边指示器（含顺序优化与并排排版） |
@@ -254,8 +258,9 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
   正文与归档一律允许；附带 `sitemap` 与 `host`。
 - **PWA**：
   - `app/manifest.ts` 生成 `/manifest.webmanifest`（`app/layout.tsx` 早就指着这个地址）；
-    `start_url` 是默认语言首页，`display: standalone`，配色先用亮色令牌
-    （`#f4f1e8` / `#0e1416`，第 6 项做设计系统时再换）。
+    `start_url` 是默认语言首页，`display: standalone`，配色取 `THEME_CHROME.paper`
+    （「纸」的底色 `#f1ece0`，与 `globals.css` 的 `--c-canvas` 同值 —— 第 6 项把原先写死的
+    `#f4f1e8` 换成了令牌；manifest 是构建期产物，只能挑一套，挑的就是「没有 JS 时的默认」）。
   - `public/sw.js`（**不打包**，浏览器直接跑，所以是普通 JS、不能 import）：
     install 预缓存外壳（`/`、`/zh/`、`/en/`、`/offline/`、manifest、favicon，逐条 try/catch，
     单条失败不影响整体）；activate 清掉旧版本缓存并 `clients.claim()`；
@@ -274,8 +279,89 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
   浏览器 / 阅读器不用手输地址。**注意**：Next 的 metadata 是浅合并 ——
   文章页（第 12 项）如果自己写了 `alternates`，这条 `types` 会被整体覆盖掉，要在文章页里补回来。
 
+### 6. 设计系统 —— 已完成 ✅
+
+**颜色只有一份定义**：`app/globals.css` 里三套块（`:root` = 纸，`[data-theme="light"]`，`[data-theme="dark"]`）。
+`lib/theme.ts` 只镜像三套主题的**底色**（`THEME_CHROME`，给 manifest 与 `meta theme-color` 用，
+因为构建期读不到浏览器里的 CSS 变量），其余一律走变量。
+
+| 外观 | 定位 | 底色 | 重点色 |
+| --- | --- | --- | --- |
+| **纸 paper**（默认） | 护眼暖白纸质，长文阅读用 | `#f1ece0` | 暖褐 `#8a6a3b` |
+| 亮 light | 冷白，「屏幕上的文档」感 | `#f4f6f6` | 蓝图青 `#1d4f63` |
+| 暗 dark | 夜间 | `#0e1416` | 亮青 `#7fc3da` |
+
+- **令牌分组**（面/字/线/重点/蓝图层这五组都在三套块里同名出现，换外观只是换变量值）：
+  - 面：`--c-canvas`（页面底）、`--c-surface`（面板/卡片）、`--c-surface-2`（表头、行内代码）；
+  - 字：`--c-ink`、`--c-ink-muted`、`--c-ink-subtle`；
+  - 线：`--c-rule`、`--c-rule-strong`；
+  - 重点：`--c-accent`、`--c-accent-soft`、`--c-accent-ink`（accent 实底上的反白字）、`--c-danger`、`--c-mark`（选区）；
+  - 蓝图层：`--bp-line`、`--bp-line-strong`、`--bp-frame`、`--bp-grid`（24px）、`--bp-grid-major`（120px）。
+  另有一组三套共用的（写在第二个 `:root` 里）：形状 `--shape-radius` / `--shape-radius-lg` /
+  `--shape-shadow`（**故意加 `shape-` 前缀**：Tailwind 自己的 theme 里有 `--radius*` / `--shadow*`，
+  同名会把 `rounded-lg` 这类工具类的取值改坏），
+  以及**阅读度量** `--reading-measure` / `--reading-size` / `--reading-leading`
+  —— 正文的宽 / 字号 / 行距已经全部改成读这三个（第 7 项的设置中心只要改它们的值，第 12 项的文章页直接受益）。
+- **怎么流到页面**：`@theme inline` 把 `--c-*` 映射成 Tailwind 的语义色工具类，
+  页面里写 `text-ink-muted`、`bg-surface`、`border-rule`、`text-accent`。
+  **不要写 `dark:` 变体**：外观有三套，两态变体表达不了；而且令牌一换，已经渲染的 class 立刻跟着变。
+- **分层**：自定义样式都写进 `@layer base`（基础层）与 `@layer components`（蓝图、原子件、正文），
+  因为 Tailwind 4 的 `index.css` 第一行就声明了 `@layer theme, base, components, utilities;`
+  —— 放在层里的规则**能被工具类覆盖**（`<main class="page px-6">` 里的 `px-6` 会生效）。
+  不写 layer 的自定义 CSS 反而会盖住一切工具类，那种坑很难查。只有打印样式故意留在层外。
+- **切主题的落点只有一个**：`<html data-theme="paper|light|dark">`（外加 `data-theme-choice` 记录读者的选择，
+  给设置中心回显用）。三处配合：
+  1. `components/ThemeInit.tsx`：把 `THEME_INIT_SCRIPT` 内联成 **body 的第一个元素**。必须在 React 水合之前跑完，
+     否则选了暗色的读者会看到一帧白底（FOUC）；React 不会水合这个 `<script>`，它只是原样躺在 HTML 里。
+  2. `components/ThemeSync.tsx`：挂 `matchMedia("(prefers-color-scheme: dark)")` 的监听，
+     只对「跟随系统」的读者生效（日落自动切深色时页面跟着走）。
+  3. `lib/theme.ts` 的运行时 API：`applyTheme()`（写 data-theme / color-scheme / theme-color meta + 派发事件）、
+     `setThemeChoice()`（存 localStorage + 生效）、`watchSystemTheme()`、`subscribeTheme()`、`readThemeTokens()`。
+     第 7 项的设置中心直接用这些，别在组件里再写一遍 localStorage 与 data-theme 的读写。
+- **选择的语义**：`system | paper | light | dark`。`system` 在浅色系统下解析成**纸**、深色系统下解析成**暗**
+  —— 「纸」就是本站的浅色，读者不必再挑一次。没存过选择时默认 `system`；localStorage 键是 `tob:theme`。
+- **没有 JS 时**：没有任何 `data-theme`，页面落到 `:root` 的「纸」，`meta theme-color` 也是纸的底色
+  （`viewport` 里故意只给一条不带宽度的值 —— 读者显式选过外观后，带 `media` 的两条反而会挑错颜色）。
+- **蓝图草图背景层**：`components/BlueprintBackground.tsx` 只是个空 div，图案全在 CSS 里
+  （细格 24px + 每 5 格一条粗格 + 边缘用底色径向淡出 + 大屏上的虚线图框，手机上隐藏图框）。
+  它固定在最底（`z-index: -1`）、`aria-hidden`、`pointer-events: none`，线透明度 ≤ 0.26：
+  约定第 5 条要的是「有气质但不抢字」。底色画在 `<html>` 上、`body` 保持透明，所以不用给内容加任何包装层。
+  第 8 项要让它随路由变化时，往这个 div 上挂 `data-*` 即可。
+- **正文与原子件**：`.article-body` 的颜色全部换成令牌（第 3 项那套 `--body-*` 局部变量没了）；
+  新增两个原子件 `.page`（页面外壳：宽度/内边距/最小高度）与 `.panel`（面板块），
+  并且**已经在用**：首页、404、离线页、语言分流页都换成了 `.page` + 令牌工具类
+  （原先的 `opacity-70`、写死的 `underline` 之类临时写法一并清掉）。
+- **图表跟着主题走**（这块是第 5 项跨项待办里点名要给第 6 项的）：
+  `ChartContext` 从「只有一个 `dark`」扩成 `{ theme, dark, colors }`，`colors` 是 `readThemeTokens()`
+  从 CSS 变量现读的令牌。`ArticleBody` 用惰性初值拿当前外观、用 `subscribeTheme()` 订阅变化，
+  外观一变就「清空容器 → 重跑渲染器」重绘（只在真的有图表的文章里付这个代价）。
+  各渲染器的改法：echarts 删掉写死的 `DARK_THEME`，改成按令牌注册一个 `blog` 主题；
+  mermaid 用 `themeVariables` 把令牌盖到内置主题上；graphviz 往 dot 源里插三条
+  `graph | node | edge` 默认属性（它是「黑字透明底」，暗色下原本等于看不见；作者自己写的颜色优先级更高）；
+  smiles 继续用内置的 light/dark；**abc（五线谱）没动**，见下面的待办。
+- **打印**：`@media print` 里隐藏蓝图层、正文转 11pt / 不限宽、代码块转浅底
+  —— 纯文字博客最实用的「导出」就是 Ctrl+P 存 PDF。
+- **改了令牌要同步的三处**（CSS 与 TS 之间没有桥）：`lib/theme.ts` 的 `THEME_CHROME`（三套底色镜像）、
+  `THEME_INIT_SCRIPT`（`applyTheme()` 的内联版本：首帧脚本与运行时 API 必须同一套判定逻辑）、
+  `FALLBACK_TOKENS`（读不到 CSS 变量时的兜底）。三处都在 `lib/theme.ts` 顶部注释里写明了。
+
 ### 跨项待办（做到对应项时顺手勾掉）
 
+- **第 7 项（框架 UI / 设置中心）**：
+  1. 外观选择器直接调 `lib/theme.ts` 的 `setThemeChoice()` 与 `THEME_CHOICES` / `THEME_LABELS`
+     （中英文案、每个选项的一句话说明都在里面），当前选中项读 `data-theme-choice` / `currentThemeChoice()`；
+     **不要**再写一遍 localStorage 与 `data-theme` 的读写；
+  2. 阅读偏好控件（宽度 / 字号 / 行距）把值写到 `--reading-measure` / `--reading-size` / `--reading-leading`
+     三个令牌上即可 —— 正文已经在读它们了；属性名 / 档位值先别急着定，做到这一步时一起定；
+  3. 顶栏、页脚这些新面板块用 `.panel` / 令牌工具类，别引入写死的颜色（`dark:` 变体在这个站里表达不了三套外观）。
+- **第 8 项（装饰与动效）**：蓝图背景层已经就位（`components/BlueprintBackground.tsx` + CSS），
+  要让它随路由变化就往那个 div 上挂 `data-*`（比如 `data-route`），CSS 里按属性换图案；
+  另外「纸质颗粒」这次没有做（不想为一个噪点引入图片资源），想加的话在这一项里做。
+- **第 6 项留下的已知缺口**：
+  1. **abc（五线谱）在暗色外观下仍是深色线条**（abcjs 用自己画出来的 `<path>`，颜色不跟令牌）。
+     没有真浏览器确认过它的配色入口（是 `foregroundColor` 之类的选项还是靠 `add_classes` 出来的 CSS 类），
+     所以第 6 项没动它；第 12 项用真图对着调。mermaid / echarts / graphviz / smiles 都已经跟主题走；
+  2. 三套令牌的对比度、蓝图层在三套外观下的观感，只在纸面上推演过，需要你本机看一眼（见第 8 节）。
 - **第 12 项（文章页）**：
   1. 把 frontmatter 的 `typography` 字段接到 `renderMarkdown` 的 `RenderOptions.typography`
      （渲染层已经支持，规范写在 `content/README.md` 第 9 节）；
@@ -302,6 +388,10 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 5. 动效一律尊重 `prefers-reduced-motion`，且背景/装饰层不得影响正文可读性（`aria-hidden`、`pointer-events: none`）。
 6. **开发态自检不是内容**：`components/dev/PipelineCheck.tsx` 只为在文章页之前验证渲染器而存在，
    生产构建里不渲染、不进产物；第 12 项落地后删掉它和 `app/[lang]/page.tsx` 里那三行即可。
+7. **外观只有一个落点**（第 6 项起）：颜色只在 `app/globals.css` 的令牌里定义，页面里用语义色
+   工具类（`text-ink-muted` / `bg-surface` / `border-rule` / `text-accent`）；
+   不写 `dark:` 变体（三套外观，两态表达不了）、不写死色值、不动 `<html>` 上的 `data-theme`
+   （要切换外观就调 `lib/theme.ts` 的 `setThemeChoice()`）。
 
 ---
 
@@ -321,7 +411,16 @@ npm run deploy       # wrangler 部署到 Cloudflare Pages
 > 另注：`npm run deploy` 用的 `wrangler` 目前**没有写进 devDependencies**，
 > 本机部署前先 `npx wrangler --version` 或全局装一个（这事留给第 14 项一并处理）。
 
-`npm run dev` 后打开 `/zh/`：除了首页占位，还会看到一块「渲染管线自检」，
+`npm run dev` 后打开 `/zh/`，想看第 6 项的三套外观就带一个调试参数（不写 localStorage，刷新即失效）：
+
+```bash
+# 纸（默认）/ 亮 / 暗
+http://localhost:3000/zh/?theme=paper
+http://localhost:3000/zh/?theme=light
+http://localhost:3000/zh/?theme=dark
+```
+
+除了首页占位，还会看到一块「渲染管线自检」，
 里面把第 3 项的 GFM、公式、代码高亮、五类图表、参考文献角标、目录抽取，
 以及第 4 项的中文排版（含 `typography: false` 的对照组）全跑一遍，
 用来在还没有文章的时候确认渲染器是通的。
@@ -362,8 +461,10 @@ npm run deploy       # wrangler 部署到 Cloudflare Pages
   **动态 import**，没有做「先跑一遍」的验证；它们的导出形状（默认导出 vs 具名导出）在代码里两种都试，
   真的不匹配会在图的位置上打印明确的报错；
 - Graphviz 的 `.wasm` 由 `@hpcc-js/wasm-graphviz` 自己加载，若首次打开报 wasm 404，把那句报错贴给我；
-- 第 3 项的外观目前只有 `app/globals.css` 里的**最小可读样式**（含一条明确的注释说明这一节会被第 6 项替换），
-  图表主题暂时跟随 `prefers-color-scheme`，第 6 项加主题开关后改读 `<html data-theme>`（`ArticleBody.tsx` 里已预留）；
+- 第 3 项的外观在第 6 项已**整体换掉**：原来 `app/globals.css` 里那节「最小可读样式」里写死的
+  颜色（`--body-fg`、`#272822` 之类）现在全部走 `--c-*` 令牌，只在图表主题那一块保留原样；
+  图表主题原本跟随 `prefers-color-scheme`，第 6 项已改成读站点外观（`<html data-theme>`）
+  并把令牌喂给渲染器（`ChartContext` 多了 `theme` / `colors`），主题切换时会自动重绘；
 - 第 4 项（中文排版优化）已接进 `lib/markdown.ts` 的管线，位置在 `remarkCitations` 之前；
   规则与「为什么不会误伤代码/公式/数字」写在 `lib/typography.ts` 的头部注释里，
   但那套字符分类与配对逻辑**只在本机跑过一次就交付**，边界情况（尤其括号配对、中日文混排）
@@ -384,6 +485,23 @@ npm run deploy       # wrangler 部署到 Cloudflare Pages
   `npm run preview` 之后确认三件事：Application → Service Workers 里注册成功；
   断网（DevTools → Network → Offline）刷新仍能看到离线页；
   第二次访问同一篇文章时 Network 里该页面走的是 `(ServiceWorker)` 而不是 `(Disk cache)`/网络。
+- 第 6 项（设计系统）**没在本机跑过任何浏览器**，下面这几件事只有你看起来才作数：
+  1. **三套外观各看一遍**：`/zh/?theme=paper`、`?theme=light`、`?theme=dark`
+     （或者把 localStorage 的 `tob:theme` 设成 `paper|light|dark|system` 刷新）。
+     重点看两处：正文对比度够不够、蓝图网格有没有抢字（愿意的话把 `--bp-line` 的透明度调小再看一遍）；
+  2. **首帧不闪白**：选择暗色后硬刷新，正常应该直接是深色 —— 如果先闪一下亮色，
+     说明 `components/ThemeInit.tsx` 被放到了 body 的非首位（或 Next 把它挪走了），告诉我，我换成别的注入方式；
+  3. **`<html>` 上的属性与 `meta theme-color`**：Elements 面板里应当是
+     `<html data-theme="dark" data-theme-choice="system" style="color-scheme: dark">`，
+     head 里只有一个 `meta[name="theme-color"]`（内容跟着主题变）；
+  4. **图表跟着主题重绘**：开着有图表的自检内容，切换主题（改 localStorage + 刷新，或控制台里
+     `document.documentElement.dataset.theme = "dark"` 然后手动派发事件），
+     看 mermaid / echarts / graphviz 有没有换成对应的配色；graphviz 若报语法错，
+     就是 `components/charts/graphviz.ts` 里那段默认属性注入的问题，把那三行删掉即可（我会同步改）；
+  5. **iOS Safari 的负 z-index**：蓝图层是 `position: fixed; z-index: -1`，
+     在 `<html>` 有底色的前提下各家浏览器表现一致；如果你在手机上看到底色被盖住或者整页变灰，告诉我。
+- 第 6 项里唯一「查过文档」的是 Tailwind 4 的 `@theme inline`（用它才能让工具类引用变量、
+  而不是把颜色值烤进 CSS）；其余都是照 CSS 规范写的，没跑过构建，`npm run typecheck` 先跑一遍。
 
 ---
 
@@ -395,3 +513,4 @@ npm run deploy       # wrangler 部署到 Cloudflare Pages
 | 本次提交 | 第 2 项内容管线完成（TOML/YAML 双 frontmatter、内容加载与查询、写作规范）；第 3 项 Markdown 渲染完成（GFM/KaTeX+宏/高亮/五类图表按需加载/参考文献角标/目录）；新增开发态渲染自检 |
 | 本次提交 | 第 4 项中文排版优化完成（`lib/typography.ts`：补空格 / 标点与成对括号转全角 / `...`→`……`，四条规则可开关，代码与公式与链接地址自动跳过）；自检加两组对照；写作规范新增第 9 节 |
 | 本次提交 | 第 5 项构建产物完成（方案改为在 `next build` 内生成：`/search-index.json`、`/feed.xml` + 每语言 RSS、`/sitemap.xml`、`/robots.txt`、`/manifest.webmanifest`、`/changelog.json`；PWA：`public/sw.js` + `/offline/` + 注册组件 + `favicon.svg`）；删除失效的 `prebuild`/`predev`（它们一直是 `build` 失败的根因）并新增 `typecheck`；新增「跨项待办」小节 |
+| 本次提交 | 第 6 项设计系统完成（`app/globals.css` 三套令牌：纸/亮/暗 + `@theme inline` 映射成语义色工具类；`lib/theme.ts`：选择解析、首帧脚本、运行时 API、令牌读取；蓝图草图背景层；`.page`/`.panel` 原子件与正文度量 `--reading-*`；占位页面改用令牌）。图表跟随主题：`ChartContext` 扩成 `{theme, dark, colors}`，ArticleBody 订阅外观变化后重绘，mermaid/echarts/graphviz/smiles 改用令牌（abc 留作待办）。manifest 配色改用 `THEME_CHROME` |

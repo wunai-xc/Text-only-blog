@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   chartLanguage,
@@ -9,6 +9,13 @@ import {
   type ChartKind,
   type ChartModule,
 } from "@/lib/charts";
+import {
+  currentTheme,
+  isDarkTheme,
+  readThemeTokens,
+  subscribeTheme,
+  type Theme,
+} from "@/lib/theme";
 
 /**
  * 图表类型 → 渲染器模块。
@@ -25,17 +32,6 @@ const LOADERS: Record<ChartKind, () => Promise<ChartModule>> = {
   abc: () => import("./charts/abc"),
   smiles: () => import("./charts/smiles"),
 };
-
-function prefersDark(): boolean {
-  if (typeof window === "undefined") return false;
-
-  // 第 6 项会在 <html data-theme> 上写站点自己的主题；有它就听它的
-  const configured = document.documentElement.dataset.theme;
-  if (configured === "dark") return true;
-  if (configured === "light" || configured === "paper") return false;
-
-  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
-}
 
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -65,9 +61,18 @@ export interface ArticleBodyProps {
  *
  * HTML 来自构建期（本仓库自己的 Markdown），不是运行时用户输入；
  * 作者在正文里写内联 HTML 也是被允许的（见 content/README.md）。
+ *
+ * 外观（第 6 项）：图表要跟着主题换配色，所以这里
+ *   1. 用 useState 的惰性初值直接读当前外观（首帧脚本已经把它写在 <html> 上了，
+ *      所以水合后的第一次渲染就是对的，不会先画一张浅色图再重画）；
+ *   2. subscribeTheme() 订阅外观变化（设置中心切换、系统深浅色变化），变了就重绘。
+ *      重绘 = 清理旧图 → 再跑一遍渲染器，代价只在真的有图表的文章里付。
  */
 export default function ArticleBody({ html, className }: ArticleBodyProps) {
   const hostRef = useRef<HTMLDivElement>(null);
+  const [theme, setTheme] = useState<Theme>(() => currentTheme());
+
+  useEffect(() => subscribeTheme((detail) => setTheme(detail.theme)), []);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -78,7 +83,12 @@ export default function ArticleBody({ html, className }: ArticleBodyProps) {
     );
     if (blocks.length === 0) return;
 
-    const context: ChartContext = { dark: prefersDark() };
+    // 令牌从 CSS 变量现读：换主题后这里拿到的就是新的一套
+    const context: ChartContext = {
+      theme,
+      dark: isDarkTheme(theme),
+      colors: readThemeTokens(),
+    };
     const cleanups: ChartCleanup[] = [];
     let cancelled = false;
 
@@ -103,6 +113,11 @@ export default function ArticleBody({ html, className }: ArticleBodyProps) {
           continue;
         }
 
+        // 换主题重绘时先把上一张图（或上一次的报错）清掉：
+        // 各个渲染器清场的方式不一样，统一在这里给一块干净容器最省心
+        block.dataset.chartState = "pending";
+        canvas.replaceChildren();
+
         try {
           const module = await loader();
           const cleanup = await module.render(canvas, source, context);
@@ -124,7 +139,7 @@ export default function ArticleBody({ html, className }: ArticleBodyProps) {
       cancelled = true;
       for (const cleanup of cleanups) cleanup();
     };
-  }, [html]);
+  }, [html, theme]);
 
   return (
     <div

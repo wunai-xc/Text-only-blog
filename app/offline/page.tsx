@@ -9,6 +9,7 @@ import Link from "next/link";
  *
  * 这页必须是**纯静态、零依赖**的：断网时它能用的只有已缓存的东西，
  * 所以这里不放任何需要联网的元素（图片、外链字体、统计脚本……都不要）。
+ * 第 6 项的蓝图背景层是纯 CSS，在离线状态下同样成立（它跟着样式表一起被缓存）。
  *
  * robots 里已把 /offline/ 排除，这里再加一层 noindex（双保险）。
  */
@@ -26,18 +27,20 @@ const CACHED_LINKS = [
 
 export default function OfflinePage() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 px-6 text-center">
-      <p className="font-mono text-sm opacity-60">offline</p>
+    <main className="page flex flex-col items-center justify-center gap-4 text-center">
+      <p className="font-mono text-sm text-ink-subtle">offline</p>
       <h1 className="text-2xl font-semibold tracking-tight">现在没有网络</h1>
-      <p className="text-sm opacity-70">
+      <p className="text-sm text-ink-muted">
         这一页是本地缓存下来的。已经打开过的文章通常还能看，没打开过的要等网络回来。
       </p>
-      <p className="text-sm opacity-70">No network right now. This page is served from the cache.</p>
+      <p className="text-sm text-ink-muted">
+        No network right now. This page is served from the cache.
+      </p>
 
-      <ul className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm">
+      <ul className="panel flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm">
         {CACHED_LINKS.map((item) => (
           <li key={item.href}>
-            <Link className="underline" href={item.href}>
+            <Link className="text-accent underline underline-offset-2" href={item.href}>
               {item.label}
             </Link>
           </li>

@@ -1,13 +1,31 @@
 /* ============================================================
-   全局样式入口（第 1 项：脚手架最小可用版）
-   - Tailwind CSS 4：用 @import 引入，配置走 CSS 变量（@theme），不再需要 tailwind.config.js
-   - KaTeX 公式样式 + monokai 代码高亮主题
-   第 6 项会把这里的令牌体系扩成「亮色 / 暗色 / 护眼纸质」三套 + 蓝图草图背景。
+   全局样式入口
+     第 1 项：脚手架 —— Tailwind CSS 4（@import + @theme 变量，不用 tailwind.config.js）
+               KaTeX 公式样式、monokai 代码高亮主题
+     第 3 项：Markdown 输出的可读样式（公式 / 代码 / 表格 / 图表 / 角标 / 参考列表）
+     第 6 项：设计系统 —— 三套令牌（纸 / 亮 / 暗）、蓝图草图背景层、正文度量、原子件
+
+   这里是**颜色的唯一事实来源**。lib/theme.ts 只镜像三套主题的「底色」
+   （THEME_CHROME，给 manifest 与 meta theme-color 用）以及一份兜底；
+   其余颜色一律通过 `--c-*` 变量流转。改色改这里，改完对照 PROJECTS.md 第 4 节第 6 项。
+
+   主题怎么切换：<html data-theme="paper|light|dark">。首帧脚本在
+   components/ThemeInit.tsx（放在 body 第一个元素，避免闪白），运行时 API 在 lib/theme.ts。
+   **页面里请不要写 `dark:` 变体** —— 外观有三套，两态变体表达不了；
+   需要「跟外观变」的样式一律走令牌。
+
+   分层：自定义样式都写进 `@layer base` / `@layer components`。
+   Tailwind 4 的 index.css 第一行就声明了 `@layer theme, base, components, utilities;`，
+   所以放在 layers 里的规则**能被工具类覆盖**（不写 layer 反而会盖住工具类，那种坑很难查）。
+   只有打印样式故意留在最外层：它要盖住一切。
    ============================================================ */
 @import "tailwindcss";
 @import "katex/dist/katex.min.css";
 @import "highlight.js/styles/monokai.css";
 
+/* ============================================================
+   1. 字体（不随外观变）
+   ============================================================ */
 @theme {
   --font-sans: system-ui, -apple-system, "Segoe UI", "Noto Sans SC",
     "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -15,245 +33,562 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-html,
-body {
-  height: 100%;
-}
-
-body {
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+/* ============================================================
+   2. 语义色令牌 → Tailwind 工具类
+   用 `@theme inline`：工具类里生成的是 var(--c-*)，所以 data-theme 一换，
+   已经在页面上的 class 立刻跟着换色。用法：
+     bg-canvas / bg-surface / bg-surface-2 / text-ink / text-ink-muted /
+     text-ink-subtle / border-rule / border-rule-strong / bg-accent /
+     text-accent / bg-accent-soft / text-accent-ink / text-danger
+   ============================================================ */
+@theme inline {
+  --color-canvas: var(--c-canvas);
+  --color-surface: var(--c-surface);
+  --color-surface-2: var(--c-surface-2);
+  --color-ink: var(--c-ink);
+  --color-ink-muted: var(--c-ink-muted);
+  --color-ink-subtle: var(--c-ink-subtle);
+  --color-rule: var(--c-rule);
+  --color-rule-strong: var(--c-rule-strong);
+  --color-accent: var(--c-accent);
+  --color-accent-soft: var(--c-accent-soft);
+  --color-accent-ink: var(--c-accent-ink);
+  --color-danger: var(--c-danger);
+  --color-mark: var(--c-mark);
 }
 
 /* ============================================================
-   第 3 项：Markdown 渲染输出的最小可读样式
-   —— 只管「公式、代码、表格、图表、引用角标、文末参考列表」不缺胳膊少腿。
-   第 6 项会用令牌体系（亮 / 暗 / 护眼纸质）把这一整块换掉，届时删掉本节即可。
+   3. 三套令牌（不进 layer：自定义属性不需要参与层叠竞争）
+   :root 就是「纸」（默认，也是没有 JS / 脚本还没跑时的外观），
+   [data-theme="light"] / [data-theme="dark"] 覆盖它。
+   「纸」不单独写一个 [data-theme="paper"] 块，免得同样的值维护两份 ——
+   选择器里带上它只是为了写明意图。
+
+   ⚠️ 新令牌请避开 Tailwind 自己的变量名（`--radius*`、`--shadow*`、`--color-*`、
+   `--text-*` 等）：那些名字在 theme 层里有值，被这里同名覆盖会把对应的工具类改坏。
+   所以本文件的形状令牌叫 `--shape-*`。
    ============================================================ */
+:root,
+[data-theme="paper"] {
+  color-scheme: light;
 
-.article-body {
-  --body-fg: #23201c;
-  --body-muted: #6c6459;
-  --body-rule: #d8d2c2;
-  --body-surface: #f7f4ea;
-  --body-accent: #8a6a3b;
-  --body-missing: #c0392b;
+  /* 面：暖白纸质，长时间阅读不刺眼 */
+  --c-canvas: #f1ece0;
+  --c-surface: #faf7ee;
+  --c-surface-2: #e9e2d2;
 
-  max-width: 46rem;
-  color: var(--body-fg);
-  font-size: 1.0625rem;
-  line-height: 1.85;
-  overflow-wrap: break-word;
+  /* 字 */
+  --c-ink: #23201c;
+  --c-ink-muted: #6a6255;
+  --c-ink-subtle: #9a8f7c;
+
+  /* 线 */
+  --c-rule: #d9d3c3;
+  --c-rule-strong: #b8ae95;
+
+  /* 重点：纸上的墨（暖褐），与蓝图的青色区分开 */
+  --c-accent: #8a6a3b;
+  --c-accent-soft: #efe6d2;
+  --c-accent-ink: #fffaf0;
+
+  --c-danger: #b23a2b;
+  --c-mark: #f0e2ba; /* 选区 */
+
+  /* 蓝图背景层（第 6 项）：透明度都压得很低，只做气质，不抢字 */
+  --bp-line: rgba(120, 100, 60, 0.12);
+  --bp-line-strong: rgba(120, 100, 60, 0.2);
+  --bp-frame: rgba(120, 100, 60, 0.26);
+
+  --shape-shadow: 0 1px 2px rgba(70, 58, 34, 0.06);
 }
 
-.article-body h1,
-.article-body h2,
-.article-body h3,
-.article-body h4,
-.article-body h5,
-.article-body h6 {
-  position: relative;
-  margin: 2rem 0 0.75rem;
-  font-weight: 600;
-  line-height: 1.35;
-  scroll-margin-top: 5rem; /* 目录跳转时别顶到屏幕上边 */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --c-canvas: #f4f6f6;
+  --c-surface: #ffffff;
+  --c-surface-2: #eaf0f0;
+  --c-ink: #16201f;
+  --c-ink-muted: #556565;
+  --c-ink-subtle: #859494;
+  --c-rule: #d7e0e0;
+  --c-rule-strong: #b6c4c4;
+  --c-accent: #1d4f63;
+  --c-accent-soft: #e0ecf0;
+  --c-accent-ink: #ffffff;
+  --c-danger: #c0392b;
+  --c-mark: #d7e7ee;
+
+  --bp-line: rgba(29, 79, 99, 0.1);
+  --bp-line-strong: rgba(29, 79, 99, 0.18);
+  --bp-frame: rgba(29, 79, 99, 0.24);
+
+  --shape-shadow: 0 1px 2px rgba(20, 40, 50, 0.06);
 }
 
-.article-body h1 { font-size: 1.7rem; }
-.article-body h2 { font-size: 1.4rem; }
-.article-body h3 { font-size: 1.2rem; }
-.article-body h4,
-.article-body h5,
-.article-body h6 { font-size: 1.05rem; }
+[data-theme="dark"] {
+  color-scheme: dark;
 
-.article-body p,
-.article-body ul,
-.article-body ol,
-.article-body blockquote,
-.article-body pre,
-.article-body table,
-.article-body figure { margin: 0.9rem 0; }
+  --c-canvas: #0e1416;
+  --c-surface: #151d20;
+  --c-surface-2: #1e282b;
+  --c-ink: #e4ebe9;
+  --c-ink-muted: #9badae;
+  --c-ink-subtle: #6b7c7d;
+  --c-rule: #263336;
+  --c-rule-strong: #3a474a;
+  --c-accent: #7fc3da;
+  --c-accent-soft: #16303a;
+  --c-accent-ink: #05262f;
+  --c-danger: #ff8b7a;
+  --c-mark: #1c3b45;
 
-.article-body ul,
-.article-body ol { padding-left: 1.4rem; }
-.article-body ul { list-style: disc; }
-.article-body ol { list-style: decimal; }
-.article-body li { margin: 0.25rem 0; }
-.article-body li > ul,
-.article-body li > ol { margin: 0.25rem 0; }
+  --bp-line: rgba(127, 195, 218, 0.08);
+  --bp-line-strong: rgba(127, 195, 218, 0.15);
+  --bp-frame: rgba(127, 195, 218, 0.2);
 
-.article-body blockquote {
-  padding: 0.2rem 0 0.2rem 0.9rem;
-  border-left: 3px solid var(--body-rule);
-  color: var(--body-muted);
+  --shape-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
-.article-body hr {
-  margin: 2rem 0;
-  border: 0;
-  border-top: 1px dashed var(--body-rule);
+/* 三套外观共用：形状、蓝图网格尺寸、正文度量。
+   阅读度量（宽度 / 字号 / 行距）是令牌，第 7 项的设置中心会来改这三个；
+   第 12 项的文章页用它们排版。 */
+:root {
+  --shape-radius: 8px;
+  --shape-radius-lg: 12px;
+  --bp-grid: 24px; /* 细格 */
+  --bp-grid-major: 120px; /* 粗格：每 5 格一条 */
+  --reading-measure: 42rem;
+  --reading-size: 1.0625rem;
+  --reading-leading: 1.85;
 }
 
-.article-body a { color: var(--body-accent); text-decoration: underline; text-underline-offset: 3px; }
-.article-body img { max-width: 100%; height: auto; }
+/* ============================================================
+   4. 基础层
+   底色放在 <html> 上、body 保持透明：这样蓝图背景层（z-index: -1）
+   正好夹在「底色」与「内容」之间，不用给内容加任何包装层。
+   ============================================================ */
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
 
-/* 代码：monokai 主题自带底色，这里只补间距与圆角 */
-.article-body pre {
-  padding: 0.85rem 1rem;
-  border-radius: 8px;
-  background: #272822;
-  overflow-x: auto;
-  font-size: 0.9rem;
-  line-height: 1.6;
+  html {
+    background-color: var(--c-canvas);
+    color: var(--c-ink);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* 切换外观时给底色/文字一点过渡；用 prefers-reduced-motion 的人不参与 */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      transition: background-color 0.18s ease, color 0.18s ease;
+    }
+  }
+
+  ::selection {
+    background-color: var(--c-mark);
+    color: var(--c-ink);
+  }
+
+  :where(a, button, summary, input, select, textarea):focus-visible {
+    outline: 2px solid var(--c-accent);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
 }
 
-.article-body pre code {
-  padding: 0;
-  background: transparent;
-  font-family: var(--font-mono);
-  font-size: inherit;
+/* ============================================================
+   5. 蓝图草图背景层（第 6 项）
+   固定在最底：细格 + 每 5 格一条粗格 + 边缘淡出 + 大屏上的虚线图纸边框。
+   约定第 5 条：装饰层必须 aria-hidden、pointer-events: none，且不得影响正文可读性
+   —— 所以线是 1px、透明度不超过 0.26，边框只做大屏、手机上直接不显示。
+   第 8 项要让它随路由变化时，在元素上挂 data-* 钩子即可（元素见 components/BlueprintBackground.tsx）。
+   ============================================================ */
+@layer components {
+  .blueprint {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      repeating-linear-gradient(
+        to right,
+        var(--bp-line-strong) 0 1px,
+        transparent 1px var(--bp-grid-major)
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        var(--bp-line-strong) 0 1px,
+        transparent 1px var(--bp-grid-major)
+      ),
+      repeating-linear-gradient(to right, var(--bp-line) 0 1px, transparent 1px var(--bp-grid)),
+      repeating-linear-gradient(to bottom, var(--bp-line) 0 1px, transparent 1px var(--bp-grid));
+  }
+
+  /* 边缘用底色淡出网格，像一张摊在桌上的图纸 */
+  .blueprint::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(130% 120% at 50% 0%, transparent 55%, var(--c-canvas) 100%);
+  }
+
+  /* 图纸边框（虚线的图框），只在大屏出现 */
+  .blueprint::after {
+    content: "";
+    position: absolute;
+    inset: 14px;
+    border: 1px dashed var(--bp-frame);
+    border-radius: var(--shape-radius-lg);
+  }
+
+  @media (max-width: 48rem) {
+    .blueprint::after {
+      display: none;
+    }
+  }
+
+  /* ==========================================================
+     6. 原子件（第 7 / 9 / 11 / 13 项复用）
+     ========================================================== */
+
+  /* 页面外壳：宽度、内边距、最小高度 */
+  .page {
+    width: 100%;
+    max-width: 48rem;
+    min-height: 100%;
+    margin-inline: auto;
+    padding: 4.5rem 1.5rem;
+  }
+
+  /* 面板块：卡片、设置分组、空状态都用它 */
+  .panel {
+    padding: 1.1rem 1.35rem;
+    border: 1px solid var(--c-rule);
+    border-radius: var(--shape-radius-lg);
+    background-color: var(--c-surface);
+    box-shadow: var(--shape-shadow);
+  }
+
+  /* ==========================================================
+     7. 正文（.article-body）—— 第 3 项的渲染输出 + 第 6 项的令牌
+     度量（宽度 / 字号 / 行距）走 --reading-* 令牌，不写死。
+     ========================================================== */
+  .article-body {
+    max-width: var(--reading-measure);
+    color: var(--c-ink);
+    font-size: var(--reading-size);
+    line-height: var(--reading-leading);
+    overflow-wrap: break-word;
+  }
+
+  .article-body h1,
+  .article-body h2,
+  .article-body h3,
+  .article-body h4,
+  .article-body h5,
+  .article-body h6 {
+    position: relative;
+    margin: 2rem 0 0.75rem;
+    font-weight: 600;
+    line-height: 1.35;
+    scroll-margin-top: 5rem; /* 目录跳转时别顶到屏幕上边 */
+  }
+
+  .article-body h1 {
+    font-size: 1.7rem;
+  }
+  .article-body h2 {
+    font-size: 1.4rem;
+  }
+  .article-body h3 {
+    font-size: 1.2rem;
+  }
+  .article-body h4,
+  .article-body h5,
+  .article-body h6 {
+    font-size: 1.05rem;
+  }
+
+  .article-body p,
+  .article-body ul,
+  .article-body ol,
+  .article-body blockquote,
+  .article-body pre,
+  .article-body table,
+  .article-body figure {
+    margin: 0.9rem 0;
+  }
+
+  .article-body ul,
+  .article-body ol {
+    padding-left: 1.4rem;
+  }
+  .article-body ul {
+    list-style: disc;
+  }
+  .article-body ol {
+    list-style: decimal;
+  }
+  .article-body li {
+    margin: 0.25rem 0;
+  }
+  .article-body li > ul,
+  .article-body li > ol {
+    margin: 0.25rem 0;
+  }
+
+  .article-body blockquote {
+    padding: 0.2rem 0 0.2rem 0.9rem;
+    border-left: 3px solid var(--c-rule-strong);
+    color: var(--c-ink-muted);
+  }
+
+  .article-body hr {
+    margin: 2rem 0;
+    border: 0;
+    border-top: 1px dashed var(--c-rule-strong);
+  }
+
+  .article-body a {
+    color: var(--c-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .article-body img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* 代码：monokai 主题自带深色底（三套外观下都一样，不做反向主题 —— 换了反而要重挑配色） */
+  .article-body pre {
+    padding: 0.85rem 1rem;
+    border-radius: var(--shape-radius);
+    background: #272822;
+    overflow-x: auto;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .article-body pre code {
+    padding: 0;
+    background: transparent;
+    font-family: var(--font-mono);
+    font-size: inherit;
+  }
+
+  .article-body :not(pre) > code {
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+    background: var(--c-surface-2);
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+
+  /* 表格 */
+  .article-body table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+
+  .article-body th,
+  .article-body td {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--c-rule);
+    text-align: left;
+  }
+
+  .article-body th {
+    background: var(--c-surface-2);
+  }
+
+  /* 公式：行间公式太长时横向滚动，而不是撑破版面 */
+  .article-body .katex-display {
+    margin: 1.1rem 0;
+    padding: 0.2rem 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  /* 标题锚点：鼠标悬停或键盘聚焦时出现，触屏设备常驻 */
+  .heading-anchor {
+    margin-left: 0.4rem;
+    color: var(--c-ink-muted);
+    font-weight: 400;
+    text-decoration: none;
+    opacity: 0;
+  }
+
+  .article-body :is(h1, h2, h3, h4, h5, h6):hover .heading-anchor,
+  .heading-anchor:focus-visible {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    .heading-anchor {
+      opacity: 0.35;
+    }
+  }
+
+  /* 参考文献角标 */
+  .cite {
+    margin-left: 0.15em;
+    color: var(--c-accent);
+    font-size: 0.85em;
+    text-decoration: none;
+    vertical-align: super;
+    line-height: 0;
+  }
+
+  .cite-missing {
+    color: var(--c-danger);
+    font-weight: 600;
+    cursor: help;
+  }
+
+  /* 文末参考列表 */
+  .references {
+    margin-top: 2.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--c-rule);
+    font-size: 0.95rem;
+  }
+
+  .references-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .references-list {
+    margin: 0.6rem 0 0;
+    padding-left: 1.6rem;
+  }
+
+  .reference-item {
+    margin: 0.4rem 0;
+  }
+
+  .reference-index {
+    color: var(--c-ink-muted);
+  }
+
+  .reference-body {
+    display: inline;
+  }
+
+  .reference-meta,
+  .reference-note {
+    margin-left: 0.4em;
+    color: var(--c-ink-muted);
+    font-size: 0.9em;
+  }
+
+  .reference-back {
+    text-decoration: none;
+  }
+
+  /* 图表：占位容器在客户端被填上 SVG / canvas */
+  .chart-block {
+    margin: 1.4rem 0;
+    padding: 0.75rem;
+    border: 1px solid var(--c-rule);
+    border-radius: var(--shape-radius);
+    background: var(--c-surface);
+  }
+
+  .chart-canvas {
+    min-height: 4rem;
+    overflow-x: auto;
+  }
+
+  .chart-block[data-chart="echarts"] .chart-canvas {
+    height: 22rem;
+  }
+
+  .chart-caption {
+    margin-top: 0.5rem;
+    color: var(--c-ink-muted);
+    font-size: 0.875rem;
+    text-align: center;
+  }
+
+  .chart-source {
+    display: none; /* 源码只给客户端读，不给读者看 */
+  }
+
+  .chart-error {
+    margin: 0;
+    color: var(--c-danger);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+  }
+
+  /* ==========================================================
+     8. 开发态渲染自检块（components/dev/PipelineCheck.tsx）—— 生产构建里不存在
+     ========================================================== */
+  .pipeline-check {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border: 1px dashed var(--c-rule-strong);
+    border-radius: var(--shape-radius);
+    background-color: var(--c-surface);
+    font-size: 0.95rem;
+  }
+
+  .pipeline-check summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .pipeline-check-note {
+    margin: 0.5rem 0;
+    color: var(--c-ink-muted);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+  }
 }
 
-.article-body :not(pre) > code {
-  padding: 0.1em 0.35em;
-  border-radius: 4px;
-  background: var(--body-surface);
-  font-family: var(--font-mono);
-  font-size: 0.9em;
-}
+/* ============================================================
+   9. 打印：纯文字博客最实用的「导出方式」就是打印成 PDF
+   故意留在 layer 外面：它要盖住 components 与工具类。
+   ============================================================ */
+@media print {
+  .blueprint {
+    display: none; /* 网格会把纸面弄灰 */
+  }
 
-/* 表格 */
-.article-body table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.95rem;
-}
+  html,
+  body {
+    background: #fff;
+    color: #000;
+  }
 
-.article-body th,
-.article-body td {
-  padding: 0.4rem 0.6rem;
-  border: 1px solid var(--body-rule);
-  text-align: left;
-}
+  .article-body {
+    max-width: none;
+    font-size: 11pt;
+    line-height: 1.6;
+  }
 
-.article-body th { background: var(--body-surface); }
+  /* 代码块转浅底，并且把 monokai 的彩色 token 压成黑色：纸上彩色几乎都读不清 */
+  .article-body pre {
+    border: 1px solid #ccc;
+    background: #f6f6f6;
+  }
 
-/* 公式：行间公式太长时横向滚动，而不是撑破版面 */
-.article-body .katex-display {
-  margin: 1.1rem 0;
-  padding: 0.2rem 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-
-/* 标题锚点：鼠标悬停或键盘聚焦时出现，触屏设备常驻 */
-.heading-anchor {
-  margin-left: 0.4rem;
-  color: var(--body-muted, #6c6459);
-  font-weight: 400;
-  text-decoration: none;
-  opacity: 0;
-}
-
-.article-body :is(h1, h2, h3, h4, h5, h6):hover .heading-anchor,
-.heading-anchor:focus-visible { opacity: 1; }
-
-@media (hover: none) {
-  .heading-anchor { opacity: 0.35; }
-}
-
-/* 参考文献角标 */
-.cite {
-  margin-left: 0.15em;
-  color: var(--body-accent, #8a6a3b);
-  font-size: 0.85em;
-  text-decoration: none;
-  vertical-align: super;
-  line-height: 0;
-}
-
-.cite-missing {
-  color: var(--body-missing, #c0392b);
-  font-weight: 600;
-  cursor: help;
-}
-
-/* 文末参考列表 */
-.references {
-  margin-top: 2.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--body-rule, #d8d2c2);
-  font-size: 0.95rem;
-}
-
-.references-title { font-size: 1.1rem; font-weight: 600; }
-
-.references-list { margin: 0.6rem 0 0; padding-left: 1.6rem; }
-
-.reference-item { margin: 0.4rem 0; }
-
-.reference-index { color: var(--body-muted, #6c6459); }
-
-.reference-body { display: inline; }
-
-.reference-meta,
-.reference-note {
-  margin-left: 0.4em;
-  color: var(--body-muted, #6c6459);
-  font-size: 0.9em;
-}
-
-.reference-back { text-decoration: none; }
-
-/* 图表：占位容器在客户端被填上 SVG / canvas */
-.chart-block {
-  margin: 1.4rem 0;
-  padding: 0.75rem;
-  border: 1px solid var(--body-rule, #d8d2c2);
-  border-radius: 8px;
-  background: var(--body-surface, #f7f4ea);
-}
-
-.chart-canvas {
-  min-height: 4rem;
-  overflow-x: auto;
-}
-
-.chart-block[data-chart="echarts"] .chart-canvas { height: 22rem; }
-
-.chart-caption {
-  margin-top: 0.5rem;
-  color: var(--body-muted, #6c6459);
-  font-size: 0.875rem;
-  text-align: center;
-}
-
-.chart-source { display: none; } /* 源码只给客户端读，不给读者看 */
-
-.chart-error {
-  margin: 0;
-  color: var(--body-missing, #c0392b);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  white-space: pre-wrap;
-}
-
-/* 开发态渲染自检块（components/dev/PipelineCheck.tsx），生产构建里不存在 */
-.pipeline-check {
-  margin-top: 1rem;
-  padding: 0.75rem 1rem;
-  border: 1px dashed #b8ae95;
-  border-radius: 8px;
-  font-size: 0.95rem;
-}
-
-.pipeline-check summary { cursor: pointer; font-weight: 600; }
-
-.pipeline-check-note {
-  margin: 0.5rem 0;
-  color: #6c6459;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  overflow-wrap: anywhere;
+  .article-body pre,
+  .article-body pre * {
+    color: #1a1a1a !important;
+  }
 }
