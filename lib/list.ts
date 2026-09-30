@@ -425,7 +425,12 @@ export interface ListText {
     draft: string;
     fullNote: string;
   };
-  /** 正文页落地前，卡片标题的悬停说明（与 RouteLink 的 navPending 同一个口径） */
+  /**
+   * 卡片标题的悬停说明，用在**正文页还没落地**的时候（与 RouteLink 的 navPending
+   * 同一个口径，判断在 components/list/PostCard.tsx 里读 lib/site.ts 的 ARTICLE_ROUTE）。
+   * 第 12 项已落地，所以这条文案当前不会渲染出来 —— 留着是为了把状态改回 `"pending"`
+   * 时（比如以后换 slug 规则）不至于出现一个没有说明的不可点标题。
+   */
   articlePending: (item: number) => string;
 }
 
@@ -477,7 +482,7 @@ const ZH: ListText = {
     pinned: "置顶",
     ai: "AI",
     draft: "草稿",
-    fullNote: "列表只到摘要为止；正文在第 12 项（文章页）落地后可读。",
+    fullNote: "列表只到摘要为止 —— 点标题进正文页读全文。",
   },
   articlePending: (item) => `文章页还没做（第 ${item} 项落地后可点）`,
 };
@@ -530,7 +535,7 @@ const EN: ListText = {
     pinned: "Pinned",
     ai: "AI",
     draft: "Draft",
-    fullNote: "The list stops at the summary; full text arrives with item 12 (the article page).",
+    fullNote: "The list stops at the summary — click a title to read the full post.",
   },
   articlePending: (item) => `Article pages are not built yet (lands in item ${item})`,
 };

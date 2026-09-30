@@ -62,13 +62,6 @@ export default async function LangHome({ params }: { params: Promise<{ lang: str
     fonts: <HomeFonts lang={lang} />,
   };
 
-  // 自检不是站点内容（约定第 6 条）：生产构建里既不渲染也不进产物，
-  // 第 12 项（文章页）落地后把这个文件和这一段一起删掉。
-  const DevCheck =
-    process.env.NODE_ENV === "production"
-      ? null
-      : (await import("@/components/dev/PipelineCheck")).default;
-
   return (
     <>
       <HomeIndex lang={lang} />
@@ -89,11 +82,6 @@ export default async function LangHome({ params }: { params: Promise<{ lang: str
           </div>
         ))}
       </main>
-      {DevCheck ? (
-        <div className="page">
-          <DevCheck />
-        </div>
-      ) : null}
     </>
   );
 }

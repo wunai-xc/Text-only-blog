@@ -57,6 +57,12 @@ import mdiTextBoxOutline from "@iconify/icons-mdi/text-box-outline";
 import mdiRobotOutline from "@iconify/icons-mdi/robot-outline";
 import mdiMagnifyClose from "@iconify/icons-mdi/magnify-close";
 import mdiAlertCircleOutline from "@iconify/icons-mdi/alert-circle-outline";
+/* 文章页（第 12 项：悬浮目录 / 进度与回顶 / 上下篇 / 评论） */
+import mdiFormatListBulleted from "@iconify/icons-mdi/format-list-bulleted";
+import mdiArrowUp from "@iconify/icons-mdi/arrow-up";
+import mdiArrowLeft from "@iconify/icons-mdi/arrow-left";
+import mdiArrowRight from "@iconify/icons-mdi/arrow-right";
+import mdiCommentTextOutline from "@iconify/icons-mdi/comment-text-outline";
 
 export const icons = {
   /* 导航 */
@@ -100,6 +106,12 @@ export const icons = {
   "mdi:robot-outline": mdiRobotOutline,
   "mdi:magnify-close": mdiMagnifyClose,
   "mdi:alert-circle-outline": mdiAlertCircleOutline,
+  /* 文章页 */
+  "mdi:format-list-bulleted": mdiFormatListBulleted,
+  "mdi:arrow-up": mdiArrowUp,
+  "mdi:arrow-left": mdiArrowLeft,
+  "mdi:arrow-right": mdiArrowRight,
+  "mdi:comment-text-outline": mdiCommentTextOutline,
 } as const;
 
 export type IconName = keyof typeof icons;

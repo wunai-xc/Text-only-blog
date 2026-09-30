@@ -130,6 +130,7 @@ author = "张三"
 | `about` | 布尔 | 标记为「关于」类文章；每语言取时间最新的一篇。 |
 | `hiddenInHomeList` | 布尔 | 首页列表里不出现，但归档、标签、搜索里仍然有。 |
 | `isAI` | 布尔 | AI 生成标记（列表页默认会筛掉，第 10 项实现）。 |
+| `comments` | 布尔 | 这一篇要不要评论区，缺省 `true`（`comment` 是别名）。写 `false` 就整篇不出评论区。 |
 | `references` | 表数组 / 数组 | 参考文献，见第 6 节。 |
 | `slug` / `permalink` | 字符串 | 自定义路由。一般不用写。 |
 
@@ -138,7 +139,7 @@ author = "张三"
 - 布尔：`true` / `"true"` / `1` / `"是"` …；
 - 别名：`name`↔`title`、`created`/`published`↔`date`、`modified`↔`updated`、
   `summary`↔`description`、`cates`↔`categories`、`top`/`sticky`/`featured`↔`pinned`、
-  `hidden`/`excludeFromHome`↔`hiddenInHomeList`、`ai`↔`isAI`。
+  `hidden`/`excludeFromHome`↔`hiddenInHomeList`、`ai`↔`isAI`、`comment`↔`comments`。
 
 ### 日期口径
 
@@ -294,8 +295,10 @@ typography = false          # 整块关掉
 +++
 ```
 
-> 说明：渲染层（`lib/markdown.ts` 的 `RenderOptions.typography`）已经支持这些开关；
-> 把 frontmatter 字段接上去是文章页（第 12 项）的事。
+> 说明：渲染层（`lib/markdown.ts` 的 `RenderOptions.typography`）支持这些开关，
+> 而 frontmatter 的 `typography` 字段**已经接上去了**（第 12 项：文章页把字段翻成选项，
+> 换算在 `lib/article.ts` 的 `parseTypographyOption()`）。写得认不出来（比如 `typo = false`
+> 这种笔误）就当没写，四条规则照旧全开。
 
 ---
 

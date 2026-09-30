@@ -14,13 +14,14 @@ import { LANGS, SITE, type Lang } from "@/lib/site";
  *   /                        语言分流页（app/page.tsx）
  *   /zh/、/en/               各语言首页
  *   /zh/posts/、/en/posts/   文章列表页（第 10 项）
- *   /zh/posts/<slug>/ …      文章，URL 由 content/ 里的文章推出（第 12 项的文章页落地后才真的可访问）
+ *   /zh/posts/<slug>/ …      文章正文页，URL 由 content/ 里的文章推出（第 12 项落地后已能访问）
  *
  * 第 13 项新加页面（标签、分类、归档、关于、搜索、友链）时，在 `pageRoutes` 里补一行；
  * 不要在这里写「还没有的页面」，sitemap 指向 404 是负分。
  *
- * ⚠️ 文章 URL 依赖第 12 项的文章页：在它落地之前，这些链接会指向 404（构建本身照常成功，
- * 只有真的部署了、且 content/ 里有文章时才会被爬虫看到）。台账里记成了第 12 项的待办。
+ * 文章 URL 与正文页的路由必须一致：两者都由 `PostMeta.href`（lib/content.ts）决定 ——
+ * 这里的 `${SITE.url}${post.href}` 与 app/[lang]/posts/[...slug]/page.tsx 的
+ * `generateStaticParams` 是同一个来源，改 slug 规则时只需要改 lib/content.ts 一处。
  */
 
 export const dynamic = "force-static";

@@ -121,11 +121,11 @@ export function routeReady(id: RouteId): boolean {
  * 文章**正文页**的落地状态（第 12 项；列表页是 ROUTES.posts，第 10 项，两者不是一回事）。
  *
  * 首页与列表页的文章卡片按它决定「可点 / 不可点」，与 RouteLink 是同一个约定
- * （约定第 8 条：没有这一页就不留会 404 的链接）。第 12 项做完把它改成 "ready"，
- * 所有卡片一起变成真链接，不需要去改各个卡片组件。
+ * （约定第 8 条：没有这一页就不留会 404 的链接）。第 12 项已落地，
+ * 所以这里改成 "ready" —— 所有卡片一起变成真链接，不需要去改各个卡片组件。
  */
 export const ARTICLE_ROUTE: { status: "ready" | "pending"; item: number } = {
-  status: "pending",
+  status: "ready",
   item: 12,
 };
 
@@ -316,6 +316,39 @@ export const CONTACT: { email: string; github: string; repo: string } = {
   github: "", // 编辑此处：GitHub 主页，例如 https://github.com/your-name
   repo: "", // 编辑此处：本站仓库地址（公开后再填）
 };
+
+/**
+ * giscus 评论（第 12 项：文章页）。
+ *
+ * **四个值全部留空** —— 空的含义是「评论还没接上」，文章页会显示「编辑此处」而不是
+ * 一个空壳 iframe。到 https://giscus.app 按提示选中仓库与 Discussions 分类，
+ * 页面会直接把下面这四个值生成出来，粘进来即可（改完重新构建）。
+ *
+ * 注意：光填这里还不够 —— 仓库必须**公开**、且已经在 Settings → General → Features 里
+ * 打开 Discussions、装过 giscus 应用（giscus.app 的向导会一步步带你做）。
+ * 第三个 `category` 是 Discussions 里的**分类名**（不是 id），两者都要填。
+ */
+export const COMMENTS: {
+  repo: string;
+  repoId: string;
+  category: string;
+  categoryId: string;
+} = {
+  repo: "", // 编辑此处：例如 "your-name/your-repo"
+  repoId: "", // 编辑此处：giscus.app 给的 data-repo-id
+  category: "", // 编辑此处：Discussions 分类名，例如 "Announcements"
+  categoryId: "", // 编辑此处：giscus.app 给的 data-category-id
+};
+
+/** 评论是否已经配置好（四项都填了才算） */
+export function commentsReady(): boolean {
+  return (
+    COMMENTS.repo !== "" &&
+    COMMENTS.repoId !== "" &&
+    COMMENTS.category !== "" &&
+    COMMENTS.categoryId !== ""
+  );
+}
 
 /** 每语言的 RSS 地址（第 5 项生成，路由见 app/[lang]/feed.xml/route.ts） */
 export function feedHref(lang: Lang): string {

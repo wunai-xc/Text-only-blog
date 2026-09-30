@@ -1012,9 +1012,11 @@
   }
 
   /* 栏头：栏号 + 一句小字 + 一条虚线拉到右边（图纸上那种标题栏的气质）。
-     列表页页头（第 10 项）用的是同一套观感，所以三个别名共用这三条规则。 */
+     列表页页头（第 10 项）与文章页页头（第 12 项）用的是同一套观感，
+     所以四个别名共用这三条规则（真去写第四份，迟早有一份忘了改）。 */
   .home-kicker,
-  .list-kicker {
+  .list-kicker,
+  .article-kicker {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -1026,7 +1028,8 @@
   }
 
   .home-no,
-  .list-no {
+  .list-no,
+  .article-no {
     padding: 0.05rem 0.3rem;
     border: 1px solid var(--c-rule-strong);
     border-radius: 3px;
@@ -1034,7 +1037,8 @@
   }
 
   .home-rule,
-  .list-rule {
+  .list-rule,
+  .article-rule {
     flex: 1 1 auto;
     height: 0;
     border-top: 1px dashed var(--c-rule);
@@ -1637,6 +1641,411 @@
   }
 
   /* ==========================================================
+     6e. 文章页（第 12 项）
+     页头 / 悬浮目录 / 阅读进度 / 回顶 / 上下篇 / 评论区。
+     版式、文案与阈值都在 lib/article.ts，这里只管画。
+
+     宽度这块有一条关键约定：**这一页的列宽 = 读者的正文度量 + 内边距**
+     （--reading-measure 是第 6 项的令牌，设置中心一改，标题 / 正文 / 上下篇 / 评论
+     会一起变窄变宽）。所以这一节里**不要写死 42rem**。
+     ========================================================== */
+
+  .article-page {
+    max-width: calc(var(--reading-measure) + 3rem);
+  }
+
+  /* 目录跳转时标题停在吸顶顶栏下面。顶栏高度只有一个事实来源：--home-head-room
+     （第 9 项起的叫法，窄屏会折行变高，见「6c. 首页」）。 */
+  .article-page .article-body :is(h1, h2, h3, h4, h5, h6) {
+    scroll-margin-top: var(--home-head-room);
+  }
+
+  /* 这一页也有锚点跳转（悬浮目录），跟随首页那条：只给允许动效的人平滑滚动 */
+  @media (prefers-reduced-motion: no-preference) {
+    html:has(.article-page) {
+      scroll-behavior: smooth;
+    }
+  }
+
+  /* ---------- 页头 ---------- */
+
+  .article-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin-bottom: 1.6rem;
+  }
+
+  .article-title {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 650;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+  }
+
+  .article-lead {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: var(--c-ink-muted);
+  }
+
+  .article-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--c-ink-subtle);
+  }
+
+  .article-badge {
+    padding: 0.02rem 0.3rem;
+    border: 1px solid var(--c-rule-strong);
+    border-radius: 3px;
+    color: var(--c-ink-muted);
+  }
+
+  .article-badge[data-badge="ai"] {
+    border-color: var(--c-accent);
+    color: var(--c-accent);
+  }
+
+  /* 草稿只在 dev 里出现（生产构建根本不含草稿） */
+  .article-badge[data-badge="draft"] {
+    border-style: dashed;
+    color: var(--c-danger);
+  }
+
+  /* 标签 / 分类片与卡片上的同名件同形，但它俩是**链接**（跳到列表页的筛选） */
+  .article-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin: 0;
+  }
+
+  .article-chip {
+    padding: 0.04rem 0.45rem;
+    border: 1px dashed var(--c-rule-strong);
+    border-radius: 999px;
+    color: var(--c-ink-muted);
+    font-size: 0.72rem;
+    text-decoration: none;
+  }
+
+  .article-chip:hover {
+    border-color: var(--c-accent);
+    color: var(--c-accent);
+  }
+
+  .article-chip[data-kind="category"] {
+    border-style: solid;
+    border-color: var(--c-accent);
+    color: var(--c-accent);
+  }
+
+  /* ---------- 悬浮目录（左侧；宽屏才有，窄屏那点宽度留给正文） ---------- */
+
+  .article-toc {
+    display: none;
+  }
+
+  /* 78rem 是「正文列两侧还放得下 12rem 目录」的最小宽度：
+     (78 - 页面列宽 45) / 2 ≈ 16.5rem，够目录（12rem）+ 边距。 */
+  @media (min-width: 78rem) {
+    .article-toc {
+      position: fixed;
+      z-index: 18;
+      top: 6.5rem;
+      left: 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      width: 12rem;
+      max-height: calc(100vh - 11rem);
+      overflow-y: auto;
+      padding: 0.7rem 0.8rem;
+      border: 1px solid var(--c-rule);
+      border-radius: var(--shape-radius-lg);
+      background-color: var(--c-surface);
+      box-shadow: var(--shape-shadow);
+    }
+  }
+
+  .article-toc-title {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--c-ink-subtle);
+    letter-spacing: 0.04em;
+  }
+
+  .article-toc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .article-toc-link {
+    display: block;
+    padding: 0.15rem 0.4rem;
+    border-left: 2px solid transparent;
+    color: var(--c-ink-muted);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+
+  .article-toc-link:hover {
+    color: var(--c-ink);
+  }
+
+  .article-toc-link[aria-current="true"] {
+    border-left-color: var(--c-accent);
+    background-color: var(--c-accent-soft);
+    color: var(--c-accent);
+  }
+
+  /* 缩进档由 lib/article.ts 的 tocIndent() 换算（depth ≤2 不缩进、3 一档、≥4 两档） */
+  .article-toc-item[data-indent="1"] > .article-toc-link {
+    padding-left: 0.9rem;
+  }
+
+  .article-toc-item[data-indent="2"] > .article-toc-link {
+    padding-left: 1.5rem;
+    font-size: 0.74rem;
+  }
+
+  .article-toc-empty,
+  .article-toc-note {
+    margin: 0;
+    color: var(--c-ink-subtle);
+    font-size: 0.7rem;
+    line-height: 1.6;
+  }
+
+  /* ---------- 阅读进度（右边缘 2px 细线 + 百分比牌子） ---------- */
+
+  .article-progress {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 19;
+    width: 2px;
+    pointer-events: none;
+  }
+
+  .article-progress-fill {
+    display: block;
+    width: 100%;
+    height: 0;
+    background-color: var(--c-accent);
+    opacity: 0.45;
+  }
+
+  /* 百分比牌子窄屏不显示：它会挤到正文上（60rem 以下只留那条 2px 的线） */
+  .article-progress-value {
+    display: none;
+  }
+
+  @media (min-width: 60rem) {
+    .article-progress-value {
+      position: fixed;
+      z-index: 19;
+      top: 50%;
+      right: 0.7rem;
+      display: block;
+      transform: translateY(-50%);
+      margin: 0;
+      padding: 0.1rem 0.3rem;
+      border: 1px dashed var(--c-rule-strong);
+      border-radius: 3px;
+      background-color: var(--c-canvas);
+      color: var(--c-ink-subtle);
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+    }
+  }
+
+  /* ---------- 回到顶部（右下角的圆形按钮） ---------- */
+
+  .article-top {
+    position: fixed;
+    z-index: 19;
+    right: 1.1rem;
+    bottom: 1.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border: 1px solid var(--c-rule-strong);
+    border-radius: 999px;
+    background-color: var(--c-surface);
+    color: var(--c-ink-muted);
+    box-shadow: var(--shape-shadow);
+    cursor: pointer;
+    /* 没滚够之前完全不可见也不可点（组件同时会摘掉 tabIndex / 加 aria-hidden） */
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .article-top[data-visible="true"] {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .article-top {
+      transition: opacity 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    }
+  }
+
+  .article-top:hover {
+    border-color: var(--c-accent);
+    color: var(--c-accent);
+  }
+
+  /* 文章页右下角让给回顶按钮：图签是装饰、回顶是功能，两者都在这个角上会叠在一起。
+     图纸编号在这页的页头（decor.sheet）照样印着，信息没丢。 */
+  .blueprint[data-decor="measure"] .blueprint-tag {
+    display: none;
+  }
+
+  /* ---------- 上下篇（文章末尾 full / 悬浮目录里 compact，共用一份组件） ---------- */
+
+  .article-pager {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  @media (min-width: 40rem) {
+    .article-pager[data-variant="full"] {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* 只有一侧有邻居时，那一格仍然待在它该在的那一边（左边是上一篇、右边是下一篇） */
+    .article-pager[data-variant="full"] .article-pager-link[data-dir="older"] {
+      grid-column: 1;
+    }
+
+    .article-pager[data-variant="full"] .article-pager-link[data-dir="newer"] {
+      grid-column: 2;
+      align-items: flex-end;
+      text-align: right;
+    }
+  }
+
+  .article-pager-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--c-rule);
+    border-radius: var(--shape-radius);
+    background-color: var(--c-surface);
+    text-decoration: none;
+  }
+
+  .article-pager-link:hover {
+    border-color: var(--c-accent);
+  }
+
+  .article-pager-label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--c-ink-subtle);
+  }
+
+  .article-pager-title {
+    color: var(--c-ink);
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  /* 悬浮目录里那一份：窄条、字号再小一档，底色用画布色（它贴着的是一块 .panel） */
+  .article-pager[data-variant="compact"] .article-pager-link {
+    padding: 0.4rem 0.5rem;
+    background-color: var(--c-canvas);
+  }
+
+  .article-pager[data-variant="compact"] .article-pager-title {
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+
+  /* ---------- 文末与评论区 ---------- */
+
+  .article-foot {
+    margin-top: 2.2rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--c-rule);
+  }
+
+  .article-comments {
+    margin-top: 2.2rem;
+  }
+
+  .article-comments-title {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0 0 0.4rem;
+    font-size: 1rem;
+    font-weight: 620;
+  }
+
+  .article-comments-note {
+    margin: 0 0 0.7rem;
+    color: var(--c-ink-subtle);
+    font-size: 0.74rem;
+    line-height: 1.7;
+  }
+
+  .article-comments-note[data-tone="warn"] {
+    color: var(--c-danger);
+  }
+
+  .article-comments-host {
+    min-height: 5rem;
+  }
+
+  .article-comments-host iframe {
+    width: 100%;
+  }
+
+  /* 还没配置 giscus 时的「编辑此处」：虚线框，一眼看出这不是评论区本身 */
+  .article-comments-setup {
+    margin: 0;
+    padding: 0.7rem 0.85rem;
+    border: 1px dashed var(--c-rule-strong);
+    border-radius: var(--shape-radius);
+    color: var(--c-ink-muted);
+    font-size: 0.78rem;
+    line-height: 1.75;
+  }
+
+  /* ==========================================================
      7. 正文（.article-body）—— 第 3 项的渲染输出 + 第 6 项的令牌
      度量（宽度 / 字号 / 行距）走 --reading-* 令牌，不写死。
      ========================================================== */
@@ -1891,31 +2300,6 @@
     font-size: 0.85rem;
     white-space: pre-wrap;
   }
-
-  /* ==========================================================
-     8. 开发态渲染自检块（components/dev/PipelineCheck.tsx）—— 生产构建里不存在
-     ========================================================== */
-  .pipeline-check {
-    margin-top: 1rem;
-    padding: 0.75rem 1rem;
-    border: 1px dashed var(--c-rule-strong);
-    border-radius: var(--shape-radius);
-    background-color: var(--c-surface);
-    font-size: 0.95rem;
-  }
-
-  .pipeline-check summary {
-    cursor: pointer;
-    font-weight: 600;
-  }
-
-  .pipeline-check-note {
-    margin: 0.5rem 0;
-    color: var(--c-ink-muted);
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    overflow-wrap: anywhere;
-  }
 }
 
 /* ============================================================
@@ -1961,6 +2345,25 @@
 
   .list-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* 第 12 项的文章页：悬浮目录、进度线、百分比、回顶都是「屏幕上才有意义」的东西；
+     评论区是第三方 iframe，纸上既印不出来也不该印。文章末尾的上下篇留着
+     （纸上的链接是给人拿去地址栏敲的）。 */
+  .article-toc,
+  .article-progress,
+  .article-progress-value,
+  .article-top,
+  .article-comments {
+    display: none;
+  }
+
+  .article-page {
+    max-width: none;
+  }
+
+  .article-pager[data-variant="full"] {
+    grid-template-columns: 1fr 1fr;
   }
 
   html,

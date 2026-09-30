@@ -196,7 +196,7 @@ const ZH: HomeText = {
       "代码高亮、KaTeX 公式（含 \\ce 化学式）、五类图表按需加载",
       "打印即排版好的 PDF（Ctrl+P 存一份）",
       "RSS 订阅、离线可用（Service Worker + 离线页）",
-      "悬浮目录与右侧进度条：第 12 项（文章页）落地",
+      "悬浮目录、右侧阅读进度与圆形回顶（文章页）",
     ],
   },
   themes: {
@@ -282,7 +282,7 @@ const EN: HomeText = {
       "Code highlighting, KaTeX math (incl. \\ce chemistry), five chart types loaded on demand",
       "Print to a properly typeset PDF (Ctrl+P)",
       "RSS feed and offline support (Service Worker + offline page)",
-      "Floating table of contents and a reading progress bar: item 12 (article page)",
+      "Floating table of contents, reading progress and a back-to-top button (article pages)",
     ],
   },
   themes: {

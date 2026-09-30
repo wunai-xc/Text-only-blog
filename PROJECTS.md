@@ -51,17 +51,23 @@
 │  ├─ not-found.tsx          404（导出为 out/404.html）
 │  └─ [lang]/
 │     ├─ layout.tsx          zh | en 静态参数 + 纠正 <html lang> + 全站框架（第 7 项的顶栏/页脚）
-│     ├─ page.tsx            首页（第 9 项：八栏吸附，版面与文案在 lib/home.ts）+ 开发态渲染自检
-│     └─ posts/page.tsx      文章列表页（第 10 项：构建期取数据；筛选 / 搜索 / 密度在 lib/list.ts + components/list）
+│     ├─ page.tsx            首页（第 9 项：八栏吸附，版面与文案在 lib/home.ts）
+│     └─ posts/
+│        ├─ page.tsx         文章列表页（第 10 项：构建期取数据；筛选 / 搜索 / 密度在 lib/list.ts + components/list）
+│        └─ [...slug]/page.tsx  文章正文页（第 12 项：构建期渲染全文 + 目录 / 进度 / 上下篇 / 评论）
 ├─ components/
 │  ├─ ArticleBody.tsx        正文容器：注入 HTML 并按需动态加载五类图表
 │  ├─ charts/
 │  │  ├─ mermaid.ts          Mermaid 渲染器（只在有图表时才进包）
 │  │  ├─ echarts.ts          ECharts（代码块是 JSON option）
 │  │  ├─ graphviz.ts         Graphviz（@hpcc-js/wasm-graphviz）
-│  │  ├─ abc.ts              五线谱（abcjs）
+│  │  ├─ abc.ts              五线谱（abcjs；渲染后把近黑的 stroke/fill 换成 --c-ink，见第 12 项）
 │  │  └─ smiles.ts           化学结构式（SmilesDrawer）
-│  ├─ dev/PipelineCheck.tsx  开发态渲染自检（生产构建里不出现，可删）
+│  ├─ article/
+│  │  ├─ ArticleToc.tsx      悬浮目录（第 12 项，客户端：宽屏才显示；底部挂着 compact 档上下篇）
+│  │  ├─ ArticleProgress.tsx 阅读进度 + 圆形回顶（第 12 项，客户端：一次 scroll 监听，rAF 节流）
+│  │  ├─ ArticlePager.tsx    上下篇（第 12 项；无 hook，服务端也能用，full/compact 两档共用）
+│  │  └─ GiscusComments.tsx  giscus 评论（第 12 项，客户端：滚到附近才加载、换外观走 postMessage）
 │  ├─ LangRedirect.tsx       浏览器端语言跳转
 │  ├─ HtmlLang.tsx           客户端纠正 <html lang>
 │  ├─ BlueprintBackground.tsx 蓝图草图背景层（第 6 项建立，第 8 项接上路由：路径 → data-decor + 右下角图签）
@@ -100,6 +106,7 @@
 │  ├─ decor.ts               装饰层（第 8 项：路径 → 图纸编号 + 图案名 + 图签文字，零依赖）
 │  ├─ home.ts                首页版面与文案（第 9 项：八栏顺序 / 并排 / 栏号 / 中英文案）
 │  ├─ list.ts                列表页（第 10/11 项：筛选状态 / 三档密度 / 纯函数 / 地址栏读写 / 中英文案，零依赖）
+│  ├─ article.ts             文章页（第 12 项：目录缩进与阈值 / 上下篇 / typography 字段 / giscus 映射 / 中英文案，零依赖）
 │  ├─ toml.ts                自写 TOML 解析器（`+++` frontmatter 用）
 │  ├─ frontmatter.ts         双格式识别与字段归一化
 │  ├─ content.ts             内容加载 / 查询 API（只读盘，不渲染）
@@ -161,7 +168,7 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 | 9 | 首页 | `[x]` | `lib/home.ts`：八栏顺序 / 并排 / 栏号 / 文案；吸附用原生 scroll-snap，侧边指示器是锚点 + IntersectionObserver |
 | 10 | 列表页 | `[x]` | `app/[lang]/posts/` + `lib/list.ts`：搜索（懒读 `/search-index.json`）、筛选（标签/分类/年份/排序）、语言切换、密度切换、AI 默认隐藏 |
 | 11 | 文章卡片 | `[x]` | `components/list/PostCard.tsx`：紧凑 / 适中 / 内容 三档；首页第 2 栏与列表页共用同一个组件 |
-| 12 | 文章页 | `[ ]` | 悬浮 TOC（含上下篇）、右侧细进度条带百分比、圆形回顶、giscus 评论 |
+| 12 | 文章页 | `[x]` | `/zh/posts/<slug>/`：构建期渲染全文、悬浮 TOC（含上下篇）、右侧细进度条带百分比、圆形回顶、giscus 评论 |
 | 13 | 其余页面 | `[ ]` | 关于/友链/标签/分类/归档/搜索/设置/404/离线 |
 | 14 | 交付 | `[ ]` | README + 编辑指南、git 提交推送 |
 
@@ -210,8 +217,9 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
   id 找不到时渲染成红色 `cite-missing` 并记一条 warning（不中断构建），且给出「首次引用」才有的返回锚点。
 - 目录：`rehype-slug` 生成的 id 直接复用（不再自己造 slug），返回**嵌套** `toc` 与 `flattenToc()`；
   标题末尾的 `#` 锚点由 `rehype-autolink-headings` 追加。
-- 开发态自检：`components/dev/PipelineCheck.tsx` 内置一段样例（GFM / 公式 / 五类图表 / 角标 / 目录统计），
-  只有 `next dev` 的首页会挂它，生产构建里不渲染、也不进产物；确认第 12 项（文章页）之后可以直接删掉这个文件。
+- 开发态自检（**第 12 项已删掉这个文件**，留档说明它当时做什么）：`components/dev/PipelineCheck.tsx` 内置一段样例（GFM / 公式 / 五类图表 / 角标 / 目录统计），
+  只有 `next dev` 的首页会挂它，生产构建里不渲染、也不进产物；第 12 项（文章页）落地后**已删**（连同首页里那三行），
+  CSS 里的 `.pipeline-check` 一节也一并删掉了。
 
 ### 4. 中文排版优化 —— 已完成 ✅
 
@@ -241,6 +249,7 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
   `content/README.md` 第 9 节写明。
 - 自检：`components/dev/PipelineCheck.tsx` 新增两段样例 —— 一段故意写得很糙的中英混排
   （应当被收拾干净），一段是对照组（`typography: false`，应当原样输出），并在页面上打印改动计数。
+  —— 这一段自检随第 12 项删掉了：它的任务（在文章页之前验证渲染器）已经由真的文章页承担。
 
 ### 5. 构建产物 —— 已完成 ✅
 
@@ -375,7 +384,8 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
   各渲染器的改法：echarts 删掉写死的 `DARK_THEME`，改成按令牌注册一个 `blog` 主题；
   mermaid 用 `themeVariables` 把令牌盖到内置主题上；graphviz 往 dot 源里插三条
   `graph | node | edge` 默认属性（它是「黑字透明底」，暗色下原本等于看不见；作者自己写的颜色优先级更高）；
-  smiles 继续用内置的 light/dark；**abc（五线谱）没动**，见下面的待办。
+  smiles 继续用内置的 light/dark；abc（五线谱）当时没动，**第 12 项补上了**（画完后把近黑的
+  `stroke` / `fill` 换成 `--c-ink`，见下面第 12 项与第 4 节的待办）。
 - **打印**：`@media print` 里隐藏蓝图层、正文转 11pt / 不限宽、代码块转浅底
   —— 纯文字博客最实用的「导出」就是 Ctrl+P 存 PDF。
 - **改了令牌要同步的三处**（CSS 与 TS 之间没有桥）：`lib/theme.ts` 的 `THEME_CHROME`（三套底色镜像）、
@@ -586,7 +596,8 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
   （`lib/home.ts`）—— 八栏 × 两语 ×（标题 + 说明 + 空状态 + 示范句子）塞进 site.ts 会把
   站点配置变成文案仓库，而改一版首页只该动一个文件（与第 6/7 项「选项文案跟着选项走」同理）。
 - 开发态自检仍然在（生产构建里不出现）：现在是首页 `</main>` 之后一块独立的 `.page`，
-  不参与八栏吸附；第 12 项落地后连同 `components/dev/PipelineCheck.tsx` 一起删（约定第 6 条）。
+  不参与八栏吸附；第 12 项落地时连同 `components/dev/PipelineCheck.tsx` 与 `.pipeline-check`
+  的 CSS 一起删掉了（约定第 6 条已兑现）。
 
 ### 10. 列表页 —— 已完成 ✅
 
@@ -640,18 +651,97 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
   - **紧凑**：一行一篇 —— 标题 + 日期与时长（扫得最快，适合文章多起来以后）；
   - **适中**（默认）：再加摘要与标签 —— 与首页第 2 栏原来的样子一致；
   - **内容**：把这一篇的元信息全展开 —— 摘要按读者的阅读度量（`--reading-*`）排、摘录、字数、
-    修改时间、所属卡组、标签与分类片，并在卡片里写明「列表只到摘要为止，正文在第 12 项落地后可读」。
+    修改时间、所属卡组、标签与分类片，并在卡片里写明「列表只到摘要为止 —— 点标题进正文页读全文」。
 - **结构上只有两处分支**（摘要要不要渲染、内容档多渲染几句），其余全交给 CSS：
   `.list-grid .post-card[data-density="full"] { grid-column: 1 / -1 }` 让内容档在宽屏上**一行一篇**，
   紧凑档收内边距与字号。组件里没有按密度写的样式分支。
 - **一份实现两处使用**：列表页（客户端）与首页第 2 栏（服务端组件）用的是同一个 `PostCard` ——
   首页把它放进 `.home-posts` 并覆盖两行（卡片贴着一块 `.panel`，改用画布色；栅格更密）。
-  第 12 项的文章页与第 13 项的标签 / 归档页复用同一个组件即可，**不要另写卡片**。
-- 卡片上的小字（几分钟 / 置顶 / 草稿 / AI / 正文页未落地）跟着卡片走（`LIST_TEXT`），
+  第 13 项的标签 / 归档页复用同一个组件即可，**不要另写卡片**
+  （文章页没有卡片，它给的是正文，见下面第 12 项）。
+- 卡片上的小字（几分钟 / 置顶 / 草稿 / AI）跟着卡片走（`LIST_TEXT`），
   所以 `lib/home.ts` 里的 `posts.minutes` 与 `articlePending` 已经删掉 —— 首页不再各留一份同义文案。
+- 标题可点与否由卡片自己判断（读 `lib/site.ts` 的 `ARTICLE_ROUTE`，约定第 8 条）：
+  第 12 项把那个状态改成了 `"ready"`，所以首页与列表页的标题**已经是真链接**了 ——
+  一行都没改 `PostCard` 与两个页面。
 - 草稿徽章只在 dev 出现（生产构建根本不含草稿，但 dev 下容易忘记哪篇还没发布）。
 - 「内容」档**不重复正文**：列表页的意义是挑文章，正文归文章页（第 12 项）。所以这一档停在
   「摘要 + 全部元信息」，并在卡片上如实说明。
+
+### 12. 文章页 —— 已完成 ✅
+
+**交付物**：`app/[lang]/posts/[...slug]/page.tsx`（服务端：构建期取这一篇并渲染成 HTML）、
+`lib/article.ts`（这一页的唯一事实来源）、`components/article/` 下四个组件
+（`ArticleToc` / `ArticleProgress` / `ArticlePager` / `GiscusComments`）、
+`app/globals.css` 的「6e. 文章页」一节。原来第 3 项留下的开发态自检
+（`components/dev/PipelineCheck.tsx` 与首页里那三行、以及 `.pipeline-check` 的 CSS）本次一并删掉。
+
+- **正文在构建期就渲染好**：`getPostWithBody` → `renderMarkdown`，静态导出后这一页的 HTML 里
+  就是完整正文 —— 没有 JS、爬虫、断网（PWA 缓存过）都能读（约定第 4 条）。只有三样东西是
+  客户端的：悬浮目录（要观察滚动）、阅读进度（要读滚动量）、评论（第三方 iframe）。
+- **宽度只有一个来源**：`.article-page { max-width: calc(var(--reading-measure) + 3rem) }`
+  —— 页头、正文、上下篇、评论区同宽，读者在设置中心把正文调窄调宽，这一页整体跟着走。
+  任何地方都**没有写死 42rem**（第 6 项留的待办，这里兑现）。
+- **悬浮目录**（`ArticleToc`）：一组**真锚点**（`<a href="#heading-id">`，id 就是第 3 项
+  `rehype-slug` 给的那个，不另造一套 slug），所以没有 JS 也能跳；高亮用 `IntersectionObserver`
+  取「顶栏下方那一带里的第一条」，带里空着时**保留上一次高亮**（不然小节之间会闪）——
+  与首页侧边指示器同一个做法。缩进档由 `lib/article.ts` 的 `tocIndent()` 换算
+  （depth ≤2 不缩进 / 3 一档 / ≥4 两档），深于 `TOC_MAX_DEPTH` 的标题不列。
+  宽屏（≥78rem）才显示 —— 窄屏那点宽度留给正文，那里由文章末尾的上下篇兜底。
+  它会**值导入** `lib/article.ts`，所以那个文件对 `lib/markdown.ts` 只用 `import type`
+  （否则整条 unified 管线会被打进浏览器包，文件头写明了这条）。
+- **阅读进度 + 回顶**（`ArticleProgress`）：右侧 2px 细线 + 百分比牌子（宽屏才有牌子）。
+  进度算的是**整页**的滚动比例，不是「正文读了多少」—— 免得出现「文章读完了、数字停在 87%」
+  这种让人不放心的刻度。一次 `scroll`（passive）+ `requestAnimationFrame` 节流同时管两件事：
+  画进度、决定回顶按钮是否出现（超过 `BACK_TO_TOP_AFTER = 600`）。回顶按钮不可见时
+  `aria-hidden` + `tabIndex={-1}`（不会 Tab 到看不见的东西上），点击在
+  `prefers-reduced-motion: reduce` 下用瞬时跳转。
+  文章页右下角本来印着图纸图签（装饰），这一页把它让给回顶按钮
+  （`.blueprint[data-decor="measure"] .blueprint-tag { display: none }`）——
+  图纸编号在页头照样印着（`decorate(meta.href)`，与图签同一个来源），信息没丢。
+- **上下篇**（`ArticlePager`）：无 hook、无 state，所以服务端组件直接渲染（文章末尾 `full` 档），
+  同一份组件也被悬浮目录以 `compact` 档复用 —— 「上/下」只在 `articleNeighbors()` 里解释一次
+  （顺序就是 `getPosts` 的时间倒序，页面里不再排一遍），两个位置都带日期，读不出歧义。
+  只有一侧有邻居时那一格留在它该在的那一边（左 = 上一篇、右 = 下一篇），另一格不占位。
+- **标签 / 分类片是链接**：链到列表页的筛选（`/zh/posts/?tag=…`、`?cat=…`），
+  编解码只有 `lib/list.ts` 一处实现（约定第 9 条）—— 第 13 项的标签 / 分类页落地前，
+  这就是站内唯一「按标签看文章」的入口。
+- **giscus 评论**（`GiscusComments`）：配置在 `lib/site.ts` 的 `COMMENTS`（四个值**全部留空**，
+  按约定第 2 条显示「编辑此处」+ 怎么配，而不是一个空壳 iframe）。四项都填了才会真的挂上去，
+  并且：
+  1. **懒加载**：滚到评论区附近（`rootMargin: 600px`）才插 giscus 的脚本 ——
+     不读评论的读者一个字节都不会连到 giscus.app；
+  2. **外观跟着站点走**：三套外观映射成 giscus 的 light / dark（表在 `lib/article.ts`），
+     换外观时用 `postMessage` 通知 iframe 换配色（giscus 的官方接口），**不重新加载**评论区
+     （重载会丢掉读了一半的评论列表）；
+  3. **讨论的映射用 `specific` + 文章的站内路径**（`commentsTerm()` 会先切掉 `?tag=` 之类的查询串）：
+     同一篇的中英版本、带查询串的地址都落到同一个讨论上；
+  4. iframe 被拦掉 / 断网时给一行提示，正文不受影响。
+  frontmatter 的 `comments: false`（别名 `comment`）可以关掉单篇的评论区。
+- **metadata**：标题 / 描述 / 关键词 + OpenGraph `article`（发布与修改时间、作者、标签）。
+  `alternates` 里 **canonical 用 `post.href`、languages 用同一 slug 的跨语言配对**，
+  并把根布局那份 RSS 发现表（`feedAlternatesTypes()`）带了回来 ——
+  Next 的 metadata 是浅合并，页面自己写 `alternates` 会把根布局那份整体覆盖（第 5 项记下的坑，
+  第 10 项先堵了一次，这一项是第二次）。sitemap 与 RSS 里的文章 URL 从这一刻起才真的可访问。
+- **frontmatter 的 `typography` 字段接上了**（第 4 项留给第 12 项的接口）：
+  `parseTypographyOption()` 把 `false` / `{ spacing = false }` 这类写法翻成
+  `RenderOptions.typography`，**返回 `undefined` 与返回 `false` 是两件事**
+  （前者「没说」、后者「说了要关」）。规范在 `content/README.md` 第 9 节。
+- **渲染警告进构建日志**：`renderMarkdown` 的 `warnings`（缺引用、公式没渲染成功……）在这里
+  逐条 `console.warn`，带上源文件路径 —— 与第 3 项「写错公式不弄挂整站」的口径一致。
+- **五线谱（abcjs）的配色缺口补上了**（第 6 项记下的待办）：abcjs 把颜色写在 SVG 元素
+  属性上，且它的配色入口在不同版本里换过名字。赌选项名不如改结果，所以
+  `components/charts/abc.ts` 在画完之后**只把「近黑」的 `stroke` / `fill` 换成 `--c-ink`**
+  （`fill="none"`、作者自己指定的颜色一律不碰）—— 亮色外观下画面完全不变，暗色下才看得出区别。
+  主题一换 `ArticleBody` 会清空重画，所以不需要任何订阅逻辑。
+- **打印**：悬浮目录、进度线、百分比、回顶、评论区都不印（纸上点不动、iframe 也印不出来），
+  正文转 11pt、宽度不再受限；文章末尾的上下篇留着（纸上的链接可以拿去地址栏敲）。
+- **零文章 / 少文章时**：`generateStaticParams` 返回空数组即「没有文章页」，不影响其它页面；
+  只有一篇时上下篇两边都为空 → `ArticlePager` 直接不渲染（不留空框）。
+- **入口**：`lib/site.ts` 的 `ARTICLE_ROUTE.status` 改成 `"ready"` ——
+  首页第 2 栏与列表页的卡片标题一起变成真链接（约定第 8 条），**没有改任何卡片代码**。
+- ⚠️ 未在本机跑过浏览器（见第 8 节）：悬浮目录的高亮带、进度条与回顶的手感、
+  giscus 懒加载与换配色、五线谱在三套外观下的观感，都需要你本机看一眼。
 
 
 
@@ -934,14 +1024,32 @@ curl -s -H "Authorization: Bearer $TOKEN" \
      不是「紧凑档」（紧凑档只有标题 + 日期 + 时长，会把这一栏的摘要去掉，所以没那么选）。
      卡片上的小字跟着卡片走（`lib/list.ts` 的 `LIST_TEXT`），`lib/home.ts` 里的
      `posts.minutes` / `articlePending` 已删，别再加回来；
-  5. 第 12 项（文章页）落地后，把 `lib/site.ts` 的 `ARTICLE_ROUTE.status` 改成 `"ready"`
-     —— 首页与列表页的文章卡片会一起变成真链接（约定第 8 条的那套做法）；
+  5. ✅ 第 12 项（文章页）已落地：`lib/site.ts` 的 `ARTICLE_ROUTE.status` 已经是 `"ready"`，
+     首页与列表页的文章卡片**一行没改**就一起变成了真链接（约定第 8 条的那套做法）。
+     以后改了 slug 规则（正文 URL 变了）就把 `app/[lang]/posts/[...slug]/page.tsx` 的
+     `generateStaticParams` 与 `lib/content.ts` 的 `PostMeta.href` 一起核一遍 —— 两者必须同源；
   6. 第 13 项的 `/[lang]/settings/` 页与首页第 7/8 栏用的是同一套组件与 API，别在那边另写一份。
 - **第 13 项**：页面落地后把 `lib/site.ts` 的 `ROUTES[id].status` 从 `"pending"` 改成 `"ready"`
   —— 顶栏、页脚、`RouteLink` 的入口会一起生效；新页面同时加进 `app/sitemap.ts` 的 `pageRoutes()`
   （第 10 项已经按这条办过：`ROUTES.posts` 已是 `"ready"`，sitemap 里也补了列表页两行）。
-- **第 12 项（文章页）**：正文宽度一律用 `--reading-measure`（读者的阅读偏好要能生效），别写死 42rem；
-  frontmatter 的 `typography` 字段接到 `renderMarkdown` 的 `RenderOptions.typography`（渲染层已支持）。
+- **第 12 项（文章页）—— 已完成**，这条留档并转成「后续项要用到的东西」：
+  1. 正文页的**宽度只有一个来源**：`--reading-measure`（`app/globals.css` 的
+     `.article-page { max-width: calc(var(--reading-measure) + 3rem) }`），别在任何地方写死 42rem；
+     度量变了连页头与评论区一起走；
+  2. 正文页的一切**文案与阈值**都在 `lib/article.ts`（目录缩进 `tocIndent` / `TOC_MAX_DEPTH`、
+     `BACK_TO_TOP_AFTER`、`TOC_ACTIVE_OFFSET`、`GISCUS_*`、上下篇、中英文案）。
+     页面里不写文案、不排「上/下」，也不手写图纸编号（`decorate(meta.href)`）；
+  3. **`lib/article.ts` 只许 `import type`**：它被客户端组件（目录 / 进度 / 评论）值导入，
+     一旦值导入 `lib/markdown.ts`，整条 unified 管线会被打进浏览器包（globals.css 的一节、
+     文件头注释都写了这条）；
+  4. 悬浮件（目录 / 进度 / 回顶）全是 `z-index: 18~19`，低于吸顶顶栏（20）与设置抽屉（50）；
+     文章页右下角的图签让给了回顶按钮（`[data-decor="measure"] .blueprint-tag` 不显示），
+     要改这个取舍就动那一条 CSS；
+  5. giscus 的四个值在 `lib/site.ts` 的 `COMMENTS`（**留空 = 显示「编辑此处」**），
+     配色映射与消息协议在 `lib/article.ts`；这一节只在读者滚到附近才联网，
+     改懒加载距离就动那个 `rootMargin: 600px`；
+  6. 第 13 项的标签 / 分类页要「跳到某一类文章」时，直接用文章页那套链接
+     （`/zh/posts/?tag=…` / `?cat=…`，由 `lib/list.ts` 的 `listQueryString` 生成），别另实现一遍。
 - **第 13 项（设置页）**：`/[lang]/settings/` 直接复用 `components/SettingsCenter.tsx`（它不管容器），
   不要另写一套；落地后把 `ROUTES.settings.status` 改成 `"ready"`。
 - **第 8 项（装饰与动效）—— 已完成**，这两条留档并转成「后续项要用到的东西」：
@@ -952,16 +1060,11 @@ curl -s -H "Authorization: Bearer $TOKEN" \
   3. 「纸质颗粒」没做（理由见第 4 节第 8 项末条）：要加就给 `.blueprint` 补第五层背景，
      只动 `app/globals.css`，别为它引图片资源。
 - **第 6 项留下的已知缺口**：
-  1. **abc（五线谱）在暗色外观下仍是深色线条**（abcjs 用自己画出来的 `<path>`，颜色不跟令牌）。
-     没有真浏览器确认过它的配色入口（是 `foregroundColor` 之类的选项还是靠 `add_classes` 出来的 CSS 类），
-     所以第 6 项没动它；第 12 项用真图对着调。mermaid / echarts / graphviz / smiles 都已经跟主题走；
+  1. ✅ **abc（五线谱）的配色缺口已由第 12 项补上**：不去赌 abcjs 的选项名，改成画完之后把
+     「近黑」的 `stroke` / `fill` 换成 `--c-ink`（`components/charts/abc.ts` 的 `recolorInk()`），
+     不动 `fill="none"` 与作者指定的颜色。mermaid / echarts / graphviz / smiles 早就是读令牌的，
+     于是五个渲染器现在都跟主题走 —— 但**五线谱这一处仍是纸面推演**，需要你本机看一眼（见第 8 节）；
   2. 三套令牌的对比度、蓝图层在三套外观下的观感，只在纸面上推演过，需要你本机看一眼（见第 8 节）。
-- **第 12 项（文章页）**：
-  1. 把 frontmatter 的 `typography` 字段接到 `renderMarkdown` 的 `RenderOptions.typography`
-     （渲染层已经支持，规范写在 `content/README.md` 第 9 节）；
-  2. 文章页如果写了 `alternates`，记得把根布局里那两条 RSS `types` 补回去（见上）；
-  3. 文章页落地后，sitemap 与 RSS 里的文章 URL 才是真的可访问（在那之前它们指向 404）；
-  4. 顺手删掉 `components/dev/PipelineCheck.tsx` 与 `app/[lang]/page.tsx` 里的那三行。
 - **第 10 项（列表页）—— 已完成**，留档并转成「后续项要用到的东西」：
   1. 搜索读的是 `/search-index.json` 的 `fields` 与 `version`（唯一事实来源仍是 `lib/search-index.ts` 的
      `SEARCH_FIELDS` / `SEARCH_INDEX_VERSION`）。**客户端不能值导入 `lib/search-index.ts`**（它 `import`
@@ -997,8 +1100,10 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 3. **UI 文案不算文章**，由 `lib/site.ts` 的 i18n 表统一维护（中英各一份，缺一边会出现 `undefined`）。
 4. 零文章、零配置时站点必须仍能构建与浏览，所有页面要有空状态。
 5. 动效一律尊重 `prefers-reduced-motion`，且背景/装饰层不得影响正文可读性（`aria-hidden`、`pointer-events: none`）。
-6. **开发态自检不是内容**：`components/dev/PipelineCheck.tsx` 只为在文章页之前验证渲染器而存在，
-   生产构建里不渲染、不进产物；第 12 项落地后删掉它和 `app/[lang]/page.tsx` 里那三行即可。
+6. **开发态自检不是内容**（**第 12 项已按这条删掉它**，留档）：`components/dev/PipelineCheck.tsx`
+   只为在文章页之前验证渲染器而存在，生产构建里不渲染、不进产物；文章页落地时连同
+   `app/[lang]/page.tsx` 里那三行与 `.pipeline-check` 的 CSS 一起删掉了。
+   现在要验证渲染管线，就直接写一篇真文章看 `/zh/posts/<slug>/`。
 7. **外观只有一个落点**（第 6 项起）：颜色只在 `app/globals.css` 的令牌里定义，页面里用语义色
    工具类（`text-ink-muted` / `bg-surface` / `border-rule` / `text-accent`）；
    不写 `dark:` 变体（三套外观，两态表达不了）、不写死色值、不动 `<html>` 上的 `data-theme`
@@ -1013,6 +1118,11 @@ curl -s -H "Authorization: Bearer $TOKEN" \
    （`data-density` 交给 CSS），新页面不要另写一份卡片；「只显示某一类文章」一律用列表页的查询串
    （`/zh/posts/?tag=…`、`?cat=…`、`?year=…`、`?sort=…`、`?density=…`），编解码只在 `lib/list.ts`。
    偏好与筛选分家：**筛选进地址栏**（可分享、可收藏），**偏好进 localStorage**（`tob:list-density` 等）。
+10. **每一页的版面、文案与阈值都在自己的 `lib/*.ts` 里**（第 9 项起的做法：首页 `lib/home.ts`、
+    列表页 `lib/list.ts`、文章页 `lib/article.ts`）：页面组件只负责把数据渲染出来，
+    不在页面里排顺序、写文案、手写图纸编号，也不实现第二份阈值（`tocIndent` / `BACK_TO_TOP_AFTER` 之类）。
+    被客户端组件引入的那几个 `lib/*.ts`（`list.ts` / `article.ts`）对服务端模块一律只用 `import type`，
+    否则会把 `node:fs`、`unified` 之类的整条依赖拖进浏览器包。
 
 ---
 
@@ -1044,15 +1154,17 @@ http://localhost:3000/zh/?theme=dark
 ```
 
 外观之外，第 8 项的「一张图纸」也能这样对照（对照表在 `lib/decor.ts`）：
-`/zh/` 整幅图纸 · `/zh/posts/` 分栏线（图签 `TOB-ZH-02`，第 10 项已落地）· 文章页左边缘刻度尺 ·
+`/zh/` 整幅图纸 · `/zh/posts/` 分栏线（图签 `TOB-ZH-02`）· 文章页（`/zh/posts/<slug>/`，第 12 项）
+左边缘刻度尺（图签那两行小字在这一页让给了回顶按钮）·
 `/zh/tags/` 密格 · `/zh/categories/` 剖面线 · `/zh/search/` 点阵 · `/offline/` 空纸；
-第 11~13 项落地之前，只有首页与列表页能真的看到（其余路径还不存在，敲进去会落到 404 页，
+第 13 项落地之前，只有首页、列表页与文章页能真的看到（其余路径还不存在，敲进去会落到 404 页，
 此时蓝图层按 `unknown` 画、图签印 `TOB-ZH-00` —— 这是预期行为）。
 
-除了首页占位，还会看到一块「渲染管线自检」，
-里面把第 3 项的 GFM、公式、代码高亮、五类图表、参考文献角标、目录抽取，
-以及第 4 项的中文排版（含 `typography: false` 的对照组）全跑一遍，
-用来在还没有文章的时候确认渲染器是通的。
+**开发态渲染自检已经删掉了**（第 12 项落地时连同 `components/dev/PipelineCheck.tsx`、
+首页里那三行、以及 `.pipeline-check` 的 CSS 一起删）。它原来的任务是把第 3 项的 GFM / 公式 /
+代码高亮 / 五类图表 / 参考文献角标 / 目录抽取与第 4 项的中文排版（含 `typography: false` 的对照组）
+跑一遍 —— 现在这件事由**真的文章页**承担：写一篇放进 `content/zh/posts/`，打开
+`/zh/posts/<slug>/` 就能看到同一套渲染结果，而且顺带验证了目录、进度、上下篇与评论。
 
 构建产物（第 5 项）在 dev 下也能直接访问，它们是按需求值的 Route Handler：
 `/feed.xml`、`/zh/feed.xml`、`/search-index.json`、`/changelog.json`、`/sitemap.xml`、`/robots.txt`。
@@ -1175,6 +1287,48 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
 - **第 11 项的三档「内容」档**停在「摘要 + 全部元信息」，**不重复正文**：那是第 12 项文章页的事。
   若你期望列表页直接给出全文（正文进列表页），说一声 —— 那要把每篇正文也传进客户端组件，
   首屏体积会明显变大，取舍我留给你定。
+- **第 12 项（文章页）也没在本机跑过浏览器**，而这一项牵扯的第三方（giscus）与滚动逻辑最多，
+  请按顺序看这几件事（前面 1、2 条最要紧）：
+  1. **构建能不能过**（最要紧）。这一项新增了一个 catch-all 路由与 `generateStaticParams`，
+     `npm run typecheck && npm run build` 之后 `ls out/zh/posts` —— 应当每个 slug 一个目录
+     （`out/zh/posts/<slug>/index.html`）。若构建在 `Collecting page data` 阶段报错，
+     把日志发我（多半是 `dynamicParams` 与 catch-all 的组合写法问题）。
+  2. **没有 JS 也能读全文**：`curl /zh/posts/<slug>/` 的 HTML 里应当有完整正文，
+     标题带 `id`（第 3 项 `rehype-slug` 给的）。**禁用 JS 时**页头 / 正文 / 参考列表 / 上下篇
+     都在，只有悬浮目录（宽屏才有）、进度条、回顶、评论不见 —— 这是设计如此。
+  3. **悬浮目录（≥78rem 的宽窗口）**：滚到某一节时对应那条应当高亮（左边一条竖线 +
+     淡淡的底色），小节之间滚动时**不应闪烁**（带里空着时保留上一次高亮）；点一条应当
+     平滑滚过去、标题停在吸顶顶栏下面（`scroll-margin-top: var(--home-head-room)`）——
+     如果标题被顶栏盖住，说明顶栏高度与那个令牌不一致，告诉我；
+     窗口收窄到 78rem 以下，目录整块消失（那点宽度留给正文），文章末尾的上下篇仍在。
+  4. **阅读进度与回顶**：右侧 2px 细线随滚动变长，宽屏（≥60rem）中部还有一个百分比小牌子；
+     滚过 600px 后右下角出现圆形回顶按钮（此前它不显示、也 Tab 不到）；点它应当平滑回到顶部；
+     系统开了「减少动效」时应当是瞬间跳转。
+     注意它算的是**整页**比例（到底 = 100%），不是「正文读了百分之多少」—— 这是刻意的。
+  5. **上下篇**：方向对不对（左 = 上一篇 = 更早，右 = 下一篇 = 更新，都带日期）；
+     第一篇只应出现「下一篇」、最后一篇只应出现「上一篇」，另一格**不留空框**。
+  6. **标签 / 分类片**：点一下应当到 `/zh/posts/?tag=…`（或 `?cat=…`）并在列表页里**已经选中**
+     那一项 —— 这条同时验证了文章页与列表页的查询串对得上（编解码都在 `lib/list.ts`）。
+  7. **giscus 现在不会加载**（`COMMENTS` 四个值是空的）：评论区应当显示「编辑此处」那段说明，
+     Network 里**不应出现任何 giscus.app 的请求**。填好那四个值重新构建后再看：
+     滚到评论区附近才开始加载（Network 里那一刻才出现 `client.js` 与 iframe）；
+     切换外观（设置中心）时评论区配色跟着变，且**不重新加载**（评论列表不闪）。
+  8. **五线谱（abcjs）的配色**：文章里放一张 ` ```abc ` 图，切到暗色 —— 谱线、符头、符干
+     应当变成浅色的 `--c-ink`，连音线（`fill="none"`）不该被填成实心。
+     如果暗色下仍然看不见，把那张图截图发我（我按截图改成别的手段）；
+     如果亮色下一眼看着和以前不一样，也告诉我（那说明 `recolorInk()` 碰到了不该碰的属性）。
+  9. **frontmatter 的 `typography`**：给某一篇写 `typography = false`（TOML）或
+     `typography: false`（YAML），那一篇的中英之间就**不该再补空格**；删掉这行恢复。
+     `{ spacing = false }` 这类写法只关一条 —— 规范在 `content/README.md` 第 9 节。
+  10. **metadata 与 RSS 发现表**：查看源代码，`<link rel="alternate" type="application/rss+xml">`
+     应当**两条都在**（zh 与 en）—— 文章页自己写了 `alternates`，把根布局那份覆盖掉过一次；
+     同时 `<link rel="canonical">` 应当是文章自己的地址。
+  11. **打印预览**（Ctrl+P）：悬浮目录、进度线、百分比、回顶、评论区都不应出现在纸上，
+     正文转 11pt、宽度不再受限，文章末尾的上下篇留着。
+- **第 12 项**改掉两处旧文案（都不是功能）：`lib/list.ts` 的 `card.fullNote` 从
+  「正文在第 12 项落地后可读」改成「点标题进正文页读全文」；首页第 6 栏的「这一项已经做到的」
+  最后一条从「第 12 项落地」改成「（文章页）」。仓库里如果再看到「第 12 项」被当成**待办**，
+  那就是漏改的注释，告诉我一声。
 - Service Worker（`public/sw.js`）与离线页只做了「逻辑上自洽」，没在任何浏览器里跑过。
   `npm run preview` 之后确认三件事：Application → Service Workers 里注册成功；
   断网（DevTools → Network → Offline）刷新仍能看到离线页；
@@ -1259,3 +1413,4 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
 | 本次提交 | **第 7 项框架 UI 完成**：顶栏（品牌 / 导航 / 图签三段，对齐 wunai-blog）、页脚（联系方式 + 版权 + 左下角齿轮）、设置中心抽屉（外观 / 阅读偏好 / 语言 / 恢复默认）。新增 `lib/icons.ts`（本地打包的 24 个图标）、`lib/prefs.ts`（宽度/字号/行距三档 + 首帧脚本 + 写 `--reading-*`）；`lib/site.ts` 扩全为「路由落地状态表 ROUTES + 顶栏导航 + 联系方式 + i18n 文案表」；新组件 `RouteLink`（按 `ROUTES.status` 决定可点/不可点）、`SiteHeader`、`SiteFooter`、`ThemeSwitcher`、`LangSwitcher`、`SettingsDock`、`SettingsCenter`、`PrefsInit`。框架挂到 `app/[lang]/layout.tsx`（第 9~13 项自动带上）；`globals.css` 新增「6b. 框架 UI」一节与 `--frame-width` 令牌，`.page` 内边距收紧到 `2.5rem 1.5rem 4rem`；`THEME_LABELS.hint` 由中文一句改成 `{ zh, en }`；约定新增第 8 条（链接可用性以 `ROUTES.status` 为唯一事实来源） |
 | 本次提交 | **第 8 项装饰与动效完成**：新增 `lib/decor.ts`（路径 → 图纸的唯一事实来源：`section` / `pattern` / 两位编号 / 图签语言，纯函数 + 两张穷尽表，零依赖）；`components/BlueprintBackground.tsx` 从空 div 变成 `"use client"` 组件，用 `usePathname()` 挂 `data-decor` / `data-route`，并在换页时让纸面重铺一次（0.32s、首帧不播、尊重 `prefers-reduced-motion`）；`app/globals.css` 新增「5b. 图案随路由变」一节 —— 七套图案（sheet / columns / measure / grid / hatch / dots / plain，全是渐变，无图片、无滤镜、不动布局）+ 右下角图签（`TOB-ZH-01` 之类，窄屏不印）+ `[data-route="article"]` 的边缘淡出微调；`lib/site.ts` 新增 `isRouteId()` 与 `SITE.i18n.decor` 三条文案（图签名字复用导航文案，不重复写十二个）。这一项**未改任何颜色与令牌、未动层序**；「纸质颗粒」未做，理由见第 4 节第 8 项 |
 | 本次提交 | **第 10 项列表页 + 第 11 项文章卡片（三档密度）完成**：新增 `app/[lang]/posts/page.tsx`（构建期取文章 / 标签 / 分类 / 年份，零文章出空状态且不出工具栏）、`components/list/PostList.tsx`（客户端：搜索 / 筛选 / 排序 / 密度 / 语言 / 地址栏状态）、`components/list/PostCard.tsx`（三档密度共用卡片）、`lib/list.ts`（筛选状态与默认值、三档密度与排序的选项表、纯函数、查询串读写、密度本机记忆、中英文案 —— 对 `content.ts` / `search-index.ts` 只 `import type`，故客户端可安全引入）；搜索在**第一次输入时**才读 `/search-index.json` 并动态 `import("fuse.js")`，索引读不到 / 版本不匹配时自动退回本页字段并在页面上写明；`ROUTES.posts` 改 `"ready"`（顶栏「文章」可以点了），sitemap 补两行列表页；`lib/site.ts` 新增 `feedAlternatesTypes()`（页面自写 `alternates` 会覆盖根布局那份 RSS 发现表，第 5 项记下的坑先在这里堵上，`app/layout.tsx` 同步改用）；首页第 2 栏换成共用的 `PostCard`（适中档），`lib/home.ts` 删掉 `posts.minutes` / `articlePending`；`lib/icons.ts` 补 11 个图标（筛选 / 时间 / 排序 / 三档密度 / AI / 清除搜索）；`app/globals.css` 新增「6d. 列表页与文章卡片」一节并把 `.home-kicker` 系三个类换成 `home/list` 共用，打印样式隐藏工具栏 |
+| 本次提交 | **第 12 项文章页完成**：新增 `app/[lang]/posts/[...slug]/page.tsx`（构建期 `getPostWithBody` → `renderMarkdown`，正文进 HTML；`generateStaticParams` 按语言列出全部 slug、`dynamicParams = false`）、`lib/article.ts`（目录缩进档与阈值 / 上下篇 `articleNeighbors` / frontmatter 的 `typography` 翻成渲染选项 / giscus 主题与 term 映射 / 中英文案；对 `markdown.ts` 等一律只 `import type`，因为客户端组件会值导入它）、`components/article/` 四个组件（`ArticleToc` 悬浮目录 —— 真锚点 + IntersectionObserver 且底部带 compact 档上下篇；`ArticleProgress` 右侧 2px 进度线 + 宽屏百分比 + 圆形回顶；`ArticlePager` 无 hook 的上下篇，full/compact 共用；`GiscusComments` 滚到附近才加载、换外观走 postMessage 不重载）、`app/globals.css` 新增「6e. 文章页」一节（宽度 = `calc(var(--reading-measure) + 3rem)`，不写死 42rem；四个 `<head>` 系类与首页 / 列表页共用；文章页右下角图签让给回顶按钮；打印隐藏悬浮件与评论区）；`lib/site.ts` 新增 `COMMENTS` + `commentsReady()`，`ARTICLE_ROUTE.status` 改 `"ready"`（首页与列表页的卡片标题**一行没改**就变成真链接）；`lib/icons.ts` 补 5 个图标（目录 / 上下箭头 / 回顶 / 评论）；补上第 6 项留下的 abc 五线谱配色缺口（`components/charts/abc.ts` 渲染后只把近黑的 `stroke` / `fill` 换成 `--c-ink`）；删掉开发态自检 `components/dev/PipelineCheck.tsx`、首页里那三行与 `.pipeline-check` 的 CSS（约定第 6 条兑现）；`lib/list.ts` 的 `fullNote` 与首页第 6 栏的一行旧文案同步成「正文页已落地」的说法。台账同步：目录树、进度表（12/14）、新增第 12 项小节、约定第 6 条、跨项待办、第 8 节的 11 条验收清单 |
