@@ -61,6 +61,24 @@ export const BACK_TO_TOP_AFTER = 600;
 /** 判定「当前读到哪一个小节」的那条线：视口顶部往下这么多像素（= 吸顶顶栏的下沿） */
 export const TOC_ACTIVE_OFFSET = 120;
 
+/**
+ * 目录面板的「宽屏」断点：**宽于它就是默认展开**。
+ * 与 globals.css「6e. 文章页」里那条 `@media (min-width: 78rem)` 同值（改一处就要改两处）。
+ * 组件读它只为了把 `aria-expanded` 说准 ——「宽屏默认展开、窄屏默认收起」这件事本身写在 CSS 里
+ * （`data-open` 不写 = 交给 CSS 的默认值），这样**没有 JS 的宽屏读者照旧看得到目录**。
+ */
+export const TOC_WIDE_QUERY = "(min-width: 78rem)";
+
+/** 拖动进度条时一次方向键跳多少个百分点（滑块必须能只用键盘走：↑/↓ 一步、PageUp/PageDown 三步、Home/End 两头） */
+export const PROGRESS_KEY_STEP = 5;
+
+/**
+ * 判定「正文标题已经滚出视野」的线（粘性标题用它决定出现 / 消失）。
+ * 与目录高亮那条 `TOC_ACTIVE_OFFSET` **同值** —— 两者要的都是「吸顶顶栏的下沿」，
+ * 只是用途不同（一个高亮小节、一个挂标题）。分成两个名字是为了读代码时不别扭，数只有一个。
+ */
+export const STICKY_TITLE_OFFSET = TOC_ACTIVE_OFFSET;
+
 /** giscus 的地址与来源（主题变化时要用它做 postMessage 的白名单） */
 export const GISCUS_SCRIPT_SRC = "https://giscus.app/client.js";
 export const GISCUS_ORIGIN = "https://giscus.app";
@@ -172,8 +190,13 @@ export interface ArticleText {
   tocLabel: string;
   tocNote: string;
   tocEmpty: string;
+  /** 目录开关的两句 aria-label（面板的宽/窄默认状态见 TOC_WIDE_QUERY） */
+  tocExpand: string;
+  tocCollapse: string;
 
   progressLabel: string;
+  /** 进度条的悬停说明：它现在是个**滑块**（能拖、也能用方向键） */
+  progressHint: string;
   backToTop: string;
 
   pagerLabel: string;
@@ -203,8 +226,11 @@ const ZH: ArticleText = {
   tocLabel: "目录",
   tocNote: "点标题跳过去；标题与正文一样，会跟着阅读偏好变宽变窄。",
   tocEmpty: "这一篇没有小节标题。",
+  tocExpand: "展开目录",
+  tocCollapse: "收起目录",
 
   progressLabel: "阅读进度",
+  progressHint: "拖动跳到任意位置（也可以用方向键）",
   backToTop: "回到顶部",
 
   pagerLabel: "上下篇",
@@ -234,8 +260,11 @@ const EN: ArticleText = {
   tocLabel: "Contents",
   tocNote: "Click to jump; the headings follow your reading width just like the body.",
   tocEmpty: "This post has no section headings.",
+  tocExpand: "Show contents",
+  tocCollapse: "Hide contents",
 
   progressLabel: "Reading progress",
+  progressHint: "Drag to jump anywhere (arrow keys work too)",
   backToTop: "Back to top",
 
   pagerLabel: "Previous and next",

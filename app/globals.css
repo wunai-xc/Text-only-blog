@@ -2472,46 +2472,187 @@
     color: var(--c-accent);
   }
 
-  /* ---------- 悬浮目录（左侧；宽屏才有，窄屏那点宽度留给正文） ---------- */
+  /* ---------- 粘性标题（大标题滚出视野后，顶栏下面挂一条同名的紧凑标题） ----------
+     容器是**零高**的 sticky（`height: 0`）并且贴在 `<article>` 里面：
+       - 零高 → 不占版面，正文第一行不会被推下去；
+       - 在 `<article>` 里 → **随文章一起结束**，滚过文章末尾它自己就走（评论不是正文，
+         用 `position: fixed` 的话它会一直压着评论区）。
+     出现 / 消失由组件用 IntersectionObserver 看正文的 `<h1>` 决定（`data-visible`）。 */
 
-  .article-toc {
-    display: none;
+  .article-sticky {
+    position: sticky;
+    /* 停在吸顶顶栏下面：顶栏高度只有一个事实来源（令牌 --header-h） */
+    top: var(--header-h);
+    /* 层序 17：高于正文，低于悬浮目录（18）、进度与回顶（19）、吸顶顶栏（20）。
+       窗口很窄、正文又调得很宽时目录面板可能压到它 —— 那时让目录在上面（读者正在点目录）。 */
+    z-index: 17;
+    height: 0;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
   }
 
-  /* 78rem 是「正文列两侧还放得下 12rem 目录」的最小宽度：
-     (78 - 页面列宽 45) / 2 ≈ 16.5rem，够目录（12rem）+ 边距。 */
-  @media (min-width: 78rem) {
-    .article-toc {
-      position: fixed;
-      z-index: 18;
-      /* 停在吸顶顶栏下面：顶栏高度只有一个事实来源（令牌 --header-h），
-         所以它变高变矮时这里自动跟着走，不手写 rem。下边留 1rem 呼吸。 */
-      top: calc(var(--header-h) + 1rem);
-      left: 1.1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.45rem;
-      width: 12rem;
-      /* 上下各让出「顶栏 + 1rem」，再留 4.5rem 给视口底部 —— 目录太长时内部滚动 */
-      max-height: calc(100vh - var(--header-h) - 5.5rem);
-      overflow-y: auto;
-      padding: 0.7rem 0.8rem;
-      border: 1px solid var(--c-rule);
-      border-radius: var(--shape-radius-lg);
-      background-color: var(--c-surface);
-      box-shadow: var(--shape-shadow);
+  .article-sticky[data-visible="true"] {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .article-sticky {
+      transition: opacity 0.18s ease;
     }
   }
 
-  .article-toc-title {
+  /* 那条横条本身：绝对定位在零高容器上（所以它「向下」画），两端各外扩 1.5rem
+     —— 正好顶到 .page 的内边距上，与正文列一样宽。 */
+  .article-sticky-bar {
+    position: absolute;
+    top: 0;
+    left: -1.5rem;
+    right: -1.5rem;
     display: flex;
-    align-items: center;
-    gap: 0.35rem;
+    align-items: baseline;
+    gap: 0.5rem;
     margin: 0;
+    padding: 0.4rem 1.5rem;
+    border-bottom: 1px solid var(--c-rule);
+    background-color: var(--c-surface);
+    box-shadow: var(--shape-shadow);
+  }
+
+  .article-sticky-label {
+    flex: none;
     font-family: var(--font-mono);
-    font-size: 0.7rem;
+    font-size: 0.66rem;
     color: var(--c-ink-subtle);
     letter-spacing: 0.04em;
+  }
+
+  /* 长标题一行到底、尾巴省略号：这条横条是高 2rem 上下的东西，不该让它长成两行 */
+  .article-sticky-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 0.92rem;
+    font-weight: 620;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* ---------- 悬浮目录（一件可以收起来的面板） ----------
+     面板的第一行就是开关（`.article-toc-toggle`）：收起时只剩它自己一个小挂件。
+     **默认状态由 CSS 决定**（组件只在读者点过之后才写 `data-open`）：
+       - 宽屏（≥78rem）：默认展开，贴在左侧顶栏下面（与第 12 项落地时一样）；
+       - 窄屏：默认收起，挂件在**左下角**（左上角被吸顶顶栏占着、右下角是回顶按钮，
+         左下角才是空的 —— 它正好叠在设置齿轮上面），点开才从那里弹出浮层。
+     这么分的好处：**没有 JS 的宽屏读者照旧看得到目录**，而窄屏也不会默认弹一块浮层挡住正文。 */
+
+  .article-toc {
+    position: fixed;
+    z-index: 18;
+    left: 0.85rem;
+    /* 齿轮（left/bottom 0.85rem + 2.4rem）上面留 0.65rem：两者在左下角站成一列 */
+    bottom: 3.9rem;
+    display: flex;
+    flex-direction: column;
+    width: min(17rem, calc(100vw - 1.7rem));
+    /* 弹出时自己滚：别顶到顶栏，也别顶到视口底 */
+    max-height: min(60vh, 24rem);
+    overflow-y: auto;
+    padding: 0.25rem 0.35rem 0.5rem;
+    border: 1px solid var(--c-rule);
+    border-radius: var(--shape-radius-lg);
+    background-color: var(--c-surface);
+    box-shadow: var(--shape-shadow);
+  }
+
+  /* 收起时只剩那一行开关：宽度跟着内容走、内边距收紧 —— 看上去是个挂件，不是一块空面板 */
+  .article-toc[data-open="false"] {
+    width: max-content;
+    max-height: none;
+    padding: 0.1rem 0.15rem;
+  }
+
+  /* 内容区默认收起（`data-open` 不写 + 窄屏 = 收起） */
+  .article-toc-body {
+    display: none;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0 0.35rem;
+  }
+
+  .article-toc[data-open="true"] .article-toc-body {
+    display: flex;
+  }
+
+  /* 78rem 是「正文列两侧还放得下 12rem 目录」的最小宽度：
+     (78 - 页面列宽 45) / 2 ≈ 16.5rem，够目录（12rem）+ 边距。
+     断点的同一个值也写在 lib/article.ts 的 `TOC_WIDE_QUERY` 里（组件读它把 `aria-expanded`
+     说准、决定「点一条要不要收起」）—— **改这里就要改那里**。 */
+  @media (min-width: 78rem) {
+    .article-toc {
+      left: 1.1rem;
+      bottom: auto;
+      /* 停在吸顶顶栏下面：顶栏高度只有一个事实来源（令牌 --header-h），
+         所以它变高变矮时这里自动跟着走，不手写 rem。下边留 1rem 呼吸。 */
+      top: calc(var(--header-h) + 1rem);
+      width: 12rem;
+      /* 上下各让出「顶栏 + 1rem」，再留 4.5rem 给视口底部 —— 目录太长时内部滚动 */
+      max-height: calc(100vh - var(--header-h) - 5.5rem);
+      padding: 0.4rem 0.45rem 0.6rem;
+    }
+
+    /* 宽屏默认**展开**（没有 JS 的读者也看得到目录）；读者点过之后才可能出现 `false` */
+    .article-toc-body {
+      display: flex;
+    }
+
+    .article-toc[data-open="false"] .article-toc-body {
+      display: none;
+    }
+  }
+
+  /* 面板第一行的开关：展开时它是面板的标题行，收起时它就是整个挂件 */
+  .article-toc-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    width: 100%;
+    padding: 0.3rem 0.4rem;
+    border: 0;
+    border-radius: var(--shape-radius);
+    background-color: transparent;
+    color: var(--c-ink-subtle);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+  }
+
+  .article-toc-toggle:hover {
+    background-color: var(--c-canvas);
+    color: var(--c-ink);
+  }
+
+  .article-toc-toggle-label {
+    flex: 1 1 auto;
+    text-align: left;
+  }
+
+  .article-toc-chevron {
+    display: inline-flex;
+    flex: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .article-toc-chevron {
+      transition: transform 0.18s ease;
+    }
+  }
+
+  /* 收起时箭头翻过来指右（面板在左边 → 指右 = 打开） */
+  .article-toc[data-open="false"] .article-toc-chevron {
+    transform: rotate(180deg);
   }
 
   .article-toc-list {
@@ -2562,7 +2703,10 @@
     line-height: 1.6;
   }
 
-  /* ---------- 阅读进度（右边缘 2px 细线 + 百分比牌子） ---------- */
+  /* ---------- 阅读进度（右边缘 2px 细线 + **可拖动的滑块** + 百分比牌子） ----------
+     视觉上仍是那条 2px 的线，但它现在是个 `role="slider"`：命中区放宽到 0.9rem
+     （2px 的东西抓不住），轨道铺满视口高度 —— 所以「指针纵坐标 / 视口高」就是百分比，
+     拖到哪就是哪（算法在 ArticleProgress 里，只有一处）。 */
 
   .article-progress {
     position: fixed;
@@ -2570,16 +2714,89 @@
     right: 0;
     bottom: 0;
     z-index: 19;
+    width: 0.9rem;
+    cursor: grab;
+    /* 按在轨道上就是「拖进度」，不该同时滚页面；手机右边缘常被拿来滚页面，
+       所以组件那边还要求先移动 6px 才算拖动（见 ArticleProgress 的文件头）。 */
+    touch-action: none;
+  }
+
+  .article-progress[data-dragging="true"] {
+    cursor: grabbing;
+  }
+
+  /* 它是个可以 Tab 到的控件（`role="slider"`），所以要有自己的焦点框：
+     全局那条 `:focus-visible` 只认 a / button / input 这些元素，管不到这个 div。
+     框往内收（offset 负数）：它贴在视口右缘，往外画会被裁掉一半。 */
+  .article-progress:focus-visible {
+    outline: 2px solid var(--c-accent);
+    outline-offset: -2px;
+  }
+
+  /* 轨道底与已读填充是**同一条线**；`right: calc(0.3rem - 1px)` 是为了让拇指的圆心
+     正好压在这条线上（拇指宽 0.6rem、贴右摆放，两者因此对齐）。 */
+  .article-progress-rail,
+  .article-progress-fill {
+    position: absolute;
+    top: 0;
+    right: calc(0.3rem - 1px);
     width: 2px;
-    pointer-events: none;
+  }
+
+  /* 平时不画轨道：不改「右边缘一条细线」的原样，悬停 / 聚焦 / 拖动时才看得见它 */
+  .article-progress-rail {
+    bottom: 0;
+    background-color: var(--c-rule);
+    opacity: 0;
   }
 
   .article-progress-fill {
     display: block;
-    width: 100%;
     height: 0;
     background-color: var(--c-accent);
     opacity: 0.45;
+  }
+
+  /* 拇指：那颗能抓的小圆点（同样只在悬停 / 聚焦 / 拖动时出现） */
+  .article-progress-thumb {
+    position: absolute;
+    right: 0;
+    width: 0.6rem;
+    height: 0.6rem;
+    margin-top: -0.3rem; /* 圆心落在百分比位置上 */
+    border: 1px solid var(--c-accent);
+    border-radius: 999px;
+    background-color: var(--c-canvas);
+    opacity: 0;
+    transform: scale(0.7);
+  }
+
+  .article-progress:hover .article-progress-rail,
+  .article-progress:focus-visible .article-progress-rail,
+  .article-progress[data-dragging="true"] .article-progress-rail,
+  .article-progress:hover .article-progress-thumb,
+  .article-progress:focus-visible .article-progress-thumb,
+  .article-progress[data-dragging="true"] .article-progress-thumb {
+    opacity: 1;
+  }
+
+  .article-progress:hover .article-progress-thumb,
+  .article-progress:focus-visible .article-progress-thumb,
+  .article-progress[data-dragging="true"] .article-progress-thumb {
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .article-progress-thumb {
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+  }
+
+  /* 触屏（粗指针）收窄一档：手机上右边缘还兼着「滚页面」，别占太宽 */
+  @media (pointer: coarse) {
+    .article-progress {
+      width: 0.7rem;
+    }
   }
 
   /* 百分比牌子窄屏不显示：它会挤到正文上（60rem 以下只留那条 2px 的线） */
@@ -2606,7 +2823,7 @@
     }
   }
 
-  /* ---------- 回到顶部（右下角的圆形按钮） ---------- */
+  /* ---------- 回到顶部（右下角的圆形按钮，**外面套一圈阅读进度环**） ---------- */
 
   .article-top {
     position: fixed;
@@ -2616,8 +2833,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.4rem;
-    height: 2.4rem;
+    /* 2.6rem（比原来大 0.2rem）：给里面那圈进度环留出位置，别贴到边框上 */
+    width: 2.6rem;
+    height: 2.6rem;
     border: 1px solid var(--c-rule-strong);
     border-radius: 999px;
     background-color: var(--c-surface);
@@ -2645,6 +2863,32 @@
   .article-top:hover {
     border-color: var(--c-accent);
     color: var(--c-accent);
+  }
+
+  /* 进度环：与右边缘那条线读同一个百分比（`stroke-dashoffset` 由组件写）。
+     SVG 是 36×36 的 viewBox、半径 16.5（周长见组件的 `RING_CIRCUMFERENCE`），
+     这里的尺寸与按钮对上：0.13rem × 2 + 2.34rem = 2.6rem。
+     `rotate(-90deg)` 把起点挪到 12 点方向（否则环从左边的 9 点开始长）。 */
+  .article-top-ring {
+    position: absolute;
+    left: 0.13rem;
+    top: 0.13rem;
+    width: 2.34rem;
+    height: 2.34rem;
+    transform: rotate(-90deg);
+  }
+
+  .article-top-ring-track {
+    fill: none;
+    stroke: var(--c-rule);
+    stroke-width: 1.6;
+  }
+
+  .article-top-ring-fill {
+    fill: none;
+    stroke: var(--c-accent);
+    stroke-width: 1.6;
+    stroke-linecap: round;
   }
 
   /* 文章页右下角让给回顶按钮：图签是装饰、回顶是功能，两者都在这个角上会叠在一起。
@@ -3103,10 +3347,11 @@
     grid-template-columns: 1fr;
   }
 
-  /* 第 12 项的文章页：悬浮目录、进度线、百分比、回顶都是「屏幕上才有意义」的东西；
-     评论区是第三方 iframe，纸上既印不出来也不该印。文章末尾的上下篇留着
-     （纸上的链接是给人拿去地址栏敲的）。 */
+  /* 第 12 项的文章页：悬浮目录（含那个开关）、粘性标题、进度线（滑块）、百分比、回顶
+     都是「屏幕上才有意义」的东西；评论区是第三方 iframe，纸上既印不出来也不该印。
+     文章末尾的上下篇留着（纸上的链接是给人拿去地址栏敲的）。 */
   .article-toc,
+  .article-sticky,
   .article-progress,
   .article-progress-value,
   .article-top,

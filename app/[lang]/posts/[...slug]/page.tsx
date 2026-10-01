@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import ArticleBody from "@/components/ArticleBody";
 import ArticlePager from "@/components/article/ArticlePager";
 import ArticleProgress from "@/components/article/ArticleProgress";
+import ArticleStickyTitle from "@/components/article/ArticleStickyTitle";
 import ArticleToc from "@/components/article/ArticleToc";
 import GiscusComments from "@/components/article/GiscusComments";
 import PostCard from "@/components/list/PostCard";
@@ -41,7 +42,8 @@ import { feedAlternatesTypes, isLang, LANGS, SITE, type Lang } from "@/lib/site"
  *   1. **构建期**把这一篇读出来渲染成 HTML（`getPostWithBody` → `renderMarkdown`）——
  *      静态导出后这一页的 HTML 里就有完整正文，没有 JS、爬虫、离线时都能读（约定第 4 条）；
  *   2. 把 frontmatter 的 `typography` 接到渲染层（第 4 项留给第 12 项的接口）；
- *   3. 把目录、进度、评论交给三个客户端组件（悬浮件与第三方 iframe 只能客户端）；
+ *   3. 把目录、粘性标题、进度（含可拖滑块与回顶进度环）、评论交给四个客户端组件
+ *      （悬浮件与第三方 iframe 只能客户端）；
  *   4. 版式与文案走 `lib/article.ts` / `lib/list.ts`，页面里不写文案、不排「上/下」，
  *      也不手写图纸编号（卡组页的组名 / 篇数 / 卡片都复用列表页那一套）。
  *
@@ -225,6 +227,9 @@ export default async function LangPost({
       <ArticleProgress lang={lang} />
 
       <article className="article" id="article-main">
+        {/* 粘性标题（第 12 项）：零高、贴在 <article> 里，标题滚出视野后在顶栏下面挂一条 */}
+        <ArticleStickyTitle lang={lang} title={meta.title} />
+
         <header className="article-head">
           <p className="article-kicker">
             <span className="article-no">{decor.sheet}</span>
