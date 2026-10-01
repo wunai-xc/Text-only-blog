@@ -77,6 +77,12 @@ tags = ["随笔"]
 **[content/README.md](./content/README.md)**。几条最容易忘的：
 
 - 文件名决定 URL：`content/zh/posts/hello.md` → `/zh/posts/hello/`（目录也可以：`notes/a.md` → `/zh/posts/notes/a/`）；
+- **文件名可以用中文，但 URL 只能是 ASCII**：`笔记.md` 这类文件名要在 frontmatter 里补一行
+  `slug = "note-1"`（YAML: `slug: note-1`），否则构建会**直接失败**并告诉你改哪儿 ——
+  中文 slug 在线上一定 404（原因见 content/README.md 第 1 节，这是真踩过的坑）；
+- 放在目录里就是一个**卡组**（目录即分组）：列表页按卡组分块显示，每个卡组还有自己的页面
+  （`content/zh/posts/notes/` → `/zh/posts/notes/`），想让卡组有名字 / 说明 / 封面就在目录里放
+  `_index.md`；
 - 文件名以 `_` 开头、以及 `README.md` 会被加载器跳过；
 - 草稿写 `draft: true`：**生产构建里根本不含它**，`npm run dev` 下才会出现（带一个草稿徽章）；
 - 想让某篇文章成为「关于」页的内容，写 `about: true`（每语言取最新的一篇，显示在 `/zh/about/`）；
@@ -118,8 +124,8 @@ app/
   [lang]/
     layout.tsx              全站框架（顶栏 / 页脚 / 首帧脚本）
     page.tsx                首页（八栏吸附，一栏一屏；每栏无卡片外壳、内容多了在栏内滚）
-    posts/page.tsx          文章列表（搜索 / 筛选 / 密度）
-    posts/[...slug]/page.tsx 文章正文（目录 / 进度 / 上下篇 / 评论）
+    posts/page.tsx          文章列表（搜索 / 筛选 / 密度；工具栏默认收起，按卡组分块）
+    posts/[...slug]/page.tsx 文章正文（目录 / 进度 / 上下篇 / 评论）+ 卡组页（/zh/posts/notes/ 这类目录页）
     tags|categories|archives|search|about|links|settings/page.tsx
   feed.xml/  [lang]/feed.xml/  search-index.json/  changelog.json/   构建期产物
 components/                 界面（article / home / list / pages / charts / 框架件）
