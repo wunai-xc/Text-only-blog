@@ -327,7 +327,7 @@ export const SITE = {
   author: "wunai",
   url: "https://blog.wunai.top",
   defaultLang: "zh" as Lang,
-  description: "编辑此处：站点描述（会用于 SEO 与 RSS）",
+  description: "wunai的数字文章笔记库",
   i18n: I18N,
 };
 
@@ -336,9 +336,9 @@ export const SITE = {
  * 不会渲染成空链接（点一下什么都不发生比缺一行更糟）。
  */
 export const CONTACT: { email: string; github: string; repo: string } = {
-  email: "", // 编辑此处：邮箱，例如 you@example.com
-  github: "", // 编辑此处：GitHub 主页，例如 https://github.com/your-name
-  repo: "", // 编辑此处：本站仓库地址（公开后再填）
+  email: "3234319738@qq.com", // 编辑此处：邮箱，例如 you@example.com
+  github: "https://github.com/wunai-xc", // 编辑此处：GitHub 主页，例如 https://github.com/your-name
+  repo: "https://github.com/wunai-xc/Text-only-blog", // 编辑此处：本站仓库地址（公开后再填）
 };
 
 /**
