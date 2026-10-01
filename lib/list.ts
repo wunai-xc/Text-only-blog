@@ -557,6 +557,9 @@ export interface ListText {
     pinned: string;
     ai: string;
     draft: string;
+    /** 「笔记」角标：卡组目录里的那一篇（与单篇文章的卡片区分开） */
+    note: string;
+    noteHint: (group: string) => string;
     fullNote: string;
   };
   /**
@@ -629,6 +632,9 @@ const ZH: ListText = {
     pinned: "置顶",
     ai: "AI",
     draft: "草稿",
+    note: "笔记",
+    noteHint: (group) =>
+      `这是卡组「${group}/」里的一篇笔记 —— 与单篇文章的卡片样式不同（虚线描边 + 画布底色）`,
     fullNote: "列表只到摘要为止 —— 点标题进正文页读全文。",
   },
   articlePending: (item) => `文章页还没做（第 ${item} 项落地后可点）`,
@@ -695,6 +701,9 @@ const EN: ListText = {
     pinned: "Pinned",
     ai: "AI",
     draft: "Draft",
+    note: "Note",
+    noteHint: (group) =>
+      `A note that lives in the card group “${group}/” — its card is styled differently from a standalone article (dashed border, canvas background)`,
     fullNote: "The list stops at the summary — click a title to read the full post.",
   },
   articlePending: (item) => `Article pages are not built yet (lands in item ${item})`,

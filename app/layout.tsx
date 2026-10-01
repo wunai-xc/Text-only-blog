@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import BlueprintBackground from "@/components/BlueprintBackground";
+import CardIntro from "@/components/CardIntro";
 import PrefsInit from "@/components/PrefsInit";
+import RouteLoading from "@/components/RouteLoading";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import ThemeInit from "@/components/ThemeInit";
 import ThemeSync from "@/components/ThemeSync";
@@ -44,6 +46,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PrefsInit />
         {/* 装饰层：整页蓝图网格，固定在最底、不接鼠标事件、不进无障碍树 */}
         <BlueprintBackground />
+        {/* 全站加载动画：换页 / 首屏资源时顶栏上面那条细线（静态导出没有 loading.tsx） */}
+        <RouteLoading />
+        {/* 文章卡片的入场动画：只给卡片加属性，样式在 CSS（首页第 2 栏 / 列表页 / 卡组页共用） */}
+        <CardIntro />
         {/* 跟随系统深浅色变化（只在读者选择「跟随系统」时生效） */}
         <ThemeSync />
         {children}

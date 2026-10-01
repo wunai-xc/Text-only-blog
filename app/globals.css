@@ -1041,6 +1041,57 @@
     padding: 1rem 1rem 3rem;
   }
 
+  /* ---------- 全站加载动画（换页时顶上那条描线） ---------- */
+
+  /* 层序：60 —— 比设置抽屉（50）还高。它是「整站正在换页」的状态，
+     换页时把抽屉盖住是对的（抽屉本来也会在换页时自动关上）。
+     线画在**视口最上沿**（顶栏是吸顶的，画在顶栏下面会随顶栏一起被卷走）。
+     整块 pointer-events: none：它只是反馈，不该吃任何点击。 */
+  .route-loading {
+    position: fixed;
+    inset-inline: 0;
+    top: 0;
+    z-index: 60;
+    height: 2px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.18s ease-out;
+  }
+
+  .route-loading[data-phase="loading"],
+  .route-loading[data-phase="done"] {
+    opacity: 1;
+  }
+
+  .route-loading-bar {
+    display: block;
+    height: 100%;
+    transform: scaleX(0);
+    transform-origin: left center;
+    background-color: var(--c-accent);
+    box-shadow: 0 0 6px var(--c-accent);
+  }
+
+  /* 爬到 88% 就慢下来等着（别走完 —— 走完等于骗人）；真正的收尾由换页完成触发。
+     用 transform: scaleX() 而不是 width：只走合成层，换页时不会触发布局。 */
+  .route-loading[data-phase="loading"] .route-loading-bar {
+    transform: scaleX(0.88);
+    transition: transform 7s cubic-bezier(0.08, 0.7, 0.15, 1);
+  }
+
+  .route-loading[data-phase="done"] .route-loading-bar {
+    transform: scaleX(1);
+    transition: transform 0.18s ease-out;
+  }
+
+  /* 减少动效：不爬升，只把「在换页」这件事说出来（画满 + 淡入淡出） */
+  @media (prefers-reduced-motion: reduce) {
+    .route-loading[data-phase="loading"] .route-loading-bar {
+      transform: scaleX(1);
+      transition: none;
+    }
+  }
+
   /* 图标小方按钮（顶栏的外观切换、抽屉的关闭） */
   .icon-button {
     display: inline-flex;
@@ -1057,6 +1108,22 @@
 
   .icon-button:hover {
     border-color: var(--c-accent);
+    color: var(--c-accent);
+  }
+
+  /* 顶栏那颗外观按钮**不描边**（站长的要求）：一进页面就有个框，视觉上比站名还抢眼。
+     只去掉边框，尺寸 / 底色 / 悬停反馈都保留 —— 删掉 width/height 会让顶栏高度跳一下。
+     只对顶栏那一颗生效：抽屉的关闭按钮与列表页工具栏的按钮仍然要有框（它们是按钮，
+     顶栏这一颗更像「一个位置上的开关」，与参考稿一致）。 */
+  .brand-switch .icon-button {
+    border-color: transparent;
+  }
+
+  /* 悬停反馈改成底色（不能只靠描边了）：`.icon-button:hover` 会把边框染成强调色，
+     所以这里要连同悬停态一起按住。 */
+  .brand-switch .icon-button:hover {
+    border-color: transparent;
+    background-color: var(--c-accent-soft);
     color: var(--c-accent);
   }
 
@@ -2019,6 +2086,45 @@
     border: 1px solid var(--c-rule);
     border-radius: var(--shape-radius);
     background-color: var(--c-surface);
+    /* 悬停那一下（抬升 / 换描边 / 投影）与入场动画都走合成层，不动布局 */
+    transition:
+      border-color 0.22s ease-out,
+      box-shadow 0.22s ease-out,
+      transform 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  /* 悬停：抬 2px + 描边加深 + 一层很淡的投影。克制到「纸上抬起一张卡片」为止，
+     不做缩放 / 不做光效 —— 这一页是拿来扫读的。 */
+  .post-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--c-rule-strong);
+    /* 投影颜色也走令牌（不写死 rgba）：亮色外观下是加深的边线色，暗色外观下自然变暗 */
+    box-shadow: 0 8px 20px -16px var(--c-rule-strong);
+  }
+
+  /* 入场动画（components/CardIntro.tsx 写 data-card-ready / --card-delay）：
+     **卡片默认可见**，只有观察器认领过的才先藏起来再揭 —— JS 没跑时卡片一直在。
+     用 animation 而不是 transition 的原因：延迟那段时间要「停在起点」（backwards 填充），
+     而动画**跑完就交还控制权**（不用 forwards）—— 否则动画的 transform 会一直压着
+     :hover 的抬升，卡片就再也抬不起来了。 */
+  .post-card[data-card-ready="hidden"] {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  .post-card[data-card-ready="in"] {
+    animation: card-rise 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) var(--card-delay, 0ms) backwards;
+  }
+
+  @keyframes card-rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
 
   .post-card[data-density="compact"] {
@@ -2048,6 +2154,50 @@
 
   .post-card[data-density="full"] .post-card-title {
     font-size: 1.15rem;
+  }
+
+  /* ---------- 文章卡片 vs 笔记卡片 ----------
+     判据只有一条（components/list/PostCard.tsx 的 data-kind）：这一篇在卡组目录里 = **笔记**，
+     在顶层 = **文章**。两种语言刻意用全站已有的说法分开：
+       · 文章 = 成稿：实线描边 + 面底色（现在这样）；
+       · 笔记 = 草稿纸：虚线描边 + 画布底色（与标签的虚线、卡组组头是同一种「还没定稿」的语气）。
+     悬停时两者都抬起来，但笔记会**由虚转实**并把描边染成强调色 —— 一眼能认出它在哪一类里。
+     这一组必须写在上面那两条密度规则**之后**（同权重，靠顺序定胜负）。 */
+  .post-card[data-kind="note"] {
+    border-style: dashed;
+    border-color: var(--c-rule-strong);
+    background-color: var(--c-canvas);
+  }
+
+  .post-card[data-kind="note"]:hover {
+    border-style: solid;
+    border-color: var(--c-accent);
+  }
+
+  /* 笔记是「条目」，标题比文章小一档（内容档仍然大一点，保持那一档的可扫读性） */
+  .post-card[data-kind="note"] .post-card-title {
+    font-size: 0.94rem;
+  }
+
+  .post-card[data-kind="note"][data-density="full"] .post-card-title {
+    font-size: 1.05rem;
+  }
+
+  /* 减少动效的人：卡片直接出现（CardIntro 那边只给 `"in"`，但 `"in"` 会触发那条 CSS 动画，
+     所以这里要显式关掉），悬停也不位移 —— 换描边与底色仍然保留（那不是动效） */
+  @media (prefers-reduced-motion: reduce) {
+    .post-card[data-card-ready="in"] {
+      animation: none;
+    }
+
+    .post-card,
+    .post-card:hover {
+      transition: none;
+    }
+
+    .post-card:hover {
+      transform: none;
+    }
   }
 
   .post-card-title a {
@@ -2091,6 +2241,18 @@
   .post-card-badge[data-badge="draft"] {
     border-style: dashed;
     color: var(--c-danger);
+  }
+
+  /* 「笔记 · 卡组名」角标：虚线小片（与标签同一个语言），卡组名用等宽小字排在后面 */
+  .post-card-badge[data-badge="note"] {
+    border-style: dashed;
+    border-color: var(--c-rule-strong);
+    background-color: var(--c-surface);
+    color: var(--c-ink-muted);
+  }
+
+  .post-card-badge-group {
+    color: var(--c-ink-subtle);
   }
 
   .post-card-desc {
@@ -3371,6 +3533,11 @@
 @media print {
   .blueprint {
     display: none; /* 网格会把纸面弄灰 */
+  }
+
+  /* 全站加载动画是屏幕上的反馈，纸上没有「正在换页」这回事 */
+  .route-loading {
+    display: none;
   }
 
   /* 第 7 项的框架件：设置入口与抽屉不该出现在纸上；顶栏改为随文档流（不要在每页顶端重复） */

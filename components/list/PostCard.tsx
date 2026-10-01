@@ -20,6 +20,11 @@ import { ARTICLE_ROUTE, type Lang } from "@/lib/site";
  *
  * 卡片上的文案跟着**卡片自己**走（lib/list.ts 的 LIST_TEXT），不从父组件透传 ——
  * 首页与列表页因此不会各写一份「几分钟」。
+ *
+ * **文章与笔记是两种卡片**（站长要的细分）：`group === ""` 的是「单篇文章」，
+ * 在一张卡组目录里的（卡组页 / 列表页的组内）算「笔记」。差别落在 `data-kind`，
+ * 样式全在 CSS 的 `.post-card[data-kind="…"]` 那几行：笔记是虚线描边 + 画布底色 +
+ * 一枚「笔记 · 卡组名」的角标，文章保持实线描边 + 面底色。组件里没有第二套结构。
  */
 export default function PostCard({
   post,
@@ -35,10 +40,17 @@ export default function PostCard({
   const compact = density === "compact";
   const full = density === "full";
   const pending = ARTICLE_ROUTE.status !== "ready";
+  /** 卡组目录里的一篇 = 笔记（见文件头注释） */
+  const note = post.group !== "";
   const date = post.date.slice(0, 10);
 
   return (
-    <article className="post-card" data-density={density} data-lang={post.lang}>
+    <article
+      className="post-card"
+      data-density={density}
+      data-lang={post.lang}
+      data-kind={note ? "note" : "post"}
+    >
       <h3 className="post-card-title">
         {pending ? (
           <span data-pending="true" title={t.articlePending(ARTICLE_ROUTE.item)}>
@@ -67,6 +79,13 @@ export default function PostCard({
           <span className="post-card-badge" data-badge="ai">
             <Icon icon={icons["mdi:robot-outline"]} width="1em" height="1em" />
             {t.card.ai}
+          </span>
+        ) : null}
+        {note ? (
+          <span className="post-card-badge" data-badge="note" title={t.card.noteHint(post.group)}>
+            <Icon icon={icons["mdi:folder-outline"]} width="1em" height="1em" />
+            {t.card.note}
+            <span className="post-card-badge-group">{post.group}/</span>
           </span>
         ) : null}
       </p>
