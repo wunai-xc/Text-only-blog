@@ -61,6 +61,14 @@ export const BACK_TO_TOP_AFTER = 600;
 /** 判定「当前读到哪一个小节」的那条线：视口顶部往下这么多像素（= 吸顶顶栏的下沿） */
 export const TOC_ACTIVE_OFFSET = 120;
 
+/**
+ * 进度条滑块用键盘调位置时的两档步长（占「整页可滚动高度」的百分比）：
+ * 方向键一档 2%、PageUp/PageDown 一档 10%。刻意**不用**「一屏」当步长 ——
+ * 滑块给的是细调，粗调有原生的空格 / PageDown 与目录里的锚点。
+ */
+export const PROGRESS_STEP = 2;
+export const PROGRESS_PAGE_STEP = 10;
+
 /** giscus 的地址与来源（主题变化时要用它做 postMessage 的白名单） */
 export const GISCUS_SCRIPT_SRC = "https://giscus.app/client.js";
 export const GISCUS_ORIGIN = "https://giscus.app";
@@ -172,9 +180,17 @@ export interface ArticleText {
   tocLabel: string;
   tocNote: string;
   tocEmpty: string;
+  /** 窄屏那颗目录按钮（宽屏目录常驻，不需要按钮） */
+  tocToggle: string;
+  tocClose: string;
 
   progressLabel: string;
+  /** 进度条滑块上的提示语（鼠标悬停时显示） */
+  progressSeek: string;
   backToTop: string;
+
+  /** 粘性标题条（滚过页头之后停在顶栏下面的那条） */
+  stickyLabel: string;
 
   pagerLabel: string;
   /** 时间更早的那一篇 */
@@ -203,9 +219,14 @@ const ZH: ArticleText = {
   tocLabel: "目录",
   tocNote: "点标题跳过去；标题与正文一样，会跟着阅读偏好变宽变窄。",
   tocEmpty: "这一篇没有小节标题。",
+  tocToggle: "目录",
+  tocClose: "收起目录",
 
   progressLabel: "阅读进度",
+  progressSeek: "拖动跳到任意位置",
   backToTop: "回到顶部",
+
+  stickyLabel: "本页标题",
 
   pagerLabel: "上下篇",
   older: "上一篇",
@@ -234,9 +255,14 @@ const EN: ArticleText = {
   tocLabel: "Contents",
   tocNote: "Click to jump; the headings follow your reading width just like the body.",
   tocEmpty: "This post has no section headings.",
+  tocToggle: "Contents",
+  tocClose: "Hide contents",
 
   progressLabel: "Reading progress",
+  progressSeek: "Drag to seek",
   backToTop: "Back to top",
+
+  stickyLabel: "This article",
 
   pagerLabel: "Previous and next",
   older: "Previous",

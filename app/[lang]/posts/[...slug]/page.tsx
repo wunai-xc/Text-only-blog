@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import ArticleBody from "@/components/ArticleBody";
 import ArticlePager from "@/components/article/ArticlePager";
 import ArticleProgress from "@/components/article/ArticleProgress";
+import ArticleStickyTitle from "@/components/article/ArticleStickyTitle";
 import ArticleToc from "@/components/article/ArticleToc";
 import GiscusComments from "@/components/article/GiscusComments";
 import PostCard from "@/components/list/PostCard";
