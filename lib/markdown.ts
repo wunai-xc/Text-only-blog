@@ -5,6 +5,8 @@
  *
  *   remark-parse             Markdown → mdast
  *   remark-gfm               GFM：表格、任务列表、脚注、删除线、裸链接
+ *   remark-cjk-friendly      中文里「标点紧贴 **」的强调修正（见下面那段注释）
+ *   remark-cjk-friendly-gfm-strikethrough  同一问题的 ~~ 删除线版本
  *   remark-breaks            单个换行即换行（写中文随笔更顺手）
  *   remark-math              $…$ / $$…$$ → math 节点
  *   remarkCjkTypography      中文排版优化（第 4 项：补空格、半角标点转全角）
@@ -27,6 +29,21 @@
  * 代码块 / 行内代码 / 公式 / 链接地址 / 内联 HTML 都不是 text 节点，因此天然躲开；
  * 位置排在 remarkCitations 之前，而 `[reference:1]` 里的 `:` 左边是字母 `e`、
  * `[` 左边也不是「汉字与字母相邻」，所以角标语法不会被排版规则碰坏。
+ *
+ * 中文里的强调（`**`）另有一个 **CommonMark 解析层面**的坑，与上面那条排版优化不是一回事：
+ * 闭合定界符的**内侧是标点**（`）`、`]`、`。` 之类）、**外侧既不是空白也不是标点**时，
+ * 它不算「右翼定界符」，于是 `**抗生素（antibiotic）**的定义` 会整段渲染成字面量星号
+ * （斜体 `*` 与 GFM 删除线 `~~` 同理）。这在中文里极其常见（术语后紧跟括注），
+ * 却是 CommonMark 的既定行为（commonmark-spec#650），改不了了 ——
+ * `remark-cjk-friendly` 就是为这件事存在的那个修正（VitePress / Rspress / Docusaurus 都内置了它），
+ * `remark-cjk-friendly-gfm-strikethrough` 是同一问题在 `~~` 上的对应件。
+ *
+ * 两个包的三条使用规矩（照它们的文档来，改这一行之前先看一眼）：
+ *   1. **两个一起挂**：只挂前一个的话，`~~` 在中文里照样失效；
+ *   2. `remark-cjk-friendly-gfm-strikethrough` **必须排在 `remark-gfm` 之后**（插件自己的要求，
+ *      放到它前面就不生效）；
+ *   3. 都从 **`/parseOnly`** 进：本站只解析、从不把 mdast 写回 Markdown，
+ *      不需要它们的序列化那一半（少打包几 KB）。
  */
 
 import "katex/contrib/mhchem"; // 副作用导入：注册 \ce{} / \pu{}
@@ -38,6 +55,8 @@ import rehypeRaw from "rehype-raw";
 import rehypeSlug from "rehype-slug";
 import rehypeStringify from "rehype-stringify";
 import remarkBreaks from "remark-breaks";
+import remarkCjkFriendly from "remark-cjk-friendly/parseOnly";
+import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethrough/parseOnly";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkParse from "remark-parse";
@@ -608,6 +627,9 @@ export async function renderMarkdown(
   const processor = unified()
     .use(remarkParse)
     .use(remarkGfm, { singleTilde: true })
+    // 中文里的 `**` / `~~` 修正。顺序是插件要求的：必须先 GFM、再这两个（见文件头注释）
+    .use(remarkCjkFriendly)
+    .use(remarkCjkFriendlyGfmStrikethrough)
     .use(remarkBreaks)
     .use(remarkMath)
     .use(remarkCjkTypography, typographyOptions)
