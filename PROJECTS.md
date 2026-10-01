@@ -1365,6 +1365,47 @@ curl -s -H "Authorization: Bearer $TOKEN" \
   每一栏里没有框、没有底色块；手机上第 2 / 6 栏在栏内滚（滚动条不画、滚到底继续滑会换栏）；
   滚到最底部能读到整个页脚。
 
+### 卡组页 + 新文章 404 的根因（站长报「新文章打不开」这一轮）
+
+站长在手机上看到两件事：**新文章点不开**、**明明是卡组却只显示一篇文章**。两件都查到了根因，
+都不是猜的（证据是线上 HTML 与提交记录，不是本地推演）：
+
+1. **新文章打不开 —— 非 ASCII slug**。线上 `/zh/posts/` 的卡片是
+   `<a href="/zh/posts/notes/笔记/">笔记1</a>`：`content/zh/posts/notes/笔记.md`
+   的 frontmatter 里**没有 `slug`**，于是 slug 由文件路径推出 `notes/笔记` —— 一个中文 slug。
+   浏览器会把 href 里的中文百分号编码成 `/zh/posts/notes/%E7%AC%94%E8%AE%B0/`，
+   而静态导出的目录名是**中文原文**，Cloudflare 的静态资源在查文件前又解码一次 ——
+   两边永远对不上，表现就是「卡片在、点进去 404」（实测 `/zh/posts/note-1/` 404）。
+   **修法两处**（缺一不可）：
+   - 内容侧：`content/zh/posts/notes/笔记.md` 补一行 `slug = "note-1"` → 地址变成
+     `/zh/posts/note-1/`（ASCII）；
+   - 代码侧：`lib/content.ts` 新增 `assertUrlSafeSlug()`，**slug 不是 ASCII 就让构建当场失败**
+     并给出改法（改文件名，或补一行 `slug`）。理由是不让作者去线上猜「为什么打不开」：
+     以前这条错只在 Cloudflare 上表现出来，构建是「成功」的。
+     报错信息分成「frontmatter 里写了 slug」与「没写 slug（推出来的）」两种说法。
+2. **卡组只显示成一篇**。卡组（目录）分块显示的那部分改动**只在工作区、没提交**
+   （线上跑的还是上一次成功构建的产物），所以线上列表页是一列平铺的卡片，
+   `notes/` 这个目录看不出是个卡组。
+
+**这一轮同时补上的四件事**：
+
+| 改动 | 为什么 |
+| --- | --- |
+| **卡组页** `/<lang>/posts/<group>/`（`app/[lang]/posts/[...slug]/page.tsx` 里的 `CardGroupPage`） | 站长的自然动作是敲目录名；以前那是 404。卡组现在有自己的一页：组名 / 说明 / 封面 / 组内卡片（复用 `PostCard`）。**与文章页共用同一个 catch-all**，因为 `notes/index.md`（目录首页）与目录 `notes/` 都会落到同一个地址 —— 拆成两条路由必然撞车，所以顺序是「先文章、后卡组」 |
+| `lib/content.ts` 的 `getCardGroupRoutes()` | 卡组页的路由表只推一次：`generateStaticParams` 与 `sitemap` 都用它（排除顶层 `""`、以及被一篇文章占着的 slug） |
+| 列表页的**组头变成链接**（`lib/list.ts` 的 `groupHref()`） | 组头点得进去，地址与卡组页、sitemap 同一份来源，不会各拼一遍 |
+| 工具栏**默认收起、不再自动展开** | 站长原话：「都收在一块，不要展开到时候一堆标签……放一整个页面吗？」——默认只留一行「筛选 + 当前条件 + 显示几篇」；只有**专门的搜索页**（`autoFocusSearch`）才挂载后展开。带筛选条件的地址（标签页链过来的）也保持收起：条件已经写在收起那一行里，没必要摊开一整套控件 |
+
+- 卡组页的封面走 `_index.md` 的 `cover`（缺省退回组内第一篇），CSS 里固定 `max-height: 13rem`
+  + `object-fit: cover` —— 一张竖图不该把页头撑到一屏；没有封面就不渲染。
+- 卡组页写死「适中」密度：密度是本机偏好（`tob:list-density`），构建期读不到（与首页第 2 栏同一取舍）。
+- 验收（**都要在本机或线上重新构建之后**看，本环境无 shell）：
+  1. `/zh/posts/` 里应当看到「卡组 / 笔记」组头、下面是 `笔记1` 那张卡片；
+  2. 点卡片标题 → `/zh/posts/note-1/` 打得开（**不再**是 `/zh/posts/notes/笔记/`）；
+  3. 点组头 → `/zh/posts/notes/` 是卡组页（组名 + 篇数 + 卡片），不再是 404；
+  4. `/zh/posts/` 的工具栏默认**只有一行**，点一下才展开；`/zh/search/` 打开时是展开的；
+  5. 故意写一个中文 slug（不补 `slug` 字段）—— 构建应当**当场失败**并指出改法。
+
 ### 跨项待办（做到对应项时顺手勾掉）
 
 - **第 7 项（框架 UI / 设置中心）—— 已完成**，这条留档并转成「后续项要用到的东西」：
@@ -1896,6 +1937,15 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
   5. **手机上滚动是否掉帧**：纯色之后这一项应该彻底没问题（那一层已经不画任何东西）；
      真把图案开关打开再遇到发涩，先把粗格那一层（`--bp-grid-major`）从 `.blueprint` 的
      `background-image` 里去掉 —— 那层最费。
+- **2026-10-01 线上实测（「新文章打不开」这一轮，唯一一次从线上取证）**：站长报「新文章打不开」
+  之后，我直接抓了线上的 `/zh/posts/`（不是本地推演）：卡片是
+  `<a href="/zh/posts/notes/笔记/">笔记1</a>`，服务端 props 里 `"slug":"notes/笔记"` ——
+  于是根因确定为**非 ASCII slug**（浏览器百分号编码与 Cloudflare 静态资源的解码对不上，必然 404），
+  `/zh/posts/note-1/` 实测 404 也印证了这一点；同一份 HTML 里工具栏是**展开**的一整套控件、
+  文章是**平铺**的一列卡片 —— 说明「卡组分块 + 工具栏折叠」那次改动当时还没提交、没上过线。
+  两条修法与验收见「卡组页 + 新文章 404 的根因」一节。
+  **教训**：以后报「打不开 / 显示不对」这类问题，先抓线上 HTML 与地址，再动代码 ——
+  这一次本地代码看起来完全正常（工作区早就补了 `slug`），问题在「没提交」与「产物规则」。 
 
 ---
 
@@ -1925,4 +1975,5 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
 | 本次提交 | **第 14 项交付（差锁文件）**：新增 `README.md` —— 站点是什么、快速开始（五个脚本 + 打开 `/zh/` 后先做的三件事）、写第一篇短文（YAML / TOML 两种 frontmatter 各一段）、部署到 Workers 静态资源（含 Cloudflare 构建设置与 GitHub Actions 的 Secrets）、目录结构概要、「需要你亲自填的地方」六行清单（每行都写了留空会发生什么）、如实说明的验证状态、三条不能破的约定（完整十条指向本台账）。README 里的事实逐条对着源码核过（脚本名 / `wrangler.toml` / workflow 的 action 与 `command: deploy` / `lib/site.ts` 的 `SITE.description`·`CONTACT`·`COMMENTS`·`LINKS` / `lib/home.ts` 的 `intro.body`·`themes.demo`·`fonts.sample` / `lib/content.ts` 的 `COVER_DIRS`）。台账：进度表第 14 项改 `[~]`（README 与提交 ✅、锁文件 ⏳）、新增「14. 交付」小节、跨项待办里那条「第 14 项」重写成「只剩一件需要 shell 的事」、第 6 节关于 wrangler 的注解与第 8 节的口径同步。**本环境无 shell，锁文件（`bun.lock` / `package-lock.json`）没有生成**，手写等于编造依赖解析结果，留你在本机 `bun install` 后提交 |
 | 本次提交 | **顶栏改版 —— 对齐 wunai-blog 参考稿**（一次修订，不是新的第 15 项）：`components/SiteHeader.tsx` 重写成「品牌 / 友链 / 图片位」三段（品牌区＝外观按钮 + 大号站名 + 闪烁光标 + 两端对齐的小字行「wunai 是谁？ About…… / 全部文章 →」；友链＝图标 + 小字竖排、`margin-left: auto` 右靠；图片位＝`HEADER_IMAGE` 撑满顶栏高，留空时画虚线空位且尺寸与有图时一致）。新增 `components/HeaderIntro.tsx`（客户端：三段错开 90ms 淡入 + 标签页切后台时暂停光标；顺序是「默认可见 → JS 就绪后才淡入」，反过来会让禁用 JS 的读者看不到顶栏）。原先挂在顶栏的**七项导航、语言切换与内容统计搬到页脚**（`components/SiteFooter.tsx` 第一块；统计那行复用 i18n 里已有的 `statsPosts` / `statsWords` / `statsUpdated` / `statsEmpty`，没有第二份文案）—— 不搬就会有四个页面失去入口。`components/RouteLink.tsx` 新增可选 `title`，pending 态把自定义提示与「第 N 项落地」拼起来而不是盖掉它。`lib/site.ts` 新增 `HEADER_IMAGE`（`<img>` 而非 `next/image`：静态导出不优化图片、且构建期不校验文件存在）。`app/globals.css` 新增令牌 `--header-h`（5.5rem / ≤48rem 4.75rem / ≤30rem 4.5rem，**两档窄屏值必须留在未分层的位置**，写进 `@layer` 会被 `:root` 压过），`--home-head-room` 改成由它推导（删掉首页窄屏那档 8.5rem）；顶栏/页脚两节重写，删掉 `.site-header-inner` / `.site-brand` / `.site-logo` / `.site-caret` / `.site-nav` / `.site-nav-entry` / `.site-titleblock`，`--frame-width` 只剩页脚与 `.page` 用。台账同步：进度表下加「追加的一次修订」说明、目录树、第 7 项小节加改版指引、第 9 项里 `--home-head-room` 与「内容统计在哪」两处、新增「顶栏改版」一节、约定新增第 11 条（顶栏只放三段 + 高度只有 `--header-h` 一个来源 + 动效顺序不能反）并扩了第 2 条（图片位）、第 8 节新增 10 条验收清单（并修掉第 8 项验收里那句「只有两张图纸能对照」的过时说法）、第 9 节本行。README 同步：图片位进「需要你亲自填的地方」表、「完整的十条约定」改成十一条并加了指向「顶栏改版」一节的指引（第 1 节「只读文字」那一行的措辞后来又跟着「背景改成纯色」那次再改了一遍） |
 | 本次提交 | **背景改成纯色（图案层关掉）**（站长的要求）：`lib/decor.ts` 新增 `DECOR_PATTERNS = false`，`decorate()` 一律返回 `plain` —— 每页的 `data-decor` 都是 `plain`，纸面只剩 `<html>` 的 `--c-canvas`：没有细格 / 粗格、没有边缘淡出、没有虚线图框。七套图案与 `PATTERNS` 表**一行没删**（开关改成 `true` 即整套恢复）。CSS 补 `.blueprint[data-decor="plain"]::before { display: none }`（连边缘淡出也关掉，这一层真的什么都不画）。顺手修掉一处会被这次改动弄坏的判断：文章页右下角「图签让给回顶按钮」原来判 `data-decor="measure"`，纯色下永远不成立，已改成 **`data-route="article"`**。右下角图签（编号 + 页名）与换页那 0.32s 淡入**保留**（不是背景，随路径变的映射还在）。台账同步：第 8 项小节加「默认已关闭」指引、新增「背景改成纯色（图案层关掉）」一节、第 6 节的图纸对照表与第 8 节验收清单改写（第 8 项验收里那句「十一张图纸都能看到」改成「要先把开关打开」）、本行。README：第 1 节「只读文字」那一行改成「背景是一整块纯色」 |
+| 本次提交 | **卡组页 + 非 ASCII slug 的构建期拦截 + 工具栏默认收起**（站长报「新文章打不开」「明明是卡组却只显示一篇文章」「筛选菜单别摊开」）。根因两条，都有线上证据：① `content/zh/posts/notes/笔记.md` 没写 `slug`，slug 被推成中文 `notes/笔记`，浏览器把 href 编码成 `%E7%AC%94%E8%AE%B0` 而静态产物是中文目录名，Cloudflare 一解码就命不中 → 「卡片在、点进去 404」；② 卡组分块显示的改动当时只在工作区、没提交，线上是平铺的一列卡片。修法：内容侧补 `slug = "note-1"`（地址变成 `/zh/posts/note-1/`），代码侧 `lib/content.ts` 新增 `assertUrlSafeSlug()`（非 ASCII 的 slug 让**构建当场失败**并给出「改文件名 / 补 slug」两种改法，别让作者去线上猜）；新增**卡组页** `/<lang>/posts/<group>/`（`app/[lang]/posts/[...slug]/page.tsx` 的 `CardGroupPage`，与文章页共用 catch-all、顺序「先文章后卡组」，于是 `notes/index.md` 那种目录首页写法不会撞车），路由表由 `lib/content.ts` 的 `getCardGroupRoutes()` 一次推出、`app/sitemap.ts` 与 `generateStaticParams` 共用，列表页组头用 `lib/list.ts` 新增的 `groupHref()` 链过去；列表页工具栏改成**默认收起且不再因筛选自动展开**（只有 `/search/` 挂载后展开），组头可点、卡组封面固定 13rem 居中裁切。文档：`content/README.md` 第 1 / 5 节写明卡组页与「谁更具体谁优先」，台账新增「卡组页 + 新文章 404 的根因」一节与 5 条验收。⚠️ 本环境无 shell，以上都要等下一次构建（本机或 Cloudflare）才作数 |
 | 本次提交 | **首页改版 —— 一栏一屏**（站长的要求：一个栏目占一屏、去掉栏目卡片、吸附别乱）：`lib/home.ts` 的 `HOME_ROWS`（带 `pair` 的二维表）换成 `HOME_ORDER: HomeBlockId[]`（一维数组），页面直接按它渲染 8 个 `<section class="home-block">` —— 去掉 `.home-row` 包装、**去掉并排**、`<section>` 不再带 `panel`（没有边框 / 圆角 / 阴影 / 面板底色）。`.home-block` 自己就是吸附块（`min-height: calc(100svh - var(--home-head-room))` + `scroll-snap-align: start` + `scroll-snap-stop: always`），`html:has(.home-flow)` 的吸附从 `y proximity` 改成 **`y mandatory`**；`.home-flow` 去掉 `gap` 与上下内边距、顶部补一段 `--header-h` 的留白（顶栏吸顶会盖住文档最上面一截），窄屏那档 `min-height: auto` 删掉（手机上也一栏一屏）。`HOME_POST_LIMIT` 6 → 4（卡片多了会超过一屏）。`HomeIndex` / `page.tsx` / `lib/home.ts` 的注释与台账同步；打印仍把八栏摊成连续文档。台账：进度表第 9 项、目录树、第 9 项小节加改版指引与两处内联纠偏、新增「首页改版 —— 一栏一屏」一节、跨项待办里首页那条改成 `HOME_ORDER`、第 8 节新增 7 条验收清单。**同一提交内又修了一轮**（第一轮还是不够确定，会长说「混乱吸附」）：`.home-block` 从 `min-height` 改成**定高 `height: calc(100svh - var(--home-head-room))` + `overflow-y: auto`** —— 吸附区比视口高时滚动中途没有合法停靠点，一松手就被拽回去，这才是「吸附乱」的根；栏内滚动条不画。去掉 `scroll-snap-stop: always`（吸附点已经是整屏，留着只会把一次滑动锁成一栏）。补 `html:has(.home-flow) .site-footer { scroll-snap-align: end }`：文档末尾没有吸附点的话，mandatory 会把页脚吸回去、永远读不到。页面里每栏多一层 `<div class="home-block-body">`：居中挪进这一层 —— 在滚动区自身上写居中，溢出的那一头（栏头）会永远滚不到。`.home-flow` 顶部留白从 `--header-h` 改成 `--home-head-room`（与吸附让位同值，「第 N 栏 = 往上翻 N − 1 屏」才对每一栏成立）。`@media print` 与 `prefers-reduced-motion: reduce` 两处都放开定高与栏内滚动。台账同步：第 9 项那一节、第 8 节那 7 条验收按新做法改写、本行 |

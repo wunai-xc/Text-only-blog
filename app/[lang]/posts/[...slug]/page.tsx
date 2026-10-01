@@ -6,31 +6,49 @@ import ArticlePager from "@/components/article/ArticlePager";
 import ArticleProgress from "@/components/article/ArticleProgress";
 import ArticleToc from "@/components/article/ArticleToc";
 import GiscusComments from "@/components/article/GiscusComments";
+import PostCard from "@/components/list/PostCard";
 import {
   ARTICLE_TEXT,
   EMPTY_POST_SLUG,
   articleNeighbors,
   parseTypographyOption,
 } from "@/lib/article";
-import { getPost, getPostWithBody, getPosts } from "@/lib/content";
+import {
+  getCardGroup,
+  getCardGroupRoutes,
+  getPost,
+  getPostWithBody,
+  getPosts,
+  type CardGroupMeta,
+} from "@/lib/content";
 import { decorate } from "@/lib/decor";
 import { asBoolean } from "@/lib/frontmatter";
-import { LIST_TEXT, facetHref, toListPost } from "@/lib/list";
+import { LIST_TEXT, facetHref, groupHref, groupTitle, toListPost } from "@/lib/list";
 import { renderMarkdown } from "@/lib/markdown";
 import { feedAlternatesTypes, isLang, LANGS, SITE, type Lang } from "@/lib/site";
 
 /**
- * 文章页（第 12 项）：`/zh/posts/<slug>/`（slug 可能带目录，见 content/README.md 第 1 节）
+ * 文章页（第 12 项）+ **卡组页**：`/zh/posts/<slug>/`（slug 可能带目录，见 content/README.md 第 1 节）
+ *
+ * 为什么卡组页也在这里（而不是另开一条路由）：两者共用同一个地址空间 ——
+ * `notes/index.md`（目录首页）与目录 `notes/` 都会落到 `/zh/posts/notes/`，
+ * 分成两条路由会直接撞车。所以这一页按「先文章、后卡组」的顺序认领：
+ *   1. `getPostWithBody` 找到就渲染正文（第 12 项的四件事）；
+ *   2. 找不到再看 `getCardGroup` —— 是个卡组就渲染卡组页（组名 / 说明 / 组内卡片）；
+ *   3. 都不是才 `notFound()`（静态导出下等于 out/404.html）。
  *
  * 这一页只做四件事，其余都在别处：
  *   1. **构建期**把这一篇读出来渲染成 HTML（`getPostWithBody` → `renderMarkdown`）——
  *      静态导出后这一页的 HTML 里就有完整正文，没有 JS、爬虫、离线时都能读（约定第 4 条）；
  *   2. 把 frontmatter 的 `typography` 接到渲染层（第 4 项留给第 12 项的接口）；
  *   3. 把目录、进度、评论交给三个客户端组件（悬浮件与第三方 iframe 只能客户端）；
- *   4. 版式与文案走 `lib/article.ts`，页面里不写文案、不排「上/下」，也不手写图纸编号。
+ *   4. 版式与文案走 `lib/article.ts` / `lib/list.ts`，页面里不写文案、不排「上/下」，
+ *      也不手写图纸编号（卡组页的组名 / 篇数 / 卡片都复用列表页那一套）。
  *
  * 几个来路：
  *   - 正文与元信息：第 2 项的 `getPostWithBody`（生产构建不含草稿）；
+ *   - 卡组页的数据：第 2 项的 `getCardGroup` / `getCardGroupRoutes`（后者同时给 sitemap 用），
+ *     地址由 `lib/list.ts` 的 `groupHref()` 生成 —— 与列表页组头指向同一个地方；
  *   - 渲染：第 3 项的 `renderMarkdown`（GFM / KaTeX / 高亮 / 五类图表占位 / 角标 / 目录）；
  *   - 图纸编号（页头那个 03）：第 8 项的 `decorate()`，与右下角图签同一个来源；
  *   - 上下篇：`articleNeighbors()`（lib/article.ts），顺序就是 `getPosts` 的时间倒序，
@@ -45,9 +63,12 @@ import { feedAlternatesTypes, isLang, LANGS, SITE, type Lang } from "@/lib/site"
  */
 
 export function generateStaticParams() {
-  const params = LANGS.flatMap((lang) =>
-    getPosts(lang).map((post) => ({ lang, slug: post.slug.split("/") })),
-  );
+  // 文章与卡组页共用这一条路由，所以两张表都要列出来
+  //（卡组页的路由表在 lib/content.ts，sitemap 用的是同一份 —— 别在这里重推一遍）
+  const params = LANGS.flatMap((lang) => [
+    ...getPosts(lang).map((post) => ({ lang, slug: post.slug.split("/") })),
+    ...getCardGroupRoutes(lang).map((group) => ({ lang, slug: group.slug.split("/") })),
+  ]);
   if (params.length > 0) return params;
 
   // 一篇文章都没有时**仍然要返回一条路径**：静态导出不允许动态路由一条路由都不生成，
@@ -71,6 +92,15 @@ function languageUrls(slug: string): Record<string, string> {
   return languages;
 }
 
+/** 卡组页的跨语言配对（同一个目录在另一种语言里也有文章时才有） */
+function groupLanguageUrls(slug: string): Record<string, string> {
+  const languages: Record<string, string> = {};
+  for (const lang of LANGS) {
+    if (getCardGroup(lang, slug)) languages[lang] = groupHref(lang, slug);
+  }
+  return languages;
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -90,6 +120,24 @@ export async function generateMetadata({
         title: t.emptyTitle,
         description: t.emptyLead,
         robots: { index: false, follow: false },
+      };
+    }
+
+    // 卡组页：标题用组名（`_index.md` 没写 title 时用目录名兜底），
+    // 描述优先用 `_index.md` 的 description，没有就用那一句通用说明
+    const group = getCardGroup(lang, slugPath);
+    if (group) {
+      const t = LIST_TEXT[lang];
+      const languages = groupLanguageUrls(group.slug);
+      const fallback = languages[SITE.defaultLang] ?? groupHref(lang, group.slug);
+      return {
+        title: groupTitle(group),
+        description: group.description || t.groups.pageNote,
+        alternates: {
+          canonical: groupHref(lang, group.slug),
+          languages: { ...languages, "x-default": fallback },
+          types: feedAlternatesTypes(),
+        },
       };
     }
     return {};
@@ -133,9 +181,16 @@ export default async function LangPost({
   const slugPath = slug.join("/");
   const data = getPostWithBody(lang, slugPath);
   if (!data) {
-    // 能走到这里的只有一种情况：零文章时 `generateStaticParams` 保的那条保留路径
+    // 零文章时 `generateStaticParams` 保的那条保留路径
     //（`dynamicParams = false`，别的未知 slug 根本不会被生成，是交给 out/404.html 的）
     if (slugPath === EMPTY_POST_SLUG) return <EmptyArticlePage lang={lang} />;
+
+    // 不是一篇文章，那就看它是不是一个卡组（目录）：是就渲染卡组页。
+    // 「先文章、后卡组」的顺序是有意的 —— `notes/index.md` 那种目录首页的写法
+    // 与目录 `notes/` 共用同一个地址，正文优先（见 lib/content.ts 的 getCardGroupRoutes）。
+    const group = getCardGroup(lang, slugPath);
+    if (group) return <CardGroupPage lang={lang} group={group} />;
+
     notFound();
   }
 
@@ -284,5 +339,58 @@ function EmptyArticlePage({ lang }: { lang: Lang }) {
         </footer>
       </article>
     </main>
+  );
+}
+
+/**
+ * 卡组页（`/zh/posts/notes/`）—— 一个目录（有 `_index.md`，或只是里面有文章）自己的页面。
+ *
+ * 为什么需要它：列表页把文章按卡组分块显示之后，组头得有个能点的地方；
+ * 而且站长在地址栏敲 `/zh/posts/notes/`（目录名）是很自然的动作 ——
+ * 以前那里是 404，现在它是这个卡组的家。
+ *
+ * 它**只做「清单」这件事**：组名 / 说明 / 封面 + 组内卡片（复用 `PostCard`，
+ * 与列表页、首页第 2 栏同一个组件，约定第 9 条）。所以它没有悬浮目录、进度条、
+ * 评论区 —— 那些是正文页的东西（第 12 项）。文章仍然要进正文页读。
+ *
+ * 密度写死「适中」：密度是本机偏好（localStorage 的 `tob:list-density`），
+ * 构建期读不到，硬猜一个不如用默认那一档（与首页第 2 栏同一个取舍）。
+ */
+function CardGroupPage({ lang, group }: { lang: Lang; group: CardGroupMeta }) {
+  const t = LIST_TEXT[lang];
+  const href = groupHref(lang, group.slug);
+  const posts = group.posts.map(toListPost);
+
+  return (
+    <div className="page list-page">
+      <header className="list-head">
+        <p className="list-kicker">
+          <span className="list-no">{decorate(href).sheet}</span>
+          {t.groups.kicker}
+          <span className="list-rule" />
+        </p>
+        <h1 className="list-title">{groupTitle(group)}</h1>
+        <p className="list-lead">{group.description || t.groups.pageNote}</p>
+        <p className="list-meta">
+          {t.groups.count(group.count)}
+          {" · "}
+          <a className="site-tagline-link" href={`/${lang}/posts/`}>
+            {t.groups.backAll}
+          </a>
+        </p>
+        {/* 组封面（`_index.md` 的 cover，缺省时退回组内第一篇的封面）：没有就不渲染 */}
+        {group.cover ? (
+          <img className="list-group-cover" src={group.cover} alt="" loading="lazy" />
+        ) : null}
+      </header>
+
+      <div className="list">
+        <div className="list-grid" data-density="cozy">
+          {posts.map((post) => (
+            <PostCard key={post.slug} post={post} lang={lang} density="cozy" />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

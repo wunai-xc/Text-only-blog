@@ -17,7 +17,7 @@
  * 零运行时依赖：fuse.js 只在列表页里按需动态 import（components/list/PostList.tsx）。
  */
 
-import type { PostMeta } from "./content";
+import type { CardGroupMeta, PostMeta } from "./content";
 import type { SearchDoc } from "./search-index";
 import type { Lang } from "./site";
 
@@ -95,6 +95,89 @@ export function fromSearchDoc(doc: SearchDoc): ListPost {
     draft: false,
     words: doc.words,
     readingMinutes: doc.readingMinutes,
+  };
+}
+
+/* ------------------------------ 卡组 ------------------------------ */
+
+/**
+ * 列表页要用的卡组（`content/README.md` 第 5 节）。
+ *
+ * 这是 `lib/content.ts` 的 `CardGroupMeta` 的**投影**：那边带着整组文章、封面与文件路径，
+ * 客户端组件只要「有哪些组、叫什么、什么顺序」。投影放在这里，页面上一行 `toListGroup()`
+ * 就够 —— 与 `toListPost` 同一个做法（两个语言的页面不各写一遍）。
+ */
+export interface ListGroup {
+  /** 目录相对路径；"" 表示 posts 顶层（顶层不算卡组，见 groupPosts） */
+  slug: string;
+  /** `_index.md` 的 title；空串 = 没写，UI 用目录名兜底（见 groupTitle） */
+  title: string;
+  description: string;
+  /** 是否由 `_index.md` 显式定义 */
+  explicit: boolean;
+  /** 排序权重，小的在前 */
+  order: number;
+}
+
+/** `CardGroupMeta` → `ListGroup`（只挑列表页要用的字段） */
+export function toListGroup(group: CardGroupMeta): ListGroup {
+  return {
+    slug: group.slug,
+    title: group.title,
+    description: group.description,
+    explicit: group.explicit,
+    order: group.order,
+  };
+}
+
+/** 卡组名：`_index.md` 没写 title 时用目录名兜底（规范如此，别在页面里各写一份） */
+export function groupTitle(group: ListGroup): string {
+  if (group.title.trim() !== "") return group.title;
+  return group.slug.split("/").pop() ?? group.slug;
+}
+
+export interface GroupedPosts {
+  /** 没放进任何目录（或不在已知卡组里）的文章 */
+  ungrouped: ListPost[];
+  /** 卡组与组内的文章；只包含「筛完之后还有文章」的组 */
+  groups: { group: ListGroup; posts: ListPost[] }[];
+}
+
+/**
+ * 把一列（已经筛过、排过的）文章按卡组切开 —— 列表页显示的「卡组」就靠这一个函数。
+ *
+ * 三个决定：
+ *   1. 顺序沿用 `lib/content.ts` 的 `sortGroups`（`order` 小的在前，再按 slug），
+ *      组内保持传进来的顺序（也就是当前排序的结果）；
+ *   2. **顶层（slug ""）永远算「未分组」**：它是「没放进任何目录的文章」，不是一个卡组，
+ *      给它一个「卡组」的组头是错的；组里只有一篇文章也照样按组显示 ——
+ *      卡组是作者的目录结构，不是「文章多到一定程度才出现」的东西；
+ *   3. 一篇文章的目录不在 `groups` 里（例如传进来的卡组列表被过滤过）时，退回「未分组」——
+ *      宁可多显示一篇文章，也不要因为数据不同步把它弄丢。
+ */
+export function groupPosts(posts: ListPost[], groups: ListGroup[]): GroupedPosts {
+  const known = groups
+    .filter((group) => group.slug !== "")
+    .sort((a, b) => a.order - b.order || a.slug.localeCompare(b.slug));
+  const knownSlugs = new Set(known.map((group) => group.slug));
+
+  const buckets = new Map<string, ListPost[]>();
+  const ungrouped: ListPost[] = [];
+  for (const post of posts) {
+    if (post.group === "" || !knownSlugs.has(post.group)) {
+      ungrouped.push(post);
+      continue;
+    }
+    const bucket = buckets.get(post.group);
+    if (bucket) bucket.push(post);
+    else buckets.set(post.group, [post]);
+  }
+
+  return {
+    ungrouped,
+    groups: known
+      .map((group) => ({ group, posts: buckets.get(group.slug) ?? [] }))
+      .filter((entry) => entry.posts.length > 0),
   };
 }
 
@@ -315,6 +398,20 @@ export function facetHref(lang: Lang, key: "tag" | "cat", name: string): string 
 }
 
 /**
+ * 卡组页的地址（`/zh/posts/notes/`）—— 「这个目录/卡组自己」的页面。
+ *
+ * 与 `groupPosts()` 用的是**同一份 slug**（`CardGroupMeta.slug` / `ListGroup.slug`），
+ * 所以列表页的组头、卡组页本身、sitemap 三处永远指向同一个地址，不会各拼一份。
+ * 页面本体在 app/[lang]/posts/[...slug]/page.tsx 里（与文章页同一个 catch-all：
+ * 先按文章 slug 找，找不到再看是不是一个卡组 —— 路由因此不会与 `notes/index.md` 那种
+ * 「目录首页」写法打架）。
+ */
+export function groupHref(lang: Lang, slug: string): string {
+  const path = slug.replace(/^\/+|\/+$/g, "");
+  return `/${lang}/posts/${path}/`;
+}
+
+/**
  * 读 `window.location.search`。**只在浏览器里挂载之后调**（静态导出时服务端读不到查询串，
  * 首帧必须与 SSR 一致，否则 React 会报水合不一致 —— 与第 7 项读 localStorage 同一个道理）。
  */
@@ -429,6 +526,29 @@ export interface ListText {
   results: (shown: number, total: number) => string;
   emptyFiltered: string;
 
+  /**
+   * 折叠起来的工具栏（第 10 项）：整块收起时只留一行。
+   * `filtersNone` 是没有生效条件时那一行的小字；Show/Hide 是给读屏用的展开/收起说明。
+   */
+  filtersNone: string;
+  filtersShow: string;
+  filtersHide: string;
+
+  /**
+   * 卡组（content/README.md 第 5 节）：列表页按目录把文章分成几块。
+   * `ungrouped` 是「没放进任何目录」那一块（顶层文章）—— 它只在有真卡组时才出现。
+   * 卡组页（`/zh/posts/notes/`）复用 `kicker` / `count`，另有两句它自己的话：
+   * `pageNote`（组里没写 description 时的说明）与 `backAll`（回全部文章）。
+   */
+  groups: {
+    kicker: string;
+    count: (n: number) => string;
+    ungrouped: string;
+    ungroupedNote: string;
+    pageNote: string;
+    backAll: string;
+  };
+
   /* 卡片（第 11 项） */
   card: {
     minutes: (n: number) => string;
@@ -489,6 +609,19 @@ const ZH: ListText = {
   results: (shown, total) => `显示 ${shown} / ${total} 篇`,
   emptyFiltered: "这些筛选条件下没有文章 —— 放宽一档试试，或者按上面的「清除筛选」。",
 
+  filtersNone: "没有筛选条件",
+  filtersShow: "展开搜索与筛选",
+  filtersHide: "收起搜索与筛选",
+
+  groups: {
+    kicker: "卡组",
+    count: (n) => `${n} 篇`,
+    ungrouped: "未分组",
+    ungroupedNote: "没放进任何目录的文章（放在 content/<lang>/posts/ 顶层的那些）。",
+    pageNote: "这个卡组（目录）里的文章都列在下面。",
+    backAll: "← 全部文章",
+  },
+
   card: {
     minutes: (n) => `${n} 分钟`,
     words: (n) => `${n} 字`,
@@ -541,6 +674,19 @@ const EN: ListText = {
   clear: "Clear filters",
   results: (shown, total) => `Showing ${shown} of ${total}`,
   emptyFiltered: "No posts match these filters — try loosening one, or hit “Clear filters” above.",
+
+  filtersNone: "No filters",
+  filtersShow: "Show search and filters",
+  filtersHide: "Hide search and filters",
+
+  groups: {
+    kicker: "Card group",
+    count: (n) => `${n} post${n === 1 ? "" : "s"}`,
+    ungrouped: "Ungrouped",
+    ungroupedNote: "Posts that do not live in a directory of their own (directly under content/<lang>/posts/).",
+    pageNote: "Every post in this card group is listed below.",
+    backAll: "← All posts",
+  },
 
   card: {
     minutes: (n) => `${n} min`,

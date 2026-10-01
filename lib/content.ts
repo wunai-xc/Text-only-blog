@@ -430,7 +430,43 @@ function firstImageInBody(body: string): string | null {
 
 /* ------------------------------ slug ------------------------------ */
 
-function resolveSlug(rel: string, fm: Record<string, unknown>): string {
+/**
+ * slug 只能是 **URL 安全的 ASCII**（字母 / 数字 / `-._~/`）。
+ *
+ * 为什么这一条是硬的（线上实测，见 PROJECTS.md 第 4 节「非 ASCII slug」）：
+ * 浏览器会把 href 里的中文自动百分号编码，而静态导出把这一篇写成**百分号编码的目录名**，
+ * Cloudflare 的静态资源在查文件前又把它解码一次 —— 两边永远对不上。
+ * 表现就是「列表里有这张卡片，点标题进去 404」（实测 `…/notes/%E7%AC%94%E8%AE%B0/`
+ * 返回的是 Next 的 404 页面）。
+ *
+ * 所以宁可让构建当场失败、并给出改法，也不要让作者去线上猜「为什么打不开」：
+ *   - 改文件名：`笔记.md` → `note-1.md`；
+ *   - 或者保留中文文件名，在 frontmatter 里补一行 `slug`（TOML: `slug = "note-1"`，
+ *     YAML: `slug: note-1`）。
+ */
+const URL_SAFE_SLUG = /^[A-Za-z0-9._~/-]+$/;
+
+function assertUrlSafeSlug(slug: string, absolutePath: string, explicit: boolean): void {
+  if (URL_SAFE_SLUG.test(slug) && !slug.includes("//")) return;
+  throw new ContentError(
+    `${relativeToRoot(absolutePath)}：slug "${slug}" 里有 URL 不安全的字符（中文、空格、% 等）。` +
+      "静态导出会把这类 slug 写成百分号编码的目录名，浏览器按 href 编码后命不中那个文件，" +
+      "线上就是「卡片在、点进去 404」—— 所以 slug 只能是 ASCII：" +
+      (explicit
+        ? '把 frontmatter 里的 slug 改成 ASCII（例如 slug = "note-1"）。'
+        : '把文件重命名为 ASCII（例如 note-1.md），或在 frontmatter 里补一行 slug = "note-1"' +
+          "（YAML: slug: note-1）。"),
+  );
+}
+
+/**
+ * 从文件路径推出 slug（`content/README.md` 第 1 节）。
+ * 带上 `explicit`：frontmatter 里自己写了 slug 时，报错信息要说「改 slug」而不是「改文件名」。
+ */
+function resolveSlug(
+  rel: string,
+  fm: Record<string, unknown>,
+): { slug: string; explicit: boolean } {
   const dir = posixDirname(rel);
   const name = rel.slice(dir ? dir.length + 1 : 0);
   const dot = name.lastIndexOf(".");
@@ -446,8 +482,9 @@ function resolveSlug(rel: string, fm: Record<string, unknown>): string {
     asString(fm.path);
   if (override) {
     slug = override.replace(/^\/+|\/+$/g, "").replace(/\/index$/, "");
+    return { slug, explicit: true };
   }
-  return slug;
+  return { slug, explicit: false };
 }
 
 /* ------------------------------ 单篇构建 ------------------------------ */
@@ -468,7 +505,9 @@ function buildPost(
   const fm = document.data;
   const body = document.body;
 
-  const slug = resolveSlug(rel, fm);
+  const { slug, explicit: slugExplicit } = resolveSlug(rel, fm);
+  // 见 assertUrlSafeSlug 的注释：非 ASCII 的 slug 会在线上 404，这里直接拦住
+  assertUrlSafeSlug(slug, absolutePath, slugExplicit);
   const group = posixDirname(rel);
 
   const plainText = stripMarkdown(body).replace(/\s+/g, " ").trim();
@@ -777,6 +816,23 @@ export function getCardGroups(lang: Lang, options?: ListOptions): CardGroupMeta[
 export function getCardGroup(lang: Lang, slug: string, options?: ListOptions): CardGroupMeta | null {
   const key = slug.replace(/^\/+|\/+$/g, "");
   return getCardGroups(lang, options).find((group) => group.slug === key) ?? null;
+}
+
+/**
+ * 卡组页（`/zh/posts/notes/`）的路由表 —— 文章页那个 catch-all 用它生成静态路径，
+ * sitemap 也用同一份（两处不能各推一遍，否则会出现「页面在、但 sitemap 里没有」）。
+ *
+ * 两条排除规则：
+ *   1. 顶层（slug ""）不是卡组，是「没放进目录的文章」，列表页把它算「未分组」；
+ *   2. 这个 slug 已经被**一篇文章**占着时（`notes/index.md` → slug `notes`，也就是
+ *      content/README.md 第 1 节说的「目录首页」），正文页优先 —— 那种情况下地址
+ *      指向那一篇文章，而不是卡组页。
+ */
+export function getCardGroupRoutes(lang: Lang, options?: ListOptions): CardGroupMeta[] {
+  const postSlugs = new Set(getPosts(lang, options).map((post) => post.slug));
+  return getCardGroups(lang, options).filter(
+    (group) => group.slug !== "" && !postSlugs.has(group.slug),
+  );
 }
 
 /** 「关于」文章：about: true 的最新一篇；没有就返回 null（UI 要出空状态） */

@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import PostList from "@/components/list/PostList";
-import { getPosts, getTaxonomy } from "@/lib/content";
+import { getCardGroups, getPosts, getTaxonomy } from "@/lib/content";
 import { decorate } from "@/lib/decor";
-import { toListPost, yearsOf, type ListFacets } from "@/lib/list";
+import { toListGroup, toListPost, yearsOf, type ListFacets } from "@/lib/list";
 import { PAGES_TEXT } from "@/lib/pages";
 import { SEARCH_INDEX_VERSION } from "@/lib/search-index";
 import { feedAlternatesTypes, isLang } from "@/lib/site";
@@ -61,6 +61,8 @@ export default async function LangSearch({ params }: { params: Promise<{ lang: s
     categories: getTaxonomy(lang, "categories").map(({ name, count }) => ({ name, count })),
     years: yearsOf(list),
   };
+  /** 卡组（目录）投影：与列表页同一个来路，搜索命中同样按目录分块显示 */
+  const groups = getCardGroups(lang).map(toListGroup);
 
   return (
     <div className="page list-page">
@@ -80,6 +82,7 @@ export default async function LangSearch({ params }: { params: Promise<{ lang: s
           lang={lang}
           posts={list}
           facets={facets}
+          groups={groups}
           indexVersion={SEARCH_INDEX_VERSION}
           autoFocusSearch
         />

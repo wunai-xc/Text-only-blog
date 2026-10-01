@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
-import { getPosts } from "@/lib/content";
+import { getCardGroupRoutes, getPosts } from "@/lib/content";
+import { groupHref } from "@/lib/list";
 import { LANGS, SITE, type Lang } from "@/lib/site";
 
 /**
@@ -15,6 +16,7 @@ import { LANGS, SITE, type Lang } from "@/lib/site";
  *   /zh/、/en/               各语言首页
  *   /zh/posts/、/en/posts/   文章列表页（第 10 项）
  *   /zh/posts/<slug>/ …      文章正文页，URL 由 content/ 里的文章推出（第 12 项落地后已能访问）
+ *   /zh/posts/<group>/ …     卡组页（目录自己的页面，`getCardGroupRoutes`；与正文页共用 catch-all，正文优先）
  *   /zh/tags/ 等三张清单页    标签 / 分类 / 归档（第 13 项；搜索页故意不进 sitemap）
  *   /zh/about/、/zh/links/   关于与友链（第 13 项；设置页 noindex，也不进 sitemap）
  *
@@ -134,6 +136,22 @@ function postRoutes(): MetadataRoute.Sitemap {
   return routes;
 }
 
+/**
+ * 卡组页（`/zh/posts/notes/`）：有文章的目录都有自己的一页，列进 sitemap。
+ * 用 `getCardGroupRoutes()` —— 与 `app/[lang]/posts/[...slug]/page.tsx` 的
+ * `generateStaticParams` **同一个来源**（地址由 `groupHref()` 生成）。
+ * 零文章、零目录时它返回空数组，sitemap 照旧合法。
+ */
+function groupRoutes(): MetadataRoute.Sitemap {
+  return LANGS.flatMap((lang) =>
+    getCardGroupRoutes(lang).map((group) => ({
+      url: `${SITE.url}${groupHref(lang, group.slug)}`,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    })),
+  );
+}
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [...pageRoutes(), ...postRoutes()];
+  return [...pageRoutes(), ...groupRoutes(), ...postRoutes()];
 }

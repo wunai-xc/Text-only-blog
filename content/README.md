@@ -23,7 +23,7 @@ content/
 │     ├─ notes/               ← 目录即分组（卡组）
 │     │  ├─ _index.md         ← 该卡组的标题 / 描述 / 顺序 / 封面
 │     │  └─ first-note.md     → /zh/posts/notes/first-note/
-│     └─ notes/index.md       → /zh/posts/notes/（目录首页，可选）
+│     └─ notes/index.md       → /zh/posts/notes/（目录首页，可选；不写的话这个地址是卡组页）
 └─ en/
    └─ posts/…                 ← 同上，英文
 ```
@@ -31,6 +31,8 @@ content/
 规则：
 
 - 只认 `.md` 与 `.markdown`；
+- **slug 只能是 URL 安全的 ASCII**（字母 / 数字 / `-._~/`）。文件名用中文没关系，但要自己写一行
+  `slug`（见下一条与第 4 节的字段表）—— 直接拿中文当 slug 上线会 404；
 - **slug 由文件路径推导**：`notes/first-note.md` → `notes/first-note`；
 - `目录/index.md` 代表这个目录本身，slug 就是目录名（`notes/index.md` → `notes`）；
 - 需要自定义 slug 时，在 frontmatter 里写 `slug`（或 `permalink`）；
@@ -132,7 +134,7 @@ author = "张三"
 | `isAI` | 布尔 | AI 生成标记（列表页默认会筛掉，第 10 项实现）。 |
 | `comments` | 布尔 | 这一篇要不要评论区，缺省 `true`（`comment` 是别名）。写 `false` 就整篇不出评论区。 |
 | `references` | 表数组 / 数组 | 参考文献，见第 6 节。 |
-| `slug` / `permalink` | 字符串 | 自定义路由。一般不用写。 |
+| `slug` / `permalink` | 字符串 | 自定义路由，**只能用 ASCII**。文件名是中文时必须写，否则构建会直接报错（原因见第 1 节）。 |
 
 容错写法（都能识别，选一种统一用即可）：
 
@@ -155,7 +157,7 @@ author = "张三"
 
 ## 5. 卡组（`_index.md`）
 
-一个目录里的 `_index.md` 用来描述这个目录（列表页 / 首页栏目会用它）：
+一个目录里的 `_index.md` 用来描述这个目录（列表页 / 卡组页 / 首页栏目会用它）：
 
 ```toml
 +++
@@ -169,7 +171,15 @@ cover = "/thumbnails/zh/notes.png"
 - `order`：小的排前面（`weight`、`index` 是别名）；不写按 0 处理；
 - `cover` 缺省时，卡组封面取组内第一篇文章的封面；
 - 没有 `_index.md` 的目录只要有文章，也会被当成一个卡组，标题由 UI 用目录名兜底；
-- 组内文章按时间倒序，`pinned` 不影响组内顺序。
+- 组内文章按时间倒序，`pinned` 不影响组内顺序；
+- **列表页按卡组分块显示**：一组一块，组头（组名 + 篇数 + 说明）下面是这一组的卡片；
+- **每个卡组都有自己的页面**：`content/zh/posts/notes/` → `/zh/posts/notes/`
+  （组名 + 说明 + 封面 + 组内卡片，组头可以点进去）。这个地址由目录名决定，
+  **不需要你写任何文件**；组里一篇文章都没有时它不存在（空目录不出现）。
+  两种情形**不做**卡组页，都按「谁更具体谁优先」处理：
+  1. 目录里写了 `index.md`（`notes/index.md` → slug `notes`）—— 那个地址就是你那篇文章，
+     正文优先；
+  2. 顶层（`content/zh/posts/` 直接放的那些文章）不是一个卡组，它们在列表页里归「未分组」。
 
 ---
 
@@ -307,6 +317,7 @@ typography = false          # 整块关掉
 | 报错 | 原因 |
 | --- | --- |
 | `frontmatter 没有闭合` | 开头写了 `---`（或 `+++`），结尾漏了同样的分隔行 |
+| `slug "…" 里有 URL 不安全的字符` | 文件名（或 frontmatter 的 `slug`）是中文 / 带空格 / 带 `%`。改文件名成 ASCII，或补一行 `slug = "note-1"` —— 非 ASCII 的 slug 线上一定 404，所以这里直接拦住 |
 | `TOML frontmatter 解析失败：…（第 N 行）` | TOML 语法问题，行号已换算成文件行号 |
 | `键 "x" 重复定义` | 同一个键写了两次 |
 | `slug 冲突` | 两个文件推出同一个 slug，用 `slug` 字段区分 |

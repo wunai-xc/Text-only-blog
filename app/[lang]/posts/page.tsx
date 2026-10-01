@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import PostList from "@/components/list/PostList";
-import { getPosts, getTaxonomy } from "@/lib/content";
+import { getCardGroups, getPosts, getTaxonomy } from "@/lib/content";
 import { decorate } from "@/lib/decor";
-import { LIST_TEXT, toListPost, yearsOf, type ListFacets } from "@/lib/list";
+import { LIST_TEXT, toListGroup, toListPost, yearsOf, type ListFacets } from "@/lib/list";
 import { SEARCH_INDEX_VERSION } from "@/lib/search-index";
 import { feedAlternatesTypes, feedHref, isLang } from "@/lib/site";
 
@@ -19,6 +19,9 @@ import { feedAlternatesTypes, feedHref, isLang } from "@/lib/site";
  *
  * 几个来路：
  *   - 文章：第 2 项的 `getPosts`（时间倒序、生产构建排除草稿）；
+ *   - 卡组（`content/README.md` 第 5 节）：第 2 项的 `getCardGroups`，投影成
+ *     `ListGroup`（`toListGroup`）后交给客户端组件 —— **客户端拿不到 fs**，
+ *     目录结构只能在服务端读；把文章按目录分块显示也因此在客户端做（只需这个投影）；
  *   - 标签 / 分类：第 2 项的 `getTaxonomy`（按出现次数倒序），这里只取「名字 + 篇数」；
  *   - 年份：`yearsOf` 从这一页的文章推出来（lib/list.ts），不另建一张表；
  *   - 图纸编号（页头那个 02）：第 8 项的 `decorate()` —— 与右下角图签同一个来源，
@@ -64,6 +67,8 @@ export default async function LangPosts({ params }: { params: Promise<{ lang: st
     categories: getTaxonomy(lang, "categories").map(({ name, count }) => ({ name, count })),
     years: yearsOf(list),
   };
+  /** 卡组（目录）：`_index.md` 定的那些，加上「目录里真有文章」的那些，按 order 排 */
+  const groups = getCardGroups(lang).map(toListGroup);
 
   return (
     <div className="page list-page">
@@ -85,7 +90,13 @@ export default async function LangPosts({ params }: { params: Promise<{ lang: st
       </header>
 
       {posts.length > 0 ? (
-        <PostList lang={lang} posts={list} facets={facets} indexVersion={SEARCH_INDEX_VERSION} />
+        <PostList
+          lang={lang}
+          posts={list}
+          facets={facets}
+          groups={groups}
+          indexVersion={SEARCH_INDEX_VERSION}
+        />
       ) : (
         <div className="panel list-empty">
           <p>{t.empty}</p>

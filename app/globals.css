@@ -1681,12 +1681,72 @@
     color: var(--c-ink-subtle);
   }
 
-  /* 工具栏：搜索 + 五组筛选 + 底部计数。打印时整块不印（见文件末尾的 @media print） */
+  /* 工具栏（第 10 项）：**整块折叠**，默认收起。
+     展开态是「搜索 + 标签 + 分类 + 时间 + 排序 + 密度 + AI + 语言」一整套控件 ——
+     标签一多就能占掉一屏，而读者来这一页是看文章的，所以默认收起来：
+     只剩一行「筛选」开关 + 当前生效的条件 + 显示几篇。
+     用 `<details>`（结构在 components/list/PostList.tsx）：没有 JS 也能展开，
+     也不需要自己写派发逻辑。打印时整块不印（见文件末尾的 @media print）。 */
   .list-toolbar {
+    /* .panel 的内边距在这里不要：收缩时那一行自己带内边距，展开时内层再补 ——
+       不然收起状态会多出一圈空白（`<details>` 里的内容本来就自己撑开高度） */
+    padding: 0;
+    margin-bottom: 1.2rem;
+  }
+
+  .list-toolbar-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.7rem;
+    padding: 0.55rem 0.75rem;
+    list-style: none; /* 去掉默认的三角（下面那条管 Safari / Chrome） */
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: var(--c-ink-muted);
+  }
+
+  .list-toolbar-bar::-webkit-details-marker {
+    display: none;
+  }
+
+  .list-toolbar-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--c-ink);
+  }
+
+  .list-toolbar-chevron {
+    display: inline-flex;
+    color: var(--c-ink-subtle);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .list-toolbar-chevron {
+      transition: transform 0.18s ease;
+    }
+  }
+
+  .list-toolbar[open] .list-toolbar-chevron {
+    transform: rotate(180deg);
+  }
+
+  /* 收起时那一行的「当前条件」：等宽小字、可以换行 —— 它是状态，不是按钮 */
+  .list-toolbar-active {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--c-ink-subtle);
+  }
+
+  .list-toolbar-panel {
     display: flex;
     flex-direction: column;
     gap: 0.55rem;
-    margin-bottom: 1.2rem;
+    padding: 0 0.75rem 0.65rem;
   }
 
   .list-field {
@@ -1804,6 +1864,89 @@
   .list-empty {
     font-size: 0.9rem;
     line-height: 1.8;
+    color: var(--c-ink-muted);
+  }
+
+  /* ---------- 卡组（列表页按目录分块） ----------
+     content/README.md 第 5 节：一个目录（有 `_index.md`，或只是里面有文章）就是一个卡组。
+     列表页因此不再把组内文章平铺成一片，而是「一组一块」：组头（组名 + 篇数 + 一句说明）
+     下面才是这一组的卡片。组头那条虚线是同一个分隔语言（与页头、首页栏头同一套观感）。
+     「未分组」也用这一件外壳 —— 它不是卡组，只是没放进目录的文章。 */
+  .list-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 1.7rem;
+  }
+
+  .list-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .list-group-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.6rem;
+    padding-bottom: 0.45rem;
+    border-bottom: 1px dashed var(--c-rule);
+  }
+
+  .list-group-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--c-ink-subtle);
+  }
+
+  .list-group-title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+
+  /* 组名是可以点的（链到卡组自己的页面：/zh/posts/notes/）。
+     画法沿用全站链接那一套：悬停才出下划线，不喧哗。 */
+  .list-group-title a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .list-group-title a:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  /* 卡组页（`/<lang>/posts/<group>/`）的组封面：`_index.md` 写了 cover 才有。
+     与卡片一样是「有就用、没有也不缺一块」的东西，所以固定一个高度、
+     居中裁切，别让一张竖图把页头撑到一屏。 */
+  .list-group-cover {
+    display: block;
+    width: 100%;
+    max-height: 13rem;
+    margin-top: 0.7rem;
+    object-fit: cover;
+    border: 1px solid var(--c-rule);
+    border-radius: var(--shape-radius);
+  }
+
+  .list-group-count {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--c-ink-subtle);
+  }
+
+  .list-group-desc {
+    flex: 1 1 100%; /* 说明另起一行，不跟组名挤在同一条线上 */
+    margin: 0;
+    max-width: var(--reading-measure);
+    font-size: 0.82rem;
+    line-height: 1.7;
     color: var(--c-ink-muted);
   }
 

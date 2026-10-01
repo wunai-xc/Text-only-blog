@@ -57,6 +57,9 @@ import mdiTextBoxOutline from "@iconify/icons-mdi/text-box-outline";
 import mdiRobotOutline from "@iconify/icons-mdi/robot-outline";
 import mdiMagnifyClose from "@iconify/icons-mdi/magnify-close";
 import mdiAlertCircleOutline from "@iconify/icons-mdi/alert-circle-outline";
+/** 图标：列表页的「卡组」组头（文件夹）与折叠工具栏的箭头 */
+import mdiFolderOutline from "@iconify/icons-mdi/folder-outline";
+import mdiChevronDown from "@iconify/icons-mdi/chevron-down";
 /* 文章页（第 12 项：悬浮目录 / 进度与回顶 / 上下篇 / 评论） */
 import mdiFormatListBulleted from "@iconify/icons-mdi/format-list-bulleted";
 import mdiArrowUp from "@iconify/icons-mdi/arrow-up";
@@ -106,6 +109,9 @@ export const icons = {
   "mdi:robot-outline": mdiRobotOutline,
   "mdi:magnify-close": mdiMagnifyClose,
   "mdi:alert-circle-outline": mdiAlertCircleOutline,
+  /* 列表页：卡组组头的文件夹、折叠工具栏的箭头 */
+  "mdi:folder-outline": mdiFolderOutline,
+  "mdi:chevron-down": mdiChevronDown,
   /* 文章页 */
   "mdi:format-list-bulleted": mdiFormatListBulleted,
   "mdi:arrow-up": mdiArrowUp,
