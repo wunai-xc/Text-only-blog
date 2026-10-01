@@ -96,7 +96,7 @@
 │  │  ├─ HomeIntro.tsx       第 1 栏 本站介绍（站名 / 自述 / 三个入口，RSS 是唯一现在可点的）
 │  │  ├─ HomePostCards.tsx   第 2 栏 文章卡片（第 11 项起用共用的 PostCard「适中档」）
 │  │  ├─ HomeStats.tsx       第 3 栏 数据统计（字数 / 累计阅读 / 首末发布 / 构建日期）
-│  │  ├─ HomeChangelog.tsx   第 4 栏 更新日志（构建期读 git log，最多 5 条，有空状态）
+│  │  ├─ HomeChangelog.tsx   第 4 栏 更新日志（日期 + 主题 + 「新」标记，整行链到 GitHub 提交）
 │  │  ├─ HomeInventory.tsx   第 5 栏 站内内容（文章 / 专题 / 标签 / 题材 / 语言）
 │  │  ├─ HomeReading.tsx     第 6 栏 阅读改善（当场跑一遍 lib/typography.ts 的排版函数）
 │  │  ├─ HomeThemes.tsx      第 7 栏 外观切换（客户端；与设置中心同一套 API 与样式）
@@ -130,7 +130,7 @@
 │  ├─ markdown.ts            Markdown → HTML 管线（第 3 项）
 │  ├─ search-index.ts        搜索索引条目构建（第 5 项，Fuse.js 字段约定在这里）
 │  ├─ feeds.ts               RSS 2.0 生成（第 5 项）
-│  └─ changelog.ts           构建期读 git log 生成更新日志（第 5 项，无 git 时降级为空）
+│  └─ changelog.ts           更新日志（第 5 项：先 GitHub API、再 git log，都失败则空）
 ├─ types/
 │  └─ iconify.d.ts           icons-mdi 深路径导入兜底声明
 ├─ .github/workflows/deploy.yml
@@ -307,10 +307,18 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
   （全文要把每篇都渲染一遍，与「让人来站点读书」相反）；标签进 `<category>`；
   控制字符会被清掉（XML 1.0 不允许，留着会让阅读器整份订阅报错）。
   最多 `FEED_LIMIT = 30` 条，零文章时输出合法的空 channel。
-- **更新日志**（`lib/changelog.ts`）：`git log --no-merges --date=short`，字段用 ASCII 的
-  Unit Separator 分隔（正文里不可能出现，不会和 `|` 撞车）；结果按 `includeMerges` 缓存两份，
-  首页栏与 JSON 路由不会各跑一次 git。**拿不到 git 时返回空数组 + 一条 console.warn，绝不让构建失败**
-  （产物目录、tarball 解压、机器没装 git 都属于这种情况）。CI 里依旧需要 `fetch-depth: 0`。
+- **更新日志**（`lib/changelog.ts`）：两个来源，按顺序试 —— ① **GitHub REST API**
+  （`/repos/<owner>/<repo>/commits`，仓库地址取 `CONTACT.repo` 里的 `owner/repo`），
+  ② `git log --no-merges --date=short`（字段用 ASCII 的 Unit Separator 分隔，正文里不可能出现，
+  不会和 `|` 撞车）。**先 API 后 git** 的理由与参考项目（wunai-Blog 的
+  `scripts/generate-changelog.mjs`）一样：云构建常常是浅克隆，`git log` 在那种环境里只剩触发
+  构建的那一条提交；API 那边多要几条是为了过滤掉合并提交后仍然够数。每条还带 `url`
+  （GitHub 上的提交地址），首页那一栏因此整行可点。结果按 `includeMerges` 缓存**一个 Promise**，
+  首页栏与 JSON 路由不会各跑一次。**两个来源都失败时返回空数组 + 一条 console.warn，绝不让构建失败**
+  （产物目录、tarball 解压、机器没装 git、API 限流都属于这种情况）；`/changelog.json` 的
+  `source` 字段（`github` / `git` / `none`）说的就是这批记录来自哪里。CI 里依旧需要
+  `fetch-depth: 0`（作为兜底）。⚠️ 那一处 `fetch` 用的是 `cache: "force-cache"` 而**不是**
+  `no-store` —— 静态导出下 `no-store` 会把页面标记成动态渲染，构建直接失败。
 - **sitemap**：`/`、`/{zh,en}/` 与文章页；语言之间用 `alternates.languages` 配 hreflang
   （文章按 slug 跨语言配对，另给 `x-default`）。
   ⚠️ 文章 URL 依赖第 12 项的文章页 —— 落地前它们会 404，这条记进了第 12 项的待办。
@@ -633,8 +641,13 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 - **第 5 栏的「笔记」**：管线里目前只有文章这一种内容类型，所以「笔记数量」映射到
   **卡组（`_index.md` 定义的专题）**，并在栏内写明这件事。要真正的短笔记型内容，
   得在 `content/<lang>/` 下加一种目录类型（加载器加一处扫描），说一声就做。
-- **第 4 栏读的是 git 提交**（`git log`，最多 5 条、不含合并提交）：拿不到 git 时
-  `getChangelog()` 返回空数组并打一条警告 —— 这一栏有空状态，**绝不让构建失败**。
+- **第 4 栏读的是提交历史**（先 GitHub API、再 `git log`，最多 5 条、不含合并提交）：
+  两个来源都失败时 `getChangelog()` 返回空数组并打一条警告 —— 这一栏有空状态，
+  **绝不让构建失败**。这一栏的**样子与交互对齐参考项目首页**（wunai-Blog 的
+  `.ah-updates` / `.ah-update`）：一列「等宽日期 + 提交主题 + 最新那条一枚「新」标记」的行，
+  默认只有一圈透明描边，悬停时描边与底色浮出来，整行点开是这条提交在 GitHub 上的页面
+  （新标签页 + `rel="noopener noreferrer"`）；`CONTACT.repo` 没填时渲染成不可点的行，
+  不留点不动的空链接（本站在别处也是这条约定）。
 - **第 2 栏的卡片暂时不可点**：正文页是第 12 项。判断与 `RouteLink` 同一个约定，
   落点只有一个 —— `lib/site.ts` 新增的 `ARTICLE_ROUTE`（`status: "pending", item: 12`），
   第 12 项做完改一个字，首页与列表页的卡片一起变成真链接。卡片的排版是紧凑文字卡，
@@ -1730,9 +1743,11 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
   `html_handling = "auto-trailing-slash"` 是默认值，与 `next.config.ts` 的 `trailingSlash: true` 一致，写出来只为明确意图。
   依据：Cloudflare 文档《Workers → Static Assets → Routing → Static Site Generation (SSG) and custom 404 pages》。
 - 本地部署：`npm run deploy`（= `npx --yes wrangler deploy`）。
-- CI：`.github/workflows/deploy.yml`，push 到 `main` 触发；`fetch-depth: 0` 是必须的
-  （更新日志在 `next build` 期间读 `git log`，浅克隆会让记录不全 —— 拿不到 git 时构建不会失败，
-  但那份 `changelog.json` 会是空的）。
+- CI：`.github/workflows/deploy.yml`，push 到 `main` 触发；`fetch-depth: 0` 留着（**兜底**，
+  不是唯一来源）。更新日志在 `next build` 期间先试 GitHub API、再读 `git log`：
+  **Cloudflare 自己那套云构建是浅克隆**（日志里就一句 `Cloning repository...`），
+  只靠 `git log` 的话线上那份记录会缩成一条，所以参考项目当年也是优先走 API。
+  两个来源都失败时构建不会失败，但这一栏（与那份 `changelog.json`）会是空的。
   - 该 workflow 原来用 `npm ci` + `setup-node` 的 `cache: npm`，而仓库里**没有锁文件**，
     这两者都会直接失败（见第 4 节「顺带发现的第二个坑」）；本次一并改成
     `oven-sh/setup-bun@v2`（bun 1.2.15，与云构建同版本）+ `bun install`。
@@ -2098,3 +2113,4 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
 | 本次提交 | **首页改版 —— 一栏一屏**（站长的要求：一个栏目占一屏、去掉栏目卡片、吸附别乱）：`lib/home.ts` 的 `HOME_ROWS`（带 `pair` 的二维表）换成 `HOME_ORDER: HomeBlockId[]`（一维数组），页面直接按它渲染 8 个 `<section class="home-block">` —— 去掉 `.home-row` 包装、**去掉并排**、`<section>` 不再带 `panel`（没有边框 / 圆角 / 阴影 / 面板底色）。`.home-block` 自己就是吸附块（`min-height: calc(100svh - var(--home-head-room))` + `scroll-snap-align: start` + `scroll-snap-stop: always`），`html:has(.home-flow)` 的吸附从 `y proximity` 改成 **`y mandatory`**；`.home-flow` 去掉 `gap` 与上下内边距、顶部补一段 `--header-h` 的留白（顶栏吸顶会盖住文档最上面一截），窄屏那档 `min-height: auto` 删掉（手机上也一栏一屏）。`HOME_POST_LIMIT` 6 → 4（卡片多了会超过一屏）。`HomeIndex` / `page.tsx` / `lib/home.ts` 的注释与台账同步；打印仍把八栏摊成连续文档。台账：进度表第 9 项、目录树、第 9 项小节加改版指引与两处内联纠偏、新增「首页改版 —— 一栏一屏」一节、跨项待办里首页那条改成 `HOME_ORDER`、第 8 节新增 7 条验收清单。**同一提交内又修了一轮**（第一轮还是不够确定，会长说「混乱吸附」）：`.home-block` 从 `min-height` 改成**定高 `height: calc(100svh - var(--home-head-room))` + `overflow-y: auto`** —— 吸附区比视口高时滚动中途没有合法停靠点，一松手就被拽回去，这才是「吸附乱」的根；栏内滚动条不画。去掉 `scroll-snap-stop: always`（吸附点已经是整屏，留着只会把一次滑动锁成一栏）。补 `html:has(.home-flow) .site-footer { scroll-snap-align: end }`：文档末尾没有吸附点的话，mandatory 会把页脚吸回去、永远读不到。页面里每栏多一层 `<div class="home-block-body">`：居中挪进这一层 —— 在滚动区自身上写居中，溢出的那一头（栏头）会永远滚不到。`.home-flow` 顶部留白从 `--header-h` 改成 `--home-head-room`（与吸附让位同值，「第 N 栏 = 往上翻 N − 1 屏」才对每一栏成立）。`@media print` 与 `prefers-reduced-motion: reduce` 两处都放开定高与栏内滚动。台账同步：第 9 项那一节、第 8 节那 7 条验收按新做法改写、本行 |
 | 本次提交 | **文章页悬浮件补强 —— 目录开关 / 可拖进度 / 回顶进度环 / 粘性标题**（站长这轮要的是那几件悬浮件的手感）。新增 `components/article/ArticleStickyTitle.tsx`：零高（`height: 0`）的 `position: sticky` 容器贴在 `<article>` **里面**，大标题滚出视野后由 IntersectionObserver（判定线 `STICKY_TITLE_OFFSET`，与目录高亮那条同值 = 顶栏下沿）在吸顶顶栏下面挂一条同名标题，两端外扩 1.5rem 与正文列同宽、长标题省略号，对读屏 `aria-hidden` 且里面不放可点的东西。`ArticleToc` 的面板第一行改成开关（`aria-expanded` / `aria-controls`）：**默认状态交给 CSS**（`data-open` 不写 = 宽屏展开、窄屏收起），读者点过之后才写死 —— 于是**没有 JS 的宽屏读者照旧看得到目录**，而窄屏默认只剩左下角那个挂件（`bottom: 3.9rem`，叠在设置齿轮上面；左上角被顶栏、右下角是回顶按钮），点开是左下角弹出的浮层、点一条目录顺势收起；断点 `(min-width: 78rem)` 与 CSS 同值，落成 `lib/article.ts` 的 `TOC_WIDE_QUERY`（组件读它把 `aria-expanded` 说准）。`ArticleProgress` 的右边缘细线变成 `role="slider"`：命中区放宽到 0.9rem（触屏 0.7rem）、轨道铺满视口高度（所以「指针纵坐标 ÷ 视口高」就是百分比），拖动用 `setPointerCapture` 且**触屏先要移动 6px 才算拖动**（手机右边缘常被拿来滚页面，`touch-action: none` 保证那一下不会同时滚页面）、鼠标按一下轨道即跳（滚动条手感）、键盘 ↑/↓ 一步 / PageUp·PageDown 三步 / Home·End 两头，并为这个 div 补了它自己的 `:focus-visible` 焦点框；回顶按钮从 2.4rem 放到 2.6rem 并套上一圈 `stroke-dashoffset` 进度环（与右边那条线、百分比牌子读同一个 `progress`）。`lib/article.ts` 新增三个常量与三句文案（中英各一份），`lib/icons.ts` 补 `mdi:chevron-left`，`app/[lang]/posts/[...slug]/page.tsx` 挂上新组件。`app/globals.css` 的「6e. 文章页」新增粘性标题一节并重写目录 / 进度两节，层序落成 **粘性标题 17 < 目录 18 < 进度与回顶 19 < 顶栏 20**；打印时这四件一起不印。台账：目录树、进度表第 12 项、跨项待办里那条层序、新增「文章页悬浮件补强」一节与第 8 节 4 条验收、本行。⚠️ 本环境无 shell，以上都要等下一次构建（本机或 Cloudflare）才作数 |
 | 本次提交 | **友链页填上八个友链 + 头像（与 wunai-Blog 一致）**（站长的要求）：`lib/site.ts` 的 `LINKS` 从空数组变成**八个**（哈康 / 摩尔 / 阿卡迪亚 / 并非懒得喷 / subear / GTMC / 戈登 / Ryan100c）—— 名字、地址、头像、一句话介绍逐条对着 wunai-Blog 的 `my-app/lib/links.ts` 抄，连「谁的简介取自哪里」的注释也一并带过来；数据形状从 `{ name, url, note? }` 扩成 `FriendLink { name, url, avatar?, note?: { zh, en } }`（新增 `FriendLink` 接口与两个纯函数：`friendNote()` 取当前语言、缺则退回中文，`friendHost()` 去掉协议与末尾斜杠，做介绍缺失时的回退文案）。`app/[lang]/links/page.tsx` 的卡片改成与 wunai-Blog 的友链页同构：**整张卡片可点**，左头像（原生 `<img>` + `loading="lazy"` + `decoding="async"` + `referrerPolicy="no-referrer"`，不走 `next/image` —— 静态导出不优化图片、`remotePatterns` 也管不到任意域名；没填头像时按名称首字画占位方块，不留碎图）、右名字 + 介绍 + **仍然印出来的地址**（本站自己的取舍，参考稿没有这一行，留着是为了点不动时能复制）。`app/globals.css` 的友链一节重写（`.links-card` / `.links-avatar` / `.links-avatar-fallback` / `.links-body`，颜色一律令牌，不写 dark: 变体），打印清单补上 `.links-item { break-inside: avoid }`。`lib/pages.ts` 的 `links.lead` 与 `emptyHint`（中英各一份）改成新形状。README / 台账同步：README 的「需要你亲自填的地方」那行、目录树、进度表下第 13 项小节里的友链页一段、第 8 节验收第 7 条、约定第 2 条、本行。⚠️ 头像是**外链**（八个里六个走 GitHub 头像，subear 与 GTMC 用对方站点自己的图 / favicon，与参考稿一致）—— 这是全站唯一一处会主动向第三方取图的地方，也是 README 第 1 节「只读文字」那条取舍的例外（已写进这一页的文件头注释）；**本环境无 shell、也跑不了浏览器**，八张图能不能加载出来要等下一次构建（本机或 Cloudflare）在联网环境里看 |
+| 本次提交 | **首页更新日志做成 wunai-Blog 的样子**（站长的要求）。样式与交互照参考项目首页 `.ah-updates` / `.ah-update` 那一块搬过来：一列「等宽日期 + 提交主题 + 最新那条一枚「新」标记」的行，默认只有一圈透明描边、悬停时描边与底色浮出来，**整行点开是这条提交在 GitHub 上的页面**（新标签页 + `rel="noopener noreferrer"`），`title` 挂完整哈希。`components/home/HomeChangelog.tsx` 重写（新增 `.home-updates` / `.home-update` / `-date` / `-title` / `-tag` 五个类，`app/globals.css` 的「6c. 首页」一节新增这一组，颜色全走令牌；`.home-item-date` / `.home-item-hash` 两条只服务旧版更新日志的规则删掉，第 6 栏用的 `.home-list` / `.home-item` 原样保留）；`HOME_TEXT.changelog` 新增 `newTag`（中英各一份）并把 `note` / `empty` 改写成「先 API 后 git」的口径。**同一提交里把数据来源也换成了参考项目那套**：`lib/changelog.ts` 现在先试 **GitHub REST API**（`CONTACT.repo` 里抠 `owner/repo`，`per_page` 多要几条以过滤合并提交）再退回 `git log`，两条都失败才返回空数组 —— 理由是 Cloudflare 自己那套云构建是**浅克隆**（构建日志里只有一句 `Cloning repository...`），只靠 `git log` 线上那一栏会缩成孤零零一条，参考项目的 `scripts/generate-changelog.mjs` 当年就是为此改的；同时每条记录多带一个 `url`（GitHub 上的提交地址），首页那一栏才点得动。函数改成异步（`getChangelog()` / `loadChangelog()` 返回 Promise，`app/[lang]/page.tsx` 与 `app/changelog.json/route.ts` 同步改），`/changelog.json` 多一个 `source` 字段（`github` / `git` / `none`）方便排查「为什么只有一条」。⚠️ 那一处 `fetch` 必须用 `cache: "force-cache"`，**不能** `no-store` —— 静态导出下 `no-store` 会把页面标记成动态渲染、构建当场失败（已写进代码注释）。文档同步：README 与 workflow 的 `fetch-depth: 0` 注解改成「兜底」、台账第 5 项的更新日志一段与第 9 项第 4 栏一段、目录树两行。**本环境无 shell**，`next build` 与 GitHub API 那一跳都要等下一次构建才作数 |

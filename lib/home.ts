@@ -111,7 +111,13 @@ export interface HomeText {
       drafts: string;
     };
   };
-  changelog: { note: string; empty: string; limit: (n: number) => string };
+  changelog: {
+    note: string;
+    empty: string;
+    limit: (n: number) => string;
+    /** 最新那条提交旁的标记（参考项目首页那枚「NEW」） */
+    newTag: string;
+  };
   inventory: {
     labels: { posts: string; groups: string; tags: string; categories: string; langs: string };
     note: string;
@@ -168,9 +174,10 @@ const ZH: HomeText = {
     },
   },
   changelog: {
-    note: "构建期读一次 git 提交历史（不含合并提交），也是「这个站还在长」的证据。",
-    empty: "读不到 git 历史（构建环境里没有 .git 时会这样）—— 这一栏留空，不影响其它内容。",
+    note: "构建期取一次：先试 GitHub API，读不到再退回本机 git 历史（不含合并提交）。每一行点开是这条提交在 GitHub 上的页面 —— 也是「这个站还在长」的证据。",
+    empty: "两个来源都拿不到（构建环境里没有 .git，GitHub API 也不通）—— 这一栏留空，不影响其它内容。",
     limit: (n) => `最近 ${n} 条`,
+    newTag: "新",
   },
   inventory: {
     labels: {
@@ -253,9 +260,10 @@ const EN: HomeText = {
     },
   },
   changelog: {
-    note: "Read once at build time from git log (merges excluded) — also evidence that the site is still growing.",
-    empty: "No git history available (that happens when the build has no .git) — this block stays empty and nothing else is affected.",
+    note: "Fetched once at build time: the GitHub API first, then the local git history (merges excluded). Each row opens that commit on GitHub — also evidence that the site is still growing.",
+    empty: "Neither source worked (no .git in the build, and the GitHub API unreachable) — this block stays empty and nothing else is affected.",
     limit: (n) => `Latest ${n}`,
+    newTag: "New",
   },
   inventory: {
     labels: {

@@ -19,7 +19,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # 首页「更新日志」栏在 next build 期间读 git log，浅克隆会让记录不全
+          # 首页「更新日志」栏在 next build 期间先试 GitHub API、读不到才退回 git log；
+          # 这一行是兜底（浅克隆会让 git 那边只剩触发构建的一条）。
           fetch-depth: 0
 
       # 用 bun 而不是 npm ci：仓库里目前**没有锁文件**，npm ci 与 setup-node 的 cache: npm

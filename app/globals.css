@@ -1444,7 +1444,7 @@
     color: var(--c-ink-subtle);
   }
 
-  /* 清单（第 4 栏更新日志 / 第 6 栏两条清单共用） */
+  /* 清单（第 6 栏那两条清单用；第 4 栏更新日志改成下面 .home-updates 那一组） */
   .home-list {
     display: flex;
     flex-direction: column;
@@ -1466,16 +1466,64 @@
     flex: 1 1 auto;
   }
 
-  .home-item-date,
-  .home-item-hash {
-    flex: none;
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: var(--c-ink-subtle);
+  /* 第 4 栏的更新日志：一列「日期 + 提交主题 + 最新那条带一枚标记」的行，
+     样式与交互对齐参考项目首页（wunai-Blog 的 .ah-updates / .ah-update）：
+     整行是一张可点的浅色条，默认只有透明描边，悬停时描边与底色浮出来。
+     颜色一律走令牌（约定第 7 条），所以三套外观都跟着变。 */
+  .home-updates {
+    display: grid;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
 
-  .home-item-hash {
-    color: var(--c-accent);
+  .home-update {
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid transparent;
+    border-radius: var(--shape-radius-lg);
+    color: inherit;
+    font-size: 0.86rem;
+    text-decoration: none;
+    transition:
+      background-color 0.22s ease-out,
+      border-color 0.22s ease-out;
+  }
+
+  /* 只有能点的那几行有悬停反馈（CONTACT.repo 没填时是 span，点了也没反应） */
+  a.home-update:hover {
+    border-color: var(--c-rule);
+    background-color: var(--c-surface);
+  }
+
+  .home-update-date {
+    flex: 0 0 auto;
+    color: var(--c-ink-subtle);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .home-update-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* 最新那条的标记：形状与配色都跟着当前外观走（不是写死的红点） */
+  .home-update-tag {
+    flex: 0 0 auto;
+    padding: 0 0.5em;
+    border-radius: 999px;
+    background-color: var(--c-accent);
+    color: var(--c-accent-ink);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
   }
 
   /* 优化前 / 优化后（第 6 栏） */

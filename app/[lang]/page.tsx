@@ -42,7 +42,8 @@ export const metadata: Metadata = { title: SITE.title };
  *
  * 数据全部在构建期取（静态导出：这一页的 HTML 里就有内容，运行时不发请求）：
  *   - 内容统计与文章列表走第 2 项的 lib/content.ts；
- *   - 更新日志走第 5 项的 lib/changelog.ts（读 git log，拿不到就空着，不让构建失败）；
+ *   - 更新日志走第 5 项的 lib/changelog.ts（先 GitHub API、再本机 git log；
+ *     拿不到就空着，不让构建失败）；
  *   - 排版优化的「优化前 / 优化后」走第 4 项的 lib/typography.ts（在那一栏里现算）。
  *
  * 吸附与侧边指示器的样式在 app/globals.css 的「6c. 首页」一节，
@@ -56,7 +57,7 @@ export default async function LangHome({ params }: { params: Promise<{ lang: str
 
   const stats = getContentStats(lang);
   const posts = getHomePosts(lang).slice(0, HOME_POST_LIMIT);
-  const changelog = getChangelog(HOME_CHANGELOG_LIMIT);
+  const changelog = await getChangelog(HOME_CHANGELOG_LIMIT);
 
   /** 八栏的内容。缺一栏 TypeScript 会报错（Record 是穷尽的），不会静默少一栏 */
   const blocks: Record<HomeBlockId, ReactNode> = {

@@ -6,12 +6,19 @@ import type { Lang } from "@/lib/site";
 /**
  * 第 4 栏：更新日志（第 9 项）
  *
- * 作者要的「五条更新日志」。数据是 lib/changelog.ts 在**构建期**读一次的 git 提交
- * （最多 5 条，不含合并提交；条数由 app/[lang]/page.tsx 的 HOME_CHANGELOG_LIMIT 决定）。
- * 拿不到 git 时它返回空数组并打一条警告，**不会让构建失败** —— 所以这一栏有明确的空状态。
+ * 一列「日期 + 提交主题 + 最新那条带一个标记」的行，样式与交互对齐参考项目
+ * （wunai-Blog 首页 `.ah-updates` 那一块）：整行是一张可点的浅色条，
+ * 悬停时描边 + 底色浮出来，点开是这条提交在 GitHub 上的页面（新标签页）。
  *
- * 显示的是提交主题（subject），也就是作者自己写的提交信息；短哈希只作为「这条对应哪次提交」
- * 的线索，不做链接（仓库地址可能还没填，CONTACT.repo 现在是空的）。
+ * 数据是 lib/changelog.ts 在**构建期**取一次（先 GitHub API、再 `git log`；
+ * 最多 5 条，不含合并提交；条数由 app/[lang]/page.tsx 的 HOME_CHANGELOG_LIMIT 决定）。
+ * 两个来源都拿不到时它返回空数组并打一条警告，**不会让构建失败** —— 所以这一栏有明确的空状态。
+ *
+ * 两条与参考项目一致的判断：
+ *   1. `entry.url` 为空（`CONTACT.repo` 没填、或只读到了本地 git）时**渲染成不可点的行**，
+ *      而不是一个点不动的空链接 —— 本站的约定：没有去处就不留链接；
+ *   2. 只有第一条（最新那条）带标记 —— 它是「这次部署带来了什么新东西」的提示，
+ *      不是每条都有的装饰。
  */
 export default function HomeChangelog({
   lang,
@@ -28,14 +35,36 @@ export default function HomeChangelog({
       {entries.length > 0 ? (
         <>
           <p className="home-note">{t.limit(entries.length)}</p>
-          <ul className="home-list">
-            {entries.map((entry) => (
-              <li className="home-item" key={entry.hash}>
-                <span className="home-item-date">{entry.date}</span>
-                <span className="home-item-text">{entry.subject}</span>
-                <span className="home-item-hash">{entry.short}</span>
-              </li>
-            ))}
+          <ul className="home-updates">
+            {entries.map((entry, index) => {
+              /* 整个卡片是内容 + 只有最新那条有标记，两者都在这里组装 */
+              const body = (
+                <>
+                  <span className="home-update-date">{entry.date || entry.short}</span>
+                  <span className="home-update-title">{entry.subject}</span>
+                  {index === 0 ? <span className="home-update-tag">{t.newTag}</span> : null}
+                </>
+              );
+              return (
+                <li key={entry.hash}>
+                  {entry.url === "" ? (
+                    <span className="home-update" data-plain="true">
+                      {body}
+                    </span>
+                  ) : (
+                    <a
+                      className="home-update"
+                      href={entry.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={entry.hash}
+                    >
+                      {body}
+                    </a>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </>
       ) : (

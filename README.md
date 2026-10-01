@@ -109,7 +109,8 @@ html_handling = "auto-trailing-slash"    # 与 next.config.ts 的 trailingSlash 
   Workers Builds 自动生成的 token 里本来就有 `Workers Scripts: Edit`。
 - **GitHub Actions**（`.github/workflows/deploy.yml`）：push 到 `main` 触发，用
   `cloudflare/wrangler-action@v3`；需要在仓库 Secrets 里配 `CLOUDFLARE_API_TOKEN` 与
-  `CLOUDFLARE_ACCOUNT_ID`。`fetch-depth: 0` 是必要的 —— 更新日志在构建期读 `git log`。
+  `CLOUDFLARE_ACCOUNT_ID`。`fetch-depth: 0` 留着做兜底 —— 首页「更新日志」在构建期先试
+  GitHub API、读不到才退回 `git log`，所以浅克隆也不会让那一栏缩成一条。)
 - 想绑自定义域名：Workers & Pages → 该 Worker → Settings → Domains & Routes。
 - **改部署目标之前先看 [PROJECTS.md](./PROJECTS.md) 第 7 节**：从 Pages 换到 Workers 是因为
   Pages 部署需要额外权限，不是偏好问题，那一段有完整的原因与备选路径。
