@@ -2309,7 +2309,7 @@
     color: var(--c-danger);
   }
 
-  /* ---------- 友链（第 13 项） ---------- */
+  /* ---------- 友链（第 13 项；卡片与 wunai-Blog 的友链页一致：左头像、右名字 + 一句话） ---------- */
 
   .links-list {
     display: grid;
@@ -2327,28 +2327,69 @@
 
   .links-item {
     display: flex;
+  }
+
+  /* 整张卡片可点：比「只有名字那一行可点」好按，手机上尤其明显 */
+  .links-card {
+    flex: 1 1 auto;
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+    padding: 0.8rem 0.95rem;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .links-card:hover {
+    border-color: var(--c-rule-strong);
+  }
+
+  .links-card:hover .links-name {
+    color: var(--c-accent);
+    text-decoration: underline;
+  }
+
+  /* 头像：40px 方图（源图按 96px 取，够两倍屏）。外链可能来自 GitHub，也可能来自
+     对方站点；取不到时浏览器只留一格空白，卡片其余内容照旧 */
+  .links-avatar {
+    flex: 0 0 auto;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--c-rule);
+    border-radius: var(--shape-radius);
+    background-color: var(--c-surface);
+    object-fit: cover;
+  }
+
+  /* 没填头像时按名称首字占位（不要出现碎图） */
+  .links-avatar-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--c-ink-subtle);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .links-body {
+    display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: 0.15rem;
+    /* 长域名 / 长介绍要能换行，别把卡片撑破 */
+    min-width: 0;
   }
 
   .links-name {
     color: var(--c-ink);
     font-size: 0.98rem;
     font-weight: 600;
-    text-decoration: none;
     overflow-wrap: anywhere;
   }
 
-  .links-name:hover {
-    color: var(--c-accent);
-    text-decoration: underline;
-  }
-
   .links-note {
-    margin: 0;
     color: var(--c-ink-muted);
-    font-size: 0.82rem;
-    line-height: 1.7;
+    font-size: 0.8rem;
+    line-height: 1.6;
   }
 
   /* 地址印出来：点不动的时候读者能自己复制（纯文字站的取舍：能读优先） */
@@ -3335,7 +3376,8 @@
      文章本身的链接照印。 */
   .archive-month,
   .archive-item,
-  .facet-item {
+  .facet-item,
+  .links-item {
     break-inside: avoid;
   }
 

@@ -60,7 +60,7 @@
 │     ├─ archives/page.tsx   归档页（第 13 项：年 → 月 → 文章的时间线）
 │     ├─ search/page.tsx     搜索页（第 13 项：复用列表页组件 + 自动聚焦搜索框）
 │     ├─ about/page.tsx      关于页（第 13 项：渲染 frontmatter 里 about: true 的那篇文章）
-│     ├─ links/page.tsx      友链页（第 13 项：读 lib/site.ts 的 LINKS，空则显示「编辑此处」）
+│     ├─ links/page.tsx      友链页（第 13 项：读 lib/site.ts 的 LINKS —— 八个，卡片带头像）
 │     └─ settings/page.tsx   设置页（第 13 项：直接复用 components/SettingsCenter）
 ├─ components/
 │  ├─ ArticleBody.tsx        正文容器：注入 HTML 并按需动态加载五类图表
@@ -814,7 +814,7 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 | 归档 | 页面本体（时间线的渲染） | `getArchive`（第 2 项）、`LIST_TEXT.card` 的置顶 / AI / 草稿小字 |
 | 搜索 | 薄壳（metadata + 文案） | **列表页那个组件**（`PostList`）整份复用，只多传 `autoFocusSearch` |
 | 关于 | 页面本体 | frontmatter 里 `about: true` 的文章 + 第 3 项的渲染管线 + `ArticleBody` |
-| 友链 | 页面本体 | `lib/site.ts` 新增的 `LINKS`（空数组 → 「编辑此处」） |
+| 友链 | 页面本体 | `lib/site.ts` 的 `LINKS`（**八个，已填**；空数组则显示「编辑此处」） |
 | 设置 | 薄壳（metadata） | **`components/SettingsCenter`** 整份复用（第 7 项就留好的口子） |
 
 - **标签 / 分类页**：一次列全、带篇数，字号分四档（`lib/pages.ts` 的 `facetWeight(count, max)`，
@@ -834,8 +834,12 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
   `typography` 也照第 12 项那样接上了；参考文献列表与 `updated` 那行小字沿用文章页的类。
   与文章页**刻意的差别**：没有悬浮目录、进度条、回顶与评论区 —— 它是一页说明，不是一篇长文。
   没有这样的文章时是空状态 + 怎么写（约定第 2 条）。
-- **友链页**：数据只有 `lib/site.ts` 的 `LINKS` 一处（现在空 → 显示「编辑此处」与填法，
-  不渲染空清单）。外链一律 `target="_blank"` + `rel="noopener noreferrer"`，
+- **友链页**：数据只有 `lib/site.ts` 的 `LINKS` 一处（**八个，已填** —— 与 wunai-Blog 的
+  `my-app/lib/links.ts` 同一份名单；空数组时显示「编辑此处」与填法，不渲染空清单）。
+  卡片与 wunai-Blog 的友链页一致：左头像、右名字 + 一句话介绍，整张卡片可点；
+  头像**外链直引**（原生 `<img>` + `loading="lazy"` + `referrerPolicy="no-referrer"`，
+  没填头像时按名称首字画占位方块），介绍取当前语言、缺则退回中文，都没有时回退显示域名。
+  外链一律 `target="_blank"` + `rel="noopener noreferrer"`，
   并且**把地址印出来** —— 点不动的时候（离线 / 对方改域名）读者还能自己复制。
 - **设置页**：直接放第 7 项的 `SettingsCenter`（它当时就写明了「只负责内容、不管容器」）。
   于是**同一份设置界面现在有四处在用**：顶栏外观按钮、首页第 7/8 栏、左下角抽屉、这一页。
@@ -858,7 +862,8 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
   （第 10 项已经把它们放进 `sw.js` 的外壳），并写明「打开过的文章地址断网时通常也打得开」。
   `sw.js` 的 `CACHE_VERSION` **没动**（外壳清单没变，只是页面里多列了两条已有的缓存项）。
 - ⚠️ 未在本机跑过浏览器（见第 8 节）：标签云的字号档与长标签换行、归档在窄屏的两行排布、
-  搜索页抢焦点的时机（手机上会不会弹键盘）、友链空状态的说明是否够清楚。
+  搜索页抢焦点的时机（手机上会不会弹键盘）、友链那八张头像能不能加载出来（要联网，
+  本环境跑不了浏览器 —— 头像是外链，取不到时只留一格空白，卡片其余内容照旧）。
 
 ### 14. 交付 —— 已完成 ✅（只差锁文件）
 
@@ -1613,7 +1618,8 @@ curl -s -H "Authorization: Bearer $TOKEN" \
    演示段落、头像与 favicon 资源位、**顶栏图片位**（`lib/site.ts` 的 `HEADER_IMAGE`，
    留空时那一格是虚线空位 + 一行小字，填了图就换成图，尺寸不变）；**第 13 项之后「关于」与「友链」
    不再写「编辑此处」在页面里** ——
-   它们的来源分别是「一篇 `about: true` 的文章」与 `lib/site.ts` 的 `LINKS`（空的时候才显示说明）。
+   它们的来源分别是「一篇 `about: true` 的文章」与 `lib/site.ts` 的 `LINKS`
+   （**八个已填**；空的时候才显示说明）。
 3. **UI 文案不算文章**，由 `lib/site.ts` 的 i18n 表统一维护（中英各一份，缺一边会出现 `undefined`）。
 4. 零文章、零配置时站点必须仍能构建与浏览，所有页面要有空状态。
    注意静态导出的一条硬规则：**动态路由至少要生成一条路径**（`generateStaticParams()`
@@ -1903,8 +1909,9 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
      `/search-index.json` 与 fuse.js；搜出来的结果与列表页里的筛选可以叠加。
   6. **关于页**：还没有 `about: true` 的文章时应当显示「编辑此处」那段说明；
      加一篇 about 文章后应当显示它的正文（公式 / 图表 / 参考文献都走同一套管线）。
-  7. **友链页**：现在是空状态；把 `lib/site.ts` 的 `LINKS` 填两行再构建，
-     应当出现两栏卡片，外链在新标签页打开且地址印在下面。
+  7. **友链页**：八个卡片应当显示各位的头像（外链，要联网）、名字、一句话介绍与印出来的地址，
+     外链在新标签页打开；把 `lib/site.ts` 的 `LINKS` 清空再构建，应当回到空状态。
+     逐个点开头像地址，确认对方没有换图 / 改域名。
   8. **设置页**（`/zh/settings/`）：里面的选项应当与左下角抽屉**完全同步** ——
      在这一页改外观，顶栏按钮与首页第 7/8 栏应当立刻跟着变（反之亦然）。
   9. **离线页**（`npm run preview` 后断网）：清单里应当看到两个语言的首页与列表页；
@@ -2090,3 +2097,4 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
 | 本次提交 | **卡组页 + 非 ASCII slug 的构建期拦截 + 工具栏默认收起**（站长报「新文章打不开」「明明是卡组却只显示一篇文章」「筛选菜单别摊开」）。根因两条，都有线上证据：① `content/zh/posts/notes/笔记.md` 没写 `slug`，slug 被推成中文 `notes/笔记`，浏览器把 href 编码成 `%E7%AC%94%E8%AE%B0` 而静态产物是中文目录名，Cloudflare 一解码就命不中 → 「卡片在、点进去 404」；② 卡组分块显示的改动当时只在工作区、没提交，线上是平铺的一列卡片。修法：内容侧补 `slug = "note-1"`（地址变成 `/zh/posts/note-1/`），代码侧 `lib/content.ts` 新增 `assertUrlSafeSlug()`（非 ASCII 的 slug 让**构建当场失败**并给出「改文件名 / 补 slug」两种改法，别让作者去线上猜）；新增**卡组页** `/<lang>/posts/<group>/`（`app/[lang]/posts/[...slug]/page.tsx` 的 `CardGroupPage`，与文章页共用 catch-all、顺序「先文章后卡组」，于是 `notes/index.md` 那种目录首页写法不会撞车），路由表由 `lib/content.ts` 的 `getCardGroupRoutes()` 一次推出、`app/sitemap.ts` 与 `generateStaticParams` 共用，列表页组头用 `lib/list.ts` 新增的 `groupHref()` 链过去；列表页工具栏改成**默认收起且不再因筛选自动展开**（只有 `/search/` 挂载后展开），组头可点、卡组封面固定 13rem 居中裁切。文档：`content/README.md` 第 1 / 5 节写明卡组页与「谁更具体谁优先」，台账新增「卡组页 + 新文章 404 的根因」一节与 5 条验收。⚠️ 本环境无 shell，以上都要等下一次构建（本机或 Cloudflare）才作数 |
 | 本次提交 | **首页改版 —— 一栏一屏**（站长的要求：一个栏目占一屏、去掉栏目卡片、吸附别乱）：`lib/home.ts` 的 `HOME_ROWS`（带 `pair` 的二维表）换成 `HOME_ORDER: HomeBlockId[]`（一维数组），页面直接按它渲染 8 个 `<section class="home-block">` —— 去掉 `.home-row` 包装、**去掉并排**、`<section>` 不再带 `panel`（没有边框 / 圆角 / 阴影 / 面板底色）。`.home-block` 自己就是吸附块（`min-height: calc(100svh - var(--home-head-room))` + `scroll-snap-align: start` + `scroll-snap-stop: always`），`html:has(.home-flow)` 的吸附从 `y proximity` 改成 **`y mandatory`**；`.home-flow` 去掉 `gap` 与上下内边距、顶部补一段 `--header-h` 的留白（顶栏吸顶会盖住文档最上面一截），窄屏那档 `min-height: auto` 删掉（手机上也一栏一屏）。`HOME_POST_LIMIT` 6 → 4（卡片多了会超过一屏）。`HomeIndex` / `page.tsx` / `lib/home.ts` 的注释与台账同步；打印仍把八栏摊成连续文档。台账：进度表第 9 项、目录树、第 9 项小节加改版指引与两处内联纠偏、新增「首页改版 —— 一栏一屏」一节、跨项待办里首页那条改成 `HOME_ORDER`、第 8 节新增 7 条验收清单。**同一提交内又修了一轮**（第一轮还是不够确定，会长说「混乱吸附」）：`.home-block` 从 `min-height` 改成**定高 `height: calc(100svh - var(--home-head-room))` + `overflow-y: auto`** —— 吸附区比视口高时滚动中途没有合法停靠点，一松手就被拽回去，这才是「吸附乱」的根；栏内滚动条不画。去掉 `scroll-snap-stop: always`（吸附点已经是整屏，留着只会把一次滑动锁成一栏）。补 `html:has(.home-flow) .site-footer { scroll-snap-align: end }`：文档末尾没有吸附点的话，mandatory 会把页脚吸回去、永远读不到。页面里每栏多一层 `<div class="home-block-body">`：居中挪进这一层 —— 在滚动区自身上写居中，溢出的那一头（栏头）会永远滚不到。`.home-flow` 顶部留白从 `--header-h` 改成 `--home-head-room`（与吸附让位同值，「第 N 栏 = 往上翻 N − 1 屏」才对每一栏成立）。`@media print` 与 `prefers-reduced-motion: reduce` 两处都放开定高与栏内滚动。台账同步：第 9 项那一节、第 8 节那 7 条验收按新做法改写、本行 |
 | 本次提交 | **文章页悬浮件补强 —— 目录开关 / 可拖进度 / 回顶进度环 / 粘性标题**（站长这轮要的是那几件悬浮件的手感）。新增 `components/article/ArticleStickyTitle.tsx`：零高（`height: 0`）的 `position: sticky` 容器贴在 `<article>` **里面**，大标题滚出视野后由 IntersectionObserver（判定线 `STICKY_TITLE_OFFSET`，与目录高亮那条同值 = 顶栏下沿）在吸顶顶栏下面挂一条同名标题，两端外扩 1.5rem 与正文列同宽、长标题省略号，对读屏 `aria-hidden` 且里面不放可点的东西。`ArticleToc` 的面板第一行改成开关（`aria-expanded` / `aria-controls`）：**默认状态交给 CSS**（`data-open` 不写 = 宽屏展开、窄屏收起），读者点过之后才写死 —— 于是**没有 JS 的宽屏读者照旧看得到目录**，而窄屏默认只剩左下角那个挂件（`bottom: 3.9rem`，叠在设置齿轮上面；左上角被顶栏、右下角是回顶按钮），点开是左下角弹出的浮层、点一条目录顺势收起；断点 `(min-width: 78rem)` 与 CSS 同值，落成 `lib/article.ts` 的 `TOC_WIDE_QUERY`（组件读它把 `aria-expanded` 说准）。`ArticleProgress` 的右边缘细线变成 `role="slider"`：命中区放宽到 0.9rem（触屏 0.7rem）、轨道铺满视口高度（所以「指针纵坐标 ÷ 视口高」就是百分比），拖动用 `setPointerCapture` 且**触屏先要移动 6px 才算拖动**（手机右边缘常被拿来滚页面，`touch-action: none` 保证那一下不会同时滚页面）、鼠标按一下轨道即跳（滚动条手感）、键盘 ↑/↓ 一步 / PageUp·PageDown 三步 / Home·End 两头，并为这个 div 补了它自己的 `:focus-visible` 焦点框；回顶按钮从 2.4rem 放到 2.6rem 并套上一圈 `stroke-dashoffset` 进度环（与右边那条线、百分比牌子读同一个 `progress`）。`lib/article.ts` 新增三个常量与三句文案（中英各一份），`lib/icons.ts` 补 `mdi:chevron-left`，`app/[lang]/posts/[...slug]/page.tsx` 挂上新组件。`app/globals.css` 的「6e. 文章页」新增粘性标题一节并重写目录 / 进度两节，层序落成 **粘性标题 17 < 目录 18 < 进度与回顶 19 < 顶栏 20**；打印时这四件一起不印。台账：目录树、进度表第 12 项、跨项待办里那条层序、新增「文章页悬浮件补强」一节与第 8 节 4 条验收、本行。⚠️ 本环境无 shell，以上都要等下一次构建（本机或 Cloudflare）才作数 |
+| 本次提交 | **友链页填上八个友链 + 头像（与 wunai-Blog 一致）**（站长的要求）：`lib/site.ts` 的 `LINKS` 从空数组变成**八个**（哈康 / 摩尔 / 阿卡迪亚 / 并非懒得喷 / subear / GTMC / 戈登 / Ryan100c）—— 名字、地址、头像、一句话介绍逐条对着 wunai-Blog 的 `my-app/lib/links.ts` 抄，连「谁的简介取自哪里」的注释也一并带过来；数据形状从 `{ name, url, note? }` 扩成 `FriendLink { name, url, avatar?, note?: { zh, en } }`（新增 `FriendLink` 接口与两个纯函数：`friendNote()` 取当前语言、缺则退回中文，`friendHost()` 去掉协议与末尾斜杠，做介绍缺失时的回退文案）。`app/[lang]/links/page.tsx` 的卡片改成与 wunai-Blog 的友链页同构：**整张卡片可点**，左头像（原生 `<img>` + `loading="lazy"` + `decoding="async"` + `referrerPolicy="no-referrer"`，不走 `next/image` —— 静态导出不优化图片、`remotePatterns` 也管不到任意域名；没填头像时按名称首字画占位方块，不留碎图）、右名字 + 介绍 + **仍然印出来的地址**（本站自己的取舍，参考稿没有这一行，留着是为了点不动时能复制）。`app/globals.css` 的友链一节重写（`.links-card` / `.links-avatar` / `.links-avatar-fallback` / `.links-body`，颜色一律令牌，不写 dark: 变体），打印清单补上 `.links-item { break-inside: avoid }`。`lib/pages.ts` 的 `links.lead` 与 `emptyHint`（中英各一份）改成新形状。README / 台账同步：README 的「需要你亲自填的地方」那行、目录树、进度表下第 13 项小节里的友链页一段、第 8 节验收第 7 条、约定第 2 条、本行。⚠️ 头像是**外链**（八个里六个走 GitHub 头像，subear 与 GTMC 用对方站点自己的图 / favicon，与参考稿一致）—— 这是全站唯一一处会主动向第三方取图的地方，也是 README 第 1 节「只读文字」那条取舍的例外（已写进这一页的文件头注释）；**本环境无 shell、也跑不了浏览器**，八张图能不能加载出来要等下一次构建（本机或 Cloudflare）在联网环境里看 |

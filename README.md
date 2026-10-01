@@ -147,7 +147,7 @@ public/                     sw.js、favicon.svg
 | `lib/site.ts` 的 `SITE.description` | 站点描述（SEO 与 RSS 用） |
 | `lib/site.ts` 的 `CONTACT` | 邮箱 / GitHub / 本站源码地址（**留空则页脚显示「编辑此处」且不可点**） |
 | `lib/site.ts` 的 `COMMENTS` | giscus 的 repo / repoId / category / categoryId（**留空则文章页显示「编辑此处」**，不加载任何第三方脚本） |
-| `lib/site.ts` 的 `LINKS` | 友链（空数组时 `/links/` 只显示说明） |
+| `lib/site.ts` 的 `LINKS` | 友链（**已填八个**，与 wunai-Blog 的 `lib/links.ts` 同一份名单；头像与一句话介绍取自各位自己的主页，`avatar` 留空则回退成名称首字） |
 | `lib/site.ts` 的 `HEADER_IMAGE` | 顶栏右上角那张图（**留空时是一格虚线空位，写着「图片位 · 编辑此处」**；尺寸与有图时一样，补图不会让顶栏跳一下） |
 | `lib/home.ts` 的 `intro.body`、`themes.demo`、`fonts.sample` | 首页第 1 / 7 / 8 栏的示范文字 |
 | `content/zh/posts/` 与 `content/en/posts/` | 文章本体（这里没有测试文章，一条都没有） |

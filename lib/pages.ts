@@ -171,10 +171,10 @@ const ZH: PagesText = {
   links: {
     kicker: "站点地图",
     title: "友链",
-    lead: "这里放你常读的站点。地址写在 lib/site.ts 的 LINKS 里（现在还是空的）。",
+    lead: "这里放我常读的八个站点。头像与一句话介绍取自各位自己的主页（与 wunai-Blog 的友链页是同一份名单）。",
     empty: "编辑此处：友链还没有填。",
     emptyHint:
-      "打开 lib/site.ts，把 LINKS 填成 [{ name: \"某某的博客\", url: \"https://example.com\", note: \"一句话\" }]，这一页就会列出它们；留空则只显示这段说明。",
+      "打开 lib/site.ts，把 LINKS 填成 [{ name: \"某某的博客\", url: \"https://example.com\", avatar: \"https://…\", note: { zh: \"一句话\", en: \"one line\" } }]，这一页就会列出它们（avatar 与 note 都可以不写：前者回退成名称首字，后者回退显示域名）；留空则只显示这段说明。",
     note: "友情链接是双向的：加别人之前，先确认对方也链了你 —— 这句话只是提醒，代码不管这件事。",
   },
   settings: {
@@ -239,10 +239,10 @@ const EN: PagesText = {
   links: {
     kicker: "Site map",
     title: "Links",
-    lead: "Sites worth reading. The list lives in LINKS in lib/site.ts (empty for now).",
+    lead: "The sites I read: eight of them, each with the avatar and one-line note taken from their own page (the same list as wunai-Blog's links page).",
     empty: "Edit here: the links are not filled in yet.",
     emptyHint:
-      "Open lib/site.ts and set LINKS to [{ name: \"Someone's blog\", url: \"https://example.com\", note: \"one line\" }]; this page lists them. Leaving it empty keeps this note.",
+      "Open lib/site.ts and set LINKS to [{ name: \"Someone's blog\", url: \"https://example.com\", avatar: \"https://…\", note: { zh: \"one line\", en: \"one line\" } }]; this page lists them (avatar and note are both optional — the first letter and the host name stand in). Leaving it empty keeps this note.",
     note: "Links are a two-way street: ask before adding someone, and make sure they link back — code cannot check that.",
   },
   settings: {
