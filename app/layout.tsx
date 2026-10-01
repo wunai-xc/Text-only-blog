@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import AmbientBackdrop from "@/components/AmbientBackdrop";
 import BlueprintBackground from "@/components/BlueprintBackground";
 import CardIntro from "@/components/CardIntro";
+import PageIntro from "@/components/PageIntro";
 import PrefsInit from "@/components/PrefsInit";
 import RouteLoading from "@/components/RouteLoading";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
@@ -44,8 +46,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeInit />
         {/* 阅读偏好（宽度/字号/行距）也要在首帧之前落好，否则会看到一次版面跳动（第 7 项） */}
         <PrefsInit />
-        {/* 装饰层：整页蓝图网格，固定在最底、不接鼠标事件、不进无障碍树 */}
+        {/* 装饰层一：环境色（大色块，随路由形变）。挂在蓝图层**前面** = 画在它下面，
+            所以右下角那张图签仍然压在大色块上面 */}
+        <AmbientBackdrop />
+        {/* 装饰层二：整页蓝图网格（图案默认关着，见 lib/decor.ts 的 DECOR_PATTERNS），
+            固定在最底、不接鼠标事件、不进无障碍树 */}
         <BlueprintBackground />
+        {/* 换页渐入：只给 <html> 挂一个属性，正文淡入一次（样式在 globals.css 第 5d 节） */}
+        <PageIntro />
         {/* 全站加载动画：换页 / 首屏资源时顶栏上面那条细线（静态导出没有 loading.tsx） */}
         <RouteLoading />
         {/* 文章卡片的入场动画：只给卡片加属性，样式在 CSS（首页第 2 栏 / 列表页 / 卡组页共用） */}

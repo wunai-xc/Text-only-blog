@@ -79,6 +79,8 @@
 │  ├─ LangRedirect.tsx       浏览器端语言跳转
 │  ├─ HtmlLang.tsx           客户端纠正 <html lang>
 │  ├─ BlueprintBackground.tsx 蓝图草图背景层（第 6 项建立，第 8 项接上路由：路径 → data-decor + 右下角图签）
+│  ├─ AmbientBackdrop.tsx    环境色层（第 8 项扩展：每页三块软边大色块，换页时形变；只有色块、无图案）
+│  ├─ PageIntro.tsx          换页渐入（第 8 项扩展：换页后给 <html> 挂 data-page-in，正文淡入一次）
 │  ├─ ThemeInit.tsx          首帧主题脚本（第 6 项；body 第一个元素，避免暗色读者看到闪白）
 │  ├─ PrefsInit.tsx          首帧阅读偏好脚本（第 7 项；body 第二个元素，避免版面跳动）
 │  ├─ ThemeSync.tsx          跟随系统深浅色变化（第 6 项；只在「跟随系统」时重新解析）
@@ -118,7 +120,8 @@
 │  │                         i18n 文案表；顶栏改版新增 HEADER_IMAGE 图片位）
 │  ├─ icons.ts               用到的 MDI 图标（第 7 项；本地打包的图标数据，运行时不发请求）
 │  ├─ prefs.ts               阅读偏好（第 7 项：宽度/字号/行距三档，写 --reading-* 令牌 + 首帧脚本）
-│  ├─ decor.ts               装饰层（第 8 项：路径 → 图纸编号 + 图案名 + 图签文字，零依赖）
+│  ├─ decor.ts               装饰层（第 8 项：路径 → 图纸编号 + 图案名 + 图签文字，零依赖；
+│  │                         第 8 项扩展：同一份路径 → 环境色层 AMBIENTS —— 每页三块大色块）
 │  ├─ home.ts                首页版面与文案（第 9 项：八栏顺序 / 栏号 / 中英文案；首页改版后一栏一屏）
 │  ├─ list.ts                列表页（第 10/11 项：筛选状态 / 三档密度 / 纯函数 / 地址栏读写 / 中英文案，零依赖）
 │  ├─ article.ts             文章页（第 12 项：目录缩进与阈值 / 上下篇 / typography 字段 / giscus 映射 / 中英文案，零依赖）
@@ -181,7 +184,7 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 | 5 | 构建产物 | `[x]` | 搜索索引 `/search-index.json`、RSS（`/feed.xml` + 每语言）、sitemap、robots、PWA（`sw.js` + 离线页 + manifest + 图标）、更新日志 `/changelog.json`；全部在 `next build` 里生成 |
 | 6 | 设计系统 | `[x]` | 护眼纸质底色、蓝图草图背景层、亮/暗/纸三套令牌（`lib/theme.ts` + `app/globals.css`） |
 | 7 | 框架 UI | `[x]` | 顶栏（对齐 wunai-blog）、Footer（左下角设置图标）、设置中心 |
-| 8 | 装饰与动效 | `[x]` | `lib/decor.ts`：路径 → 图纸（图案 / 编号 / 图签），图案全在 CSS 里；换页纸面重铺一次 + 顶栏光标闪烁 |
+| 8 | 装饰与动效 | `[x]` | `lib/decor.ts`：路径 → 图纸（图案 / 编号 / 图签），图案全在 CSS 里；换页纸面重铺一次 + 顶栏光标闪烁。**扩展（见后面那节）**：同一份路径 → 环境色层（每页三块软边大色块，换页时丝滑形变，只有色块、没有图案）+ 换页后正文渐入一次 |
 | 9 | 首页 | `[x]` | `lib/home.ts`：八栏顺序 / 栏号 / 文案（首页改版后：一栏一屏、无并排、无卡片外壳；每栏定高一屏、内容多了在栏内滚）；吸附用原生 scroll-snap 的 `y mandatory`，侧边指示器是锚点 + IntersectionObserver |
 | 10 | 列表页 | `[x]` | `app/[lang]/posts/` + `lib/list.ts`：搜索（懒读 `/search-index.json`）、筛选（标签/分类/年份/排序）、语言切换、密度切换、AI 默认隐藏 |
 | 11 | 文章卡片 | `[x]` | `components/list/PostCard.tsx`：紧凑 / 适中 / 内容 三档；首页第 2 栏与列表页共用同一个组件 |
@@ -194,6 +197,12 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 > 顶栏变成「品牌 / 友链 / 图片位」三段，原先挂在顶栏的七项导航、语言切换与内容统计搬到页脚。
 > 为什么改、动了哪些文件、要小心的令牌，见本文件后面那节「**顶栏改版 —— 对齐 wunai-blog 参考稿**」。
 > 第 7 项那一节保留原样（当时的取舍仍有参考价值），凡与顶栏结构冲突处，以「顶栏改版」一节为准。
+>
+> **再追加的一次修订（第 8 项的扩展）**：正文底下加了一层**环境色**（每页三块软边大色块，
+> 换页时形变成下一页的样子）＋ 换页时正文**渐入**一次。见本文件后面那节
+> 「**环境色大色块 + 换页渐入（第 8 项的扩展）**」。⚠️ 这一层**只有色块，没有任何图案 / 格子 / 线**：
+> 第一版做过一套「结构覆盖」（同心环 / 网格 / 点阵…），站长否掉了（「不要任何格子背景，背景干净点」），
+> 整套已删 —— 别再往回加。
 
 ### 1. 脚手架 —— 已完成 ✅
 
@@ -525,6 +534,10 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 > ⚠️ **本节描述的图案默认已经关掉了**（站长的要求：全站背景改成纯色）——
 > `lib/decor.ts` 的 `DECOR_PATTERNS = false` 让每页都是 `plain`，代码一行没删。
 > 开关与理由见后面的「**背景改成纯色（图案层关掉）**」一节。
+>
+> ⚠️ **另有一层是第 8 项后来扩展出来的**：正文底下的**环境色**（每页三块软边大色块，换页时丝滑形变，
+> **只有色块、没有任何图案**）+ 换页后正文**渐入**一次。本节当时没有这两样 ——
+> 见后面那节「**环境色大色块 + 换页渐入（第 8 项的扩展）**」。
 
 - **一张图纸 = 编号 + 图案 + 图签名字**。`lib/decor.ts` 把路径翻成四样东西：
   `section`（哪一页，`RouteId | "article" | "offline" | "unknown"`）、`pattern`（图案名）、
@@ -1353,6 +1366,11 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 - **验收**（也在第 8 节那组里）：随便逛几页，背景应当是一整块纯色、滚动时不变；
   右下角（文章页除外）应当只有图签那两行小字；`view-source` 里
   `data-decor="plain"`、`data-route` 仍然是 `home` / `posts` / `article`……
+- ⚠️ **后来「环境色大色块」（第 8 项的扩展）在这层之上又加了一点颜色**：
+  底色仍然没有图案（本节说的「纯色」指的是**没有图案**这件事，仍然成立），
+  但纸面上多了三块低浓度的大色块（`--ambient-alpha` 压着，纸 0.18）。
+  觉得不够纯 → 把那个令牌调小或设成 `0`（色块还在、只是看不见），
+  或者删掉 `app/layout.tsx` 里的 `<AmbientBackdrop />`。见「环境色大色块 + 换页渐入」一节。
 
 ### 首页改版 —— 一栏一屏（去掉并排与卡片外壳）
 
@@ -1533,6 +1551,66 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 `ArticleProgress` 那两个常量（`DRAG_THRESHOLD` 6px、`PROGRESS_KEY_STEP` 5）与目录那个断点
 （`TOC_WIDE_QUERY`）就是用来调的三颗旋钮。
 
+### 环境色大色块 + 换页渐入（第 8 项的扩展）
+
+**站长这轮要的是**：① 全站页面切换要有**不影响阅读的渐入**；② 每一页有**自己的大色块模糊背景
+或结构覆盖**，且**不挡字**；③ 每次换页，图形要**丝滑变成另一种图形**。
+中途站长又补了一句硬要求：**「不要任何格子背景，背景干净点」** —— 于是第一版那套「结构覆盖」
+（同心环 / 交叉网 / 点阵 / 色带 / 弧，全是渐变线格）**整套删掉**，这一层只剩大色块。
+⚠️ **别再往回加图案 / 网格 / 线**：那是被明确否掉的东西（`lib/decor.ts` 与 globals.css 第 5c 节
+两处注释里都写了这一句）。
+
+**交付物**：`lib/decor.ts` 新增 `AMBIENTS`（12 页穷尽表：每页三块大色块的颜料号 / 圆心 / 直径 /
+椭圆朝向 / 浓度）与三个常量（`AMBIENT_SHIFT_MS` / `AMBIENT_BASE_VMAX` / `PAGE_FADE_MS`）；
+新组件 `components/AmbientBackdrop.tsx`（环境色层）与 `components/PageIntro.tsx`（换页渐入），
+都挂在 `app/layout.tsx`；`app/globals.css` 新增「5c. 环境色层」与「5d. 换页渐入」两节 +
+三套外观的环境色令牌（`--ambient-tint-1…6` / `--ambient-alpha`）+ 打印不印。
+
+- **层序**：环境色层挂在蓝图层**前面**（body 的第一个装饰层）= 画在它下面，
+  两层的定位与 `z-index` 完全一样（`fixed; inset: 0; z-index: -1; pointer-events: none; aria-hidden`）。
+  所以右下角图签、（将来若打开的）图纸网格都还压在大色块上面。
+  **别把这一层往上层挪**：顶栏是 20、设置齿轮 40、遮罩 45、抽屉 50、加载线 60（第 4 节第 7 项那张层清单）。
+- **色块怎么画**（globals.css 第 5c 节）：一个 `position: fixed` 的容器（`z-index: -1`）+ 三个
+  `<span class="ambient-blob">`。每块**宽高恒定**（`36vmax`，由行内样式给），
+  圆心 / 大小 / 椭圆朝向全部落在 `transform: translate(…) rotate(…) scale(sx, sy)` 上 ——
+  这是这一层唯一的技术点：**换页时浏览器插值 transform 与 background-color**，就是「丝滑形变」。
+  为什么不让宽高按页变：遮罩要按元素尺寸栅格化，尺寸每帧变就会发涩（手机上尤其）。
+  软边用 `mask-image: radial-gradient(closest-side, …)` 而不是 `filter: blur()`：
+  手机上一大片 blur 会每帧重新栅格化，遮罩是一次性的（并且 `border-radius: 50%` 兜底：
+  没有 mask 的老浏览器拿到的是一块圆色斑，不是方角块）。
+- **每页独特**：靠**位置 / 大小 / 椭圆朝向 / 颜料**四样一起变（相邻两页一定不一样）——
+  首页暖褐大块压左上、列表页两条竖长色斑贴左右、正文页只在两个角留一点、离线页只有上下两片淡色……
+  用不到的第三块写 `fade: 0.3` 那种低浓度（**不是删行**）：元素固定三块，形变才不会「跳变」。
+- **可读性预算**（约定第 5 条，改数之前先读）：整层只有一处
+  `opacity: var(--ambient-alpha)`（纸 0.18 / 亮 0.14 / 暗 0.22），色块边缘还是软下去的；
+  正文 `--c-ink` / `--c-canvas` 对比度本来在 12:1 以上，压上这一层仍远超 AAA。
+  另外**正文页整层再压到六成**（`.ambient[data-route="article"]`）、**窄屏再压一档**
+  （手机上 80vmax 的色块占的视野比桌面上大得多）。这一层 `position: fixed`、不占文档流，
+  所以不可能引起版面跳动（CLS）。
+- **换页渐入**（第 5d 节 + `PageIntro`）：换页后 `.site-main` 从 `opacity: 0.3` 淡到 1（420ms）。
+  四个刻意的取舍：
+  1. **只淡不位移**：`.site-main` 上只要出现 `transform`，它就成了 fixed 后代的包含块 ——
+     文章页右侧那条可拖的进度轨、左下角目录挂件会在动画期间跟着它走（肉眼看到「跳一下再归位」）；
+  2. **首帧不播**：首屏是一次「已经翻开的纸」，没有「换页」这回事（与 `BlueprintBackground` 同规矩）。
+     判定用「上一次播过的路径」而不是 `mounted` 布尔 —— 开发模式会把 effect 跑两遍，
+     布尔会被第一次跑掉，于是首屏也淡一次；
+  3. **在布局阶段挂属性**（`useLayoutEffect`，服务端用 `useEffect` 顶替以免 SSR 警告）：
+     属性若在 paint 之后才挂上，新页面会先**全亮一帧**再变暗淡上来（一次闪光）——
+     布局副作用在 paint 之前跑，新内容的第一帧就已经是 0.3；
+  4. 连着快速换两页时先摘属性、**强制一次样式重算**再挂回去，否则浏览器认为「动画没变」，
+     第二次渐入不会重新开始。
+  最低只到 0.3（不是 0）：这 420ms 里字一直看得见、可读。
+- **动效时长只有两个令牌**：`--ambient-shift`（1100ms，色块形变）与 `--page-fade`（420ms，正文渐入），
+  组件里的毫秒数（`AMBIENT_SHIFT_MS` / `PAGE_FADE_MS`）必须与它们对齐 —— 改一处要改两处。
+- **减少动效**：`prefers-reduced-motion: reduce` 下色块不做过渡（一帧到位，换页也照样换色块）、
+  渐入属性根本不写、换外观那 0.18s 的浓度过渡也一起关掉。
+- **打印**：`.ambient { display: none }`（纸上没有「背景气氛」这回事，半透明色块印出来只是脏色）。
+- **令牌位置**：色值在三套外观的令牌块里（约定第 7 条：颜色只有一个落点），
+  `lib/decor.ts` 只说「用几号颜料」；`AMBIENTS` 是 `Record<DecorSection, Ambient>`（穷尽类型），
+  新加一页忘了给规格 TypeScript 会直接报错。
+- **验收**（也在第 8 节那组里）：换几页看大色块是不是**挪过去**而不是整层重铺、正文底下的色
+  是不是很淡、三套外观各看一遍、系统开「减少动效」后不再有过渡、打印预览里不该有色块。
+
 ### 跨项待办（做到对应项时顺手勾掉）
 
 - **第 7 项（框架 UI / 设置中心）—— 已完成**，这条留档并转成「后续项要用到的东西」：
@@ -1655,6 +1733,10 @@ curl -s -H "Authorization: Bearer $TOKEN" \
    （`lib/article.ts` 的 `EMPTY_POST_SLUG`），它渲染「还没有文章」那一页，
    `noindex`、不进 sitemap，作者写下第一篇后自动消失 —— **别把它当成死链删掉**。
 5. 动效一律尊重 `prefers-reduced-motion`，且背景/装饰层不得影响正文可读性（`aria-hidden`、`pointer-events: none`）。
+   背景装饰层（`z-index: -1` 那一层）**只许是纯色与大色块**：站长明确否掉了图案 / 网格 / 线
+   （「不要任何格子背景，背景干净点」，见「环境色大色块 + 换页渐入」一节）——
+   要在背景上加线条之前先问一声。另：换页渐入**只许改 `opacity`**，
+   `.site-main` 上不许出现 `transform`（会变成 fixed 后代的包含块，见同一节第 2 条）。
 6. **开发态自检不是内容**（**第 12 项已按这条删掉它**，留档）：`components/dev/PipelineCheck.tsx`
    只为在文章页之前验证渲染器而存在，生产构建里不渲染、不进产物；文章页落地时连同
    `app/[lang]/page.tsx` 里那三行与 `.pipeline-check` 的 CSS 一起删掉了。
@@ -2095,6 +2177,26 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
   4. **粘性标题**：滚过大标题 → 顶栏下面挂一条紧凑标题（左边一个「正文」小字）；
      滚回顶部消失；滚到评论区也消失（它贴在 `<article>` 里）；窄窗口下长标题应当出省略号。
      另外**打印预览**里这四件都不该出现（`.article-sticky` 与另外三件一起列在 `@media print` 的隐藏名单里）。
+- **环境色大色块 + 换页渐入（第 8 项扩展）也没在本机跑过浏览器**，请按这几条看
+  （细节与理由见「**环境色大色块 + 换页渐入**」一节）：
+  1. **先看「干净」这一条**（站长的要求）：任何一页的背景都**不该出现格子 / 网格 / 点阵 / 线条** ——
+     只有几块**软边的大色块**。如果还看到格子，那是 `.blueprint` 那一层被打开了
+     （`lib/decor.ts` 的 `DECOR_PATTERNS` 默认是 `false`，改回去才会画网格）；把截图发我。
+  2. **换页时图形是不是「变过去」而不是「换过去」**：首页 → 列表页 → 文章页 →
+     标签 / 分类 / 归档，大色块应当**挪位置 / 改大小 / 换颜色**（1100ms），
+     而不是整层闪一下重铺。手机上若发涩，先告诉我，我把 `--ambient-alpha` 调低或把 `will-change` 去掉。
+  3. **正文读起来不受影响**（最要紧的一条）：打开一篇文章读几段 —— 底色上的那点色
+     不应当影响字的对比度；**文章页应当是全站最安静的一页**（整层只有六成浓度）。
+     觉得还是花，就只改一个数：三套外观的 `--ambient-alpha`（纸 0.18 / 亮 0.14 / 暗 0.22）。
+  4. **换页渐入**：点站内链接换页 → 新页正文应当**从略暗淡上来**（420ms），
+     顶栏与页脚**不动**（只有正文那一片在淡）；**首屏刷新不该有这次淡入**。
+     换页过程中右侧那条可拖的进度轨、左下角目录挂件**不该位移**（渐入只改 opacity 就是为了这个）。
+  5. **三套外观各看一遍**：纸（暖褐 / 苔绿系）、亮（青蓝系）、暗（亮一档的色块）；
+     换外观时色块的颜色应当**平滑过去**（0.55s），不是硬切。
+  6. **系统开「减少动效」**：色块直接换（不做过渡）、换页也不再有渐入。
+  7. **打印预览**：不该出现任何色块（`.ambient` 在 `@media print` 里 `display: none`）。
+  8. **`npm run typecheck`**：这次新增两个客户端组件、改了 `lib/decor.ts` 的类型与 `Decor` 形状
+     （`decorate()` 多返回一个 `ambient` 字段）—— 先跑一遍类型检查最省事。
 
 ---
 
@@ -2124,6 +2226,7 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
 | 本次提交 | **第 14 项交付（差锁文件）**：新增 `README.md` —— 站点是什么、快速开始（五个脚本 + 打开 `/zh/` 后先做的三件事）、写第一篇短文（YAML / TOML 两种 frontmatter 各一段）、部署到 Workers 静态资源（含 Cloudflare 构建设置与 GitHub Actions 的 Secrets）、目录结构概要、「需要你亲自填的地方」六行清单（每行都写了留空会发生什么）、如实说明的验证状态、三条不能破的约定（完整十条指向本台账）。README 里的事实逐条对着源码核过（脚本名 / `wrangler.toml` / workflow 的 action 与 `command: deploy` / `lib/site.ts` 的 `SITE.description`·`CONTACT`·`COMMENTS`·`LINKS` / `lib/home.ts` 的 `intro.body`·`themes.demo`·`fonts.sample` / `lib/content.ts` 的 `COVER_DIRS`）。台账：进度表第 14 项改 `[~]`（README 与提交 ✅、锁文件 ⏳）、新增「14. 交付」小节、跨项待办里那条「第 14 项」重写成「只剩一件需要 shell 的事」、第 6 节关于 wrangler 的注解与第 8 节的口径同步。**本环境无 shell，锁文件（`bun.lock` / `package-lock.json`）没有生成**，手写等于编造依赖解析结果，留你在本机 `bun install` 后提交 |
 | 本次提交 | **顶栏改版 —— 对齐 wunai-blog 参考稿**（一次修订，不是新的第 15 项）：`components/SiteHeader.tsx` 重写成「品牌 / 友链 / 图片位」三段（品牌区＝外观按钮 + 大号站名 + 闪烁光标 + 两端对齐的小字行「wunai 是谁？ About…… / 全部文章 →」；友链＝图标 + 小字竖排、`margin-left: auto` 右靠；图片位＝`HEADER_IMAGE` 撑满顶栏高，留空时画虚线空位且尺寸与有图时一致）。新增 `components/HeaderIntro.tsx`（客户端：三段错开 90ms 淡入 + 标签页切后台时暂停光标；顺序是「默认可见 → JS 就绪后才淡入」，反过来会让禁用 JS 的读者看不到顶栏）。原先挂在顶栏的**七项导航、语言切换与内容统计搬到页脚**（`components/SiteFooter.tsx` 第一块；统计那行复用 i18n 里已有的 `statsPosts` / `statsWords` / `statsUpdated` / `statsEmpty`，没有第二份文案）—— 不搬就会有四个页面失去入口。`components/RouteLink.tsx` 新增可选 `title`，pending 态把自定义提示与「第 N 项落地」拼起来而不是盖掉它。`lib/site.ts` 新增 `HEADER_IMAGE`（`<img>` 而非 `next/image`：静态导出不优化图片、且构建期不校验文件存在）。`app/globals.css` 新增令牌 `--header-h`（5.5rem / ≤48rem 4.75rem / ≤30rem 4.5rem，**两档窄屏值必须留在未分层的位置**，写进 `@layer` 会被 `:root` 压过），`--home-head-room` 改成由它推导（删掉首页窄屏那档 8.5rem）；顶栏/页脚两节重写，删掉 `.site-header-inner` / `.site-brand` / `.site-logo` / `.site-caret` / `.site-nav` / `.site-nav-entry` / `.site-titleblock`，`--frame-width` 只剩页脚与 `.page` 用。台账同步：进度表下加「追加的一次修订」说明、目录树、第 7 项小节加改版指引、第 9 项里 `--home-head-room` 与「内容统计在哪」两处、新增「顶栏改版」一节、约定新增第 11 条（顶栏只放三段 + 高度只有 `--header-h` 一个来源 + 动效顺序不能反）并扩了第 2 条（图片位）、第 8 节新增 10 条验收清单（并修掉第 8 项验收里那句「只有两张图纸能对照」的过时说法）、第 9 节本行。README 同步：图片位进「需要你亲自填的地方」表、「完整的十条约定」改成十一条并加了指向「顶栏改版」一节的指引（第 1 节「只读文字」那一行的措辞后来又跟着「背景改成纯色」那次再改了一遍） |
 | 本次提交 | **背景改成纯色（图案层关掉）**（站长的要求）：`lib/decor.ts` 新增 `DECOR_PATTERNS = false`，`decorate()` 一律返回 `plain` —— 每页的 `data-decor` 都是 `plain`，纸面只剩 `<html>` 的 `--c-canvas`：没有细格 / 粗格、没有边缘淡出、没有虚线图框。七套图案与 `PATTERNS` 表**一行没删**（开关改成 `true` 即整套恢复）。CSS 补 `.blueprint[data-decor="plain"]::before { display: none }`（连边缘淡出也关掉，这一层真的什么都不画）。顺手修掉一处会被这次改动弄坏的判断：文章页右下角「图签让给回顶按钮」原来判 `data-decor="measure"`，纯色下永远不成立，已改成 **`data-route="article"`**。右下角图签（编号 + 页名）与换页那 0.32s 淡入**保留**（不是背景，随路径变的映射还在）。台账同步：第 8 项小节加「默认已关闭」指引、新增「背景改成纯色（图案层关掉）」一节、第 6 节的图纸对照表与第 8 节验收清单改写（第 8 项验收里那句「十一张图纸都能看到」改成「要先把开关打开」）、本行。README：第 1 节「只读文字」那一行改成「背景是一整块纯色」 |
+| 本次提交 | **环境色大色块 + 换页渐入（第 8 项的一次扩展）**（站长的要求：① 全站换页要有不影响阅读的渐入；② 每页要有自己的大色块模糊背景或结构覆盖、且不挡字；③ 每次换页图形要丝滑变成另一种图形。中途追加一句硬要求：**「不要任何格子背景，背景干净点」**）。`lib/decor.ts` 新增 `AMBIENTS` 穷尽表（12 页：每页三块大色块的颜料号 / 圆心 / 直径 / 椭圆朝向 / 浓度）与三个常量（`AMBIENT_SHIFT_MS` 1100 / `AMBIENT_BASE_VMAX` 36 / `PAGE_FADE_MS` 420），`decorate()` 多返回一个 `ambient` 字段；新增 `components/AmbientBackdrop.tsx`（`fixed; z-index: -1`、`aria-hidden`、`pointer-events: none`，三块 `<span class="ambient-blob">`：**宽高恒定、几何全在 `transform: translate/rotate/scale` 上**，所以换页时浏览器插值 transform 与 background-color = 丝滑形变；软边用 `mask-image: radial-gradient(closest-side, …)` 而不是 `filter: blur()`——手机上一大片 blur 每帧重栅格化，遮罩是一次性的）与 `components/PageIntro.tsx`（换页后给 `<html>` 挂 `data-page-in`，`.site-main` 从 `opacity: 0.3` 淡到 1；**只改 opacity 不加位移**——`.site-main` 上出现 transform 会变成 fixed 后代的包含块，文章页那条可拖的进度轨会跟着走；**首帧不播**且判定用「上次播过的路径」而不是 `mounted` 布尔，免得开发模式跑两遍 effect 把首屏也淡一次；属性在**布局阶段**挂上，新内容第一帧就是 0.3，不会先全亮再变暗；连换两页时先摘属性 + 强制重算再挂回），两个组件挂在 `app/layout.tsx`（环境色层在蓝图层**前面** = 画在它下面，所以右下角图签仍压在色块上）。`app/globals.css` 新增三套外观的环境色令牌（`--ambient-tint-1…6` + `--ambient-alpha`：纸 0.18 / 亮 0.14 / 暗 0.22；正文页整层压到六成、窄屏再压一档）与「5c. 环境色层」「5d. 换页渐入」两节，打印时 `.ambient` 不印，`prefers-reduced-motion: reduce` 下色块不做过渡、也不写渐入属性。**第一版做过的「结构覆盖」（同心环 / 交叉网 / 点阵 / 色带 / 弧，全是渐变线格）整套已删** —— 站长那句「不要任何格子背景」否的就是它；`lib/decor.ts` 与 globals.css 第 5c 节两处都留了「别再往回加」的注释。台账同步：进度表第 8 项、目录树三行、第 8 项小节加指引、「背景改成纯色」一节补一句（底色仍然没有图案，现在多了低浓度色块）、新增「环境色大色块 + 换页渐入（第 8 项的扩展）」一节、约定第 5 条扩写（背景装饰层只许纯色与大色块；换页渐入只许改 opacity）、第 8 节新增 8 条验收、本行。⚠️ **本环境无 shell、跑不了浏览器**，形变是否顺滑、色块会不会影响阅读、渐入有没有闪烁，都要等下一次构建在浏览器里看 |
 | 本次提交 | **卡组页 + 非 ASCII slug 的构建期拦截 + 工具栏默认收起**（站长报「新文章打不开」「明明是卡组却只显示一篇文章」「筛选菜单别摊开」）。根因两条，都有线上证据：① `content/zh/posts/notes/笔记.md` 没写 `slug`，slug 被推成中文 `notes/笔记`，浏览器把 href 编码成 `%E7%AC%94%E8%AE%B0` 而静态产物是中文目录名，Cloudflare 一解码就命不中 → 「卡片在、点进去 404」；② 卡组分块显示的改动当时只在工作区、没提交，线上是平铺的一列卡片。修法：内容侧补 `slug = "note-1"`（地址变成 `/zh/posts/note-1/`），代码侧 `lib/content.ts` 新增 `assertUrlSafeSlug()`（非 ASCII 的 slug 让**构建当场失败**并给出「改文件名 / 补 slug」两种改法，别让作者去线上猜）；新增**卡组页** `/<lang>/posts/<group>/`（`app/[lang]/posts/[...slug]/page.tsx` 的 `CardGroupPage`，与文章页共用 catch-all、顺序「先文章后卡组」，于是 `notes/index.md` 那种目录首页写法不会撞车），路由表由 `lib/content.ts` 的 `getCardGroupRoutes()` 一次推出、`app/sitemap.ts` 与 `generateStaticParams` 共用，列表页组头用 `lib/list.ts` 新增的 `groupHref()` 链过去；列表页工具栏改成**默认收起且不再因筛选自动展开**（只有 `/search/` 挂载后展开），组头可点、卡组封面固定 13rem 居中裁切。文档：`content/README.md` 第 1 / 5 节写明卡组页与「谁更具体谁优先」，台账新增「卡组页 + 新文章 404 的根因」一节与 5 条验收。⚠️ 本环境无 shell，以上都要等下一次构建（本机或 Cloudflare）才作数 |
 | 本次提交 | **首页改版 —— 一栏一屏**（站长的要求：一个栏目占一屏、去掉栏目卡片、吸附别乱）：`lib/home.ts` 的 `HOME_ROWS`（带 `pair` 的二维表）换成 `HOME_ORDER: HomeBlockId[]`（一维数组），页面直接按它渲染 8 个 `<section class="home-block">` —— 去掉 `.home-row` 包装、**去掉并排**、`<section>` 不再带 `panel`（没有边框 / 圆角 / 阴影 / 面板底色）。`.home-block` 自己就是吸附块（`min-height: calc(100svh - var(--home-head-room))` + `scroll-snap-align: start` + `scroll-snap-stop: always`），`html:has(.home-flow)` 的吸附从 `y proximity` 改成 **`y mandatory`**；`.home-flow` 去掉 `gap` 与上下内边距、顶部补一段 `--header-h` 的留白（顶栏吸顶会盖住文档最上面一截），窄屏那档 `min-height: auto` 删掉（手机上也一栏一屏）。`HOME_POST_LIMIT` 6 → 4（卡片多了会超过一屏）。`HomeIndex` / `page.tsx` / `lib/home.ts` 的注释与台账同步；打印仍把八栏摊成连续文档。台账：进度表第 9 项、目录树、第 9 项小节加改版指引与两处内联纠偏、新增「首页改版 —— 一栏一屏」一节、跨项待办里首页那条改成 `HOME_ORDER`、第 8 节新增 7 条验收清单。**同一提交内又修了一轮**（第一轮还是不够确定，会长说「混乱吸附」）：`.home-block` 从 `min-height` 改成**定高 `height: calc(100svh - var(--home-head-room))` + `overflow-y: auto`** —— 吸附区比视口高时滚动中途没有合法停靠点，一松手就被拽回去，这才是「吸附乱」的根；栏内滚动条不画。去掉 `scroll-snap-stop: always`（吸附点已经是整屏，留着只会把一次滑动锁成一栏）。补 `html:has(.home-flow) .site-footer { scroll-snap-align: end }`：文档末尾没有吸附点的话，mandatory 会把页脚吸回去、永远读不到。页面里每栏多一层 `<div class="home-block-body">`：居中挪进这一层 —— 在滚动区自身上写居中，溢出的那一头（栏头）会永远滚不到。`.home-flow` 顶部留白从 `--header-h` 改成 `--home-head-room`（与吸附让位同值，「第 N 栏 = 往上翻 N − 1 屏」才对每一栏成立）。`@media print` 与 `prefers-reduced-motion: reduce` 两处都放开定高与栏内滚动。台账同步：第 9 项那一节、第 8 节那 7 条验收按新做法改写、本行 |
 | 本次提交 | **文章页悬浮件补强 —— 目录开关 / 可拖进度 / 回顶进度环 / 粘性标题**（站长这轮要的是那几件悬浮件的手感）。新增 `components/article/ArticleStickyTitle.tsx`：零高（`height: 0`）的 `position: sticky` 容器贴在 `<article>` **里面**，大标题滚出视野后由 IntersectionObserver（判定线 `STICKY_TITLE_OFFSET`，与目录高亮那条同值 = 顶栏下沿）在吸顶顶栏下面挂一条同名标题，两端外扩 1.5rem 与正文列同宽、长标题省略号，对读屏 `aria-hidden` 且里面不放可点的东西。`ArticleToc` 的面板第一行改成开关（`aria-expanded` / `aria-controls`）：**默认状态交给 CSS**（`data-open` 不写 = 宽屏展开、窄屏收起），读者点过之后才写死 —— 于是**没有 JS 的宽屏读者照旧看得到目录**，而窄屏默认只剩左下角那个挂件（`bottom: 3.9rem`，叠在设置齿轮上面；左上角被顶栏、右下角是回顶按钮），点开是左下角弹出的浮层、点一条目录顺势收起；断点 `(min-width: 78rem)` 与 CSS 同值，落成 `lib/article.ts` 的 `TOC_WIDE_QUERY`（组件读它把 `aria-expanded` 说准）。`ArticleProgress` 的右边缘细线变成 `role="slider"`：命中区放宽到 0.9rem（触屏 0.7rem）、轨道铺满视口高度（所以「指针纵坐标 ÷ 视口高」就是百分比），拖动用 `setPointerCapture` 且**触屏先要移动 6px 才算拖动**（手机右边缘常被拿来滚页面，`touch-action: none` 保证那一下不会同时滚页面）、鼠标按一下轨道即跳（滚动条手感）、键盘 ↑/↓ 一步 / PageUp·PageDown 三步 / Home·End 两头，并为这个 div 补了它自己的 `:focus-visible` 焦点框；回顶按钮从 2.4rem 放到 2.6rem 并套上一圈 `stroke-dashoffset` 进度环（与右边那条线、百分比牌子读同一个 `progress`）。`lib/article.ts` 新增三个常量与三句文案（中英各一份），`lib/icons.ts` 补 `mdi:chevron-left`，`app/[lang]/posts/[...slug]/page.tsx` 挂上新组件。`app/globals.css` 的「6e. 文章页」新增粘性标题一节并重写目录 / 进度两节，层序落成 **粘性标题 17 < 目录 18 < 进度与回顶 19 < 顶栏 20**；打印时这四件一起不印。台账：目录树、进度表第 12 项、跨项待办里那条层序、新增「文章页悬浮件补强」一节与第 8 节 4 条验收、本行。⚠️ 本环境无 shell，以上都要等下一次构建（本机或 Cloudflare）才作数 |

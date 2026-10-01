@@ -99,6 +99,18 @@
   --bp-line-strong: rgba(120, 100, 60, 0.2);
   --bp-frame: rgba(120, 100, 60, 0.26);
 
+  /* 环境色层（第 8 项扩展）：大色块的六号颜料。
+     色值写**不透明**的，浓淡一律交给 `--ambient-alpha`（整层乘一次）——
+     想调「这片色重不重」只改那一个数，六号颜料不用动。
+     ⚠️ 这一层只有色块、没有任何线 / 网格（站长的要求），所以没有「结构线色」这种令牌。 */
+  --ambient-tint-1: #b08a52; /* 暖褐（与重点色同一家族） */
+  --ambient-tint-2: #8c9a63; /* 苔绿 */
+  --ambient-tint-3: #7d93a8; /* 灰蓝 */
+  --ambient-tint-4: #c08055; /* 陶土 */
+  --ambient-tint-5: #9c7b96; /* 紫褐 */
+  --ambient-tint-6: #6f9a92; /* 青灰 */
+  --ambient-alpha: 0.18;
+
   --shape-shadow: 0 1px 2px rgba(70, 58, 34, 0.06);
 }
 
@@ -122,6 +134,15 @@
   --bp-line: rgba(29, 79, 99, 0.1);
   --bp-line-strong: rgba(29, 79, 99, 0.18);
   --bp-frame: rgba(29, 79, 99, 0.24);
+
+  /* 环境色层：亮外观偏冷（纸是暖的，这里就走青蓝那一侧） */
+  --ambient-tint-1: #2f6b80;
+  --ambient-tint-2: #6aa0b5;
+  --ambient-tint-3: #3f7f6a;
+  --ambient-tint-4: #5f79a8;
+  --ambient-tint-5: #8a6f9c;
+  --ambient-tint-6: #4d8f96;
+  --ambient-alpha: 0.14;
 
   --shape-shadow: 0 1px 2px rgba(20, 40, 50, 0.06);
 }
@@ -147,6 +168,15 @@
   --bp-line-strong: rgba(127, 195, 218, 0.15);
   --bp-frame: rgba(127, 195, 218, 0.2);
 
+  /* 环境色层：暗外观下纸是近黑的，色块要**亮**一点才看得出来（这里比另两套高一档） */
+  --ambient-tint-1: #2a6a80;
+  --ambient-tint-2: #2f7f74;
+  --ambient-tint-3: #3a5f86;
+  --ambient-tint-4: #55648f;
+  --ambient-tint-5: #5c4a78;
+  --ambient-tint-6: #2f7f8c;
+  --ambient-alpha: 0.22;
+
   --shape-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
@@ -162,6 +192,11 @@
   --reading-measure: 42rem;
   --reading-size: 1.0625rem;
   --reading-leading: 1.85;
+  /* 换页动效的两个时长（第 8 项扩展）。**组件里的毫秒数必须与它们一致**：
+     lib/decor.ts 的 AMBIENT_SHIFT_MS / PAGE_FADE_MS
+     —— 配对关系写在 components/AmbientBackdrop.tsx 与 components/PageIntro.tsx 的文件头。 */
+  --ambient-shift: 1100ms; /* 大色块形变（挪位 / 换形 / 换色） */
+  --page-fade: 420ms; /* 换页后正文渐入 */
   /*
    * 顶栏高度：**只有一个事实来源**。
    * 吸顶顶栏是 sticky 的，凡是「要停在顶栏下面」的东西都读它 ——
@@ -428,6 +463,153 @@
   @media (max-width: 48rem) {
     .blueprint-tag {
       display: none;
+    }
+  }
+
+  /* ==========================================================
+     5c. 环境色层（第 8 项扩展：大色块，随路由形变）
+     谁是哪一页的规格（颜料号 / 圆心 / 直径 / 朝向 / 浓度）在 lib/decor.ts 的 AMBIENTS；
+     这里只负责「怎么画」：遮罩做软边、transform 做形变。
+     渲染它的组件是 components/AmbientBackdrop.tsx（客户端，读 usePathname），
+     挂载顺序在 app/layout.tsx：**环境色层在蓝图层前面** = 画在它下面。
+
+     ⚠️ 这一层**只有大色块，没有图案 / 格子 / 线**（站长的要求：「不要任何格子背景，背景干净点」）。
+
+     ⚠️ 可读性预算（约定第 5 条：装饰不得影响正文可读性）——改这里的数之前先读这一句：
+     整层只有一处 `opacity: var(--ambient-alpha)`（纸 0.18 / 亮 0.14 / 暗 0.22），
+     也就是说纸面上最浓的一处叠加不到 18%，而色块的边缘还是软下去的；
+     正文的 --c-ink 与 --c-canvas 对比度在 12:1 以上，压上这一层仍然远超 AAA。
+     另外**没有任何一处会动尺寸或位置**：这一层 position: fixed、不占文档流，
+     所以它既不会引起版面跳动（CLS），也不会改变任何一行字的位置。
+     ========================================================== */
+  .ambient {
+    position: fixed;
+    inset: 0;
+    z-index: -1; /* 与蓝图层同级：谁在上面由挂载顺序决定（环境色在下） */
+    overflow: hidden; /* 色块允许超出视口，但不该让页面多出滚动条 */
+    pointer-events: none;
+    opacity: var(--ambient-alpha);
+    transition: opacity 0.18s ease; /* 与 <html> 换底色同一个节拍 */
+  }
+
+  /* 正文页让路：读者在文章页停留最久，这一页整层再压到六成（规格那边本身也已经最淡） */
+  .ambient[data-route="article"] {
+    opacity: calc(var(--ambient-alpha) * 0.6);
+  }
+
+  /* 窄屏也压一档：手机上一块 80vmax 的色块占的视野比桌面上大得多 */
+  @media (max-width: 48rem) {
+    .ambient {
+      opacity: calc(var(--ambient-alpha) * 0.82);
+    }
+
+    .ambient[data-route="article"] {
+      opacity: calc(var(--ambient-alpha) * 0.5);
+    }
+  }
+
+  /* 色块的容器：三块都是它的绝对定位子元素（圆心按视口百分比算，与文档滚动无关）。
+     它自己只管定位 —— 让「整层浓度」（.ambient 的 opacity）与「单块几何」（行内 transform）分家 */
+  .ambient-field {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* 一块大色块。宽高由行内样式给（**恒定**，见 lib/decor.ts 的 AMBIENT_BASE_VMAX），
+     位置 / 远近 / 朝向全在 transform 上 —— 换页时浏览器插值这几个数，这就是「形变」。
+     软边用遮罩（radial-gradient）而不是 filter: blur()：手机上 blur 会让整块每帧重新栅格化，
+     遮罩是一次性的；颜色写在 background-color 上，所以换颜料（换页 / 换外观）也平滑。
+     border-radius 只是兜底：老浏览器没有 mask 时，至少还是一块圆的色斑而不是方角。 */
+  .ambient-blob {
+    position: absolute;
+    left: 0;
+    top: 0;
+    border-radius: 50%;
+    background-color: var(--ambient-tint-1);
+    -webkit-mask-image: radial-gradient(
+      closest-side,
+      #000 0%,
+      rgba(0, 0, 0, 0.78) 36%,
+      rgba(0, 0, 0, 0.3) 68%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      closest-side,
+      #000 0%,
+      rgba(0, 0, 0, 0.78) 36%,
+      rgba(0, 0, 0, 0.3) 68%,
+      transparent 100%
+    );
+    transition:
+      transform var(--ambient-shift) cubic-bezier(0.22, 0.61, 0.36, 1),
+      opacity var(--ambient-shift) ease,
+      background-color calc(var(--ambient-shift) * 0.5) ease;
+    will-change: transform;
+  }
+
+  /* 六号颜料（色值在三套外观的令牌里） */
+  .ambient-blob[data-tint="1"] {
+    background-color: var(--ambient-tint-1);
+  }
+
+  .ambient-blob[data-tint="2"] {
+    background-color: var(--ambient-tint-2);
+  }
+
+  .ambient-blob[data-tint="3"] {
+    background-color: var(--ambient-tint-3);
+  }
+
+  .ambient-blob[data-tint="4"] {
+    background-color: var(--ambient-tint-4);
+  }
+
+  .ambient-blob[data-tint="5"] {
+    background-color: var(--ambient-tint-5);
+  }
+
+  .ambient-blob[data-tint="6"] {
+    background-color: var(--ambient-tint-6);
+  }
+
+  /* ---------- 这一层里没有图案 ----------
+     站长否掉了「结构覆盖 / 格子背景」：「不要任何格子背景，背景干净点」。
+     所以这里只剩上面那几块软边大色块 —— 没有线、没有网格、没有点阵。
+     （`.blueprint` 那一套图纸图案是**另一层**，由 lib/decor.ts 的 `DECOR_PATTERNS` 控制，默认关着。）
+     要在背景上加线条 / 网格之前先问一声：那正是被否掉的东西。 */
+
+  /* 减少动效：色块不做过渡，换页时一帧到位（大小 / 位置 / 颜色都直接跳过去）。
+     换外观时那一层 0.18s 的浓度过渡也一起关掉 —— 与 <html> 底色那条 transition 同一个口径。 */
+  @media (prefers-reduced-motion: reduce) {
+    .ambient,
+    .ambient-blob {
+      transition: none;
+    }
+  }
+
+  /* ==========================================================
+     5d. 换页渐入（第 8 项扩展）
+     只有一条：换页后 `.site-main` 从 0.3 淡到 1（420ms）。属性由 components/PageIntro.tsx
+     在**布局阶段**挂到 <html> 上（换页那一刻新内容的第一帧就已经是 0.3，不会先全亮再变暗），
+     首帧不播、420ms 后自动摘掉。
+
+     为什么只有 opacity、没有位移：`.site-main` 上只要出现 transform，它就成了 fixed 后代的
+     包含块 —— 文章页右侧那条可拖的进度轨、左下角的目录挂件会在动画期间跟着它走，
+     肉眼看到「跳一下再归位」。渐入少一点位移看不出损失，这个坑很大。
+     正文不透明度最低也只到 0.3（不是 0），所以这 420ms 里字一直是看得见的、可读的。
+     ========================================================== */
+  @media (prefers-reduced-motion: no-preference) {
+    html[data-page-in] .site-main {
+      animation: page-fade-in var(--page-fade) ease-out both;
+    }
+  }
+
+  @keyframes page-fade-in {
+    from {
+      opacity: 0.3;
+    }
+    to {
+      opacity: 1;
     }
   }
 
@@ -3533,6 +3715,11 @@
 @media print {
   .blueprint {
     display: none; /* 网格会把纸面弄灰 */
+  }
+
+  /* 第 8 项扩展的环境色层：纸上没有「背景气氛」这回事，半透明色块印出来只会是脏色 */
+  .ambient {
+    display: none;
   }
 
   /* 全站加载动画是屏幕上的反馈，纸上没有「正在换页」这回事 */
