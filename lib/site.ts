@@ -156,7 +156,7 @@ export const NAV: RouteId[] = (Object.keys(ROUTES) as RouteId[]).filter((id) => 
  * 想让读屏读出来（例如这是站标）就填上 alt，那时它不再被当作装饰。
  */
 export const HEADER_IMAGE: { src: string; alt: string } = {
-  src: "", // 编辑此处：例如 "/header.jpg"
+  src: "wunai_xc.png", // 编辑此处：例如 "/header.jpg"
   alt: "",
 };
 

@@ -1,10 +1,9 @@
 import { Icon } from "@iconify/react/offline";
 
 import LangSwitcher from "./LangSwitcher";
-import RouteLink from "./RouteLink";
 import SettingsDock from "./SettingsDock";
 import { getContentStats } from "@/lib/content";
-import { CONTACT, NAV, ROUTES, SITE, feedHref, type Lang } from "@/lib/site";
+import { CONTACT, SITE, feedHref, type Lang } from "@/lib/site";
 import { icons, type IconName } from "@/lib/icons";
 
 interface ContactEntry {
@@ -25,12 +24,9 @@ function shortUrl(url: string): string {
 /**
  * 页脚（第 7 项；顶栏改版时承接了原先挂在顶栏的两样东西）
  *
- * 现在有五块内容 + 一颗固定的齿轮：
- *   1. **站内导航**：七个页面入口（首页 / 文章 / 标签 / 分类 / 归档 / 搜索 / 友链）+ 语言切换。
- *      它们原先是顶栏第二段；顶栏按 wunai-blog 参考稿改成「品牌 / 友链 / 图片位」之后，
- *      导航搬到这里 —— 与参考稿把「站点控制项」放页脚是同一个做法。**别把入口删了**：
- *      删掉的话标签、分类、归档、搜索四页就没有任何可达入口了（站点地图除外）。
- *      「跳到某一页」仍然走 `RouteLink`（按 ROUTES[id].status 决定可点与否，约定第 8 条）；
+ * 现在有四块内容 + 一颗固定的齿轮：
+ *   1. **语言切换**：原先与站内导航同排，站内导航删掉后单独留在这里。
+ *      它是客户端组件（要读当前路径算目标地址）；
  *   2. **内容统计**：文章数 / 字数 / 最近更新，构建期读一次（`getContentStats`）。
  *      一行等宽小字，原先印在顶栏右侧的图签区里，图签区让位给图片之后搬到这里。
  *      没有文章时显示「还没有文章 —— 第一篇由你亲笔写」，而不是一串 0；
@@ -43,6 +39,10 @@ function shortUrl(url: string): string {
  * 左下角那颗齿轮（components/SettingsDock.tsx）：常驻视口左下角，点开是设置中心抽屉。
  * 它是 fixed 定位，所以从页面任何位置都能摸到；页脚因此留了 4.75rem 的下边距，
  * 免得滚到最底时齿轮压住版权行。
+ *
+ * ⚠️ 站内导航已移除：文章 / 标签 / 分类 / 归档 / 搜索 / 友链 现在只能靠站点地图
+ *    或手敲 URL 到达。若之后要恢复入口，记得把 `NAV.map` 那段加回来并补上
+ *    `RouteLink`、`NAV`、`ROUTES` 的 import。
  */
 export default function SiteFooter({ lang }: { lang: Lang }) {
   const t = SITE.i18n[lang];
@@ -98,29 +98,15 @@ export default function SiteFooter({ lang }: { lang: Lang }) {
   return (
     <footer className="site-footer">
       <div className="site-footer-inner">
-        {/* 1. 站内导航（原先在顶栏第二段）+ 语言切换 */}
-        <nav className="site-footer-nav" aria-label={t.navLabel}>
-          <p className="site-footer-group-label">{t.navLabel}</p>
+        {/* 1. 语言切换（站内导航已移除）+ 2. 内容统计 */}
+        <div className="site-footer-nav">
           <ul className="site-footer-nav-list">
-            {NAV.map((id) => {
-              const icon = ROUTES[id].icon;
-              return (
-                <li key={id}>
-                  <RouteLink route={id} lang={lang} className="site-footer-nav-link">
-                    {icon ? <Icon icon={icons[icon]} width="1em" height="1em" /> : null}
-                    <span>{t.nav[id]}</span>
-                  </RouteLink>
-                </li>
-              );
-            })}
-            {/* 语言切换是客户端组件（要读当前路径算目标地址），外观与其它入口一致 */}
             <li>
               <LangSwitcher lang={lang} className="site-footer-nav-link" />
             </li>
           </ul>
-          {/* 2. 内容统计：构建期数字，原先印在顶栏的图签区里 */}
           <p className="site-footer-stats">{statsLine}</p>
-        </nav>
+        </div>
 
         <div className="site-footer-contact">
           <p className="site-footer-group-label">{t.contactTitle}</p>
@@ -151,7 +137,7 @@ export default function SiteFooter({ lang }: { lang: Lang }) {
                       {body}
                     </a>
                   ) : (
-                    <span className="site-footer-link" data-pending="true">
+                    <span className="site-footer-link" data-not-filled>
                       {body}
                     </span>
                   )}
@@ -161,16 +147,13 @@ export default function SiteFooter({ lang }: { lang: Lang }) {
           </ul>
         </div>
 
-        <div className="site-footer-note">
-          <p className="site-footer-body">{t.footerNote}</p>
-        </div>
+        {/* 3. 一句话说明 + 4. 版权行 */}
+        <p className="site-footer-note">{t.footerNote}</p>
+        <p className="site-footer-copy">
+          © {year} {SITE.name}
+        </p>
       </div>
 
-      <p className="site-footer-copy">
-        © {year} {SITE.title} · {t.poweredBy}
-      </p>
-
-      {/* 左下角的设置中心入口 */}
       <SettingsDock lang={lang} />
     </footer>
   );
