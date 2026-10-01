@@ -45,9 +45,93 @@ npm run deploy       # 部署到 Cloudflare Workers 静态资源
 3. 想看三套外观的差别，可以直接用调试参数（不写 localStorage，刷新即失效）：
    `/zh/?theme=paper`、`/zh/?theme=light`、`/zh/?theme=dark`。
 
+只想把它跑在**自己的一台机器 / 内网**（不走 Cloudflare）→ 看第 3 节。
+
 ---
 
-## 3. 写一篇文章
+## 3. 本地部署（自己的一台机器 / 内网）
+
+「本地部署」就是：`next build` 导出的 `out/` 目录，交给任意一个静态文件服务器。
+**不需要 Node 运行时、不需要数据库、没有任何环境变量**（`output: "export"`，见 `next.config.ts`）。
+
+**前置条件只有一条**：Node.js **≥ 20.9**（`next@16.3.1` 的 `engines.node` 就是 `>=20.9.0`）。
+先 `node -v` 看一眼。
+
+```bash
+node -v              # 需要 v20.9.0 起
+npm install          # 仓库里暂时**没有锁文件**，所以用 install；npm ci 会直接失败
+npm run typecheck    # 只查类型；出问题先在这里解决，比 build 快
+npm run build        # 静态导出到 out/
+```
+
+### 3.1 先在本机把它当线上跑一遍
+
+```bash
+npm run preview      # = npx serve out -l 4173 → 打开 http://localhost:4173/zh/
+```
+
+- 换端口：`npx serve out -l 8080`；清掉产物重来：`npm run clean`（删 `.next` 与 `out`）；
+- 构建完 `out/` 里应该有：`zh/`、`en/`、`404.html`、`feed.xml`、`zh/feed.xml`、`search-index.json`、
+  `sitemap.xml`、`robots.txt`、`manifest.webmanifest`、`sw.js`、`_next/`；
+- **Service Worker 只在这里生效**：`npm run dev` 下不注册（热更新的产物被缓存住会看到上一版页面），
+  直接 `file://` 打开 `out/index.html` 也不行 —— 必须经 HTTP，而且 `localhost` 之外要 HTTPS；
+- 顺手验一次离线：打开 `/zh/`（再点开一篇正文），DevTools → Application → Service Workers 应看到已注册、
+  勾上 Offline 刷新，首页与列表页仍能打开；
+- 构建期只有一处网络依赖：首页「更新日志」栏先试 GitHub API、失败退回 `git log`、都失败就留空
+  （`lib/changelog.ts`）。**它不会让构建失败**，所以离线也能出完整站点，只是那一栏空着。
+
+### 3.2 放到自己的一台机器 / 内网服务器上
+
+把 **`out/` 里的内容**（不是仓库根目录）放到网站根目录即可。nginx 一例：
+
+```nginx
+server {
+  listen 80;
+  server_name blog.example.com;
+
+  root /var/www/text-only-blog/out;        # 指向 out/，不是仓库根
+  index index.html;
+
+  # 目录式 URL：/zh/posts/ → /zh/posts/index.html（trailingSlash 导出成这个形状）
+  location / { try_files $uri $uri/index.html $uri.html =404; }
+
+  # 站点自己的 404（app/not-found.tsx 导出的 out/404.html）
+  error_page 404 /404.html;
+}
+```
+
+四条容易踩的：
+
+1. **别把尾部斜杠抹掉**：`next.config.ts` 里 `trailingSlash: true`，产物是 `zh/posts/index.html`
+   这种目录索引，所以要按 `/zh/posts/` 访问（上面那段 nginx 会把缺尾斜杠的请求 301 过去）。
+   别为了「地址好看」写一条 rewrite 去掉尾斜杠 —— 那会让页面里的相对资源路径错位。
+2. **必须挂在域名（或端口）的根上**：`next.config.ts` 没配 `basePath` / `assetPrefix`，产物里的
+   资源地址是绝对的 `/_next/…`。要放到 `https://example.com/blog/` 这类**子路径**下，得先给
+   `next.config.ts` 配上这两项再重新 `npm run build`，否则页面白屏；不想动配置就给它一个
+   独立子域 / 独立端口。
+3. **404 要交给 `out/404.html`**：Cloudflare 那边是 `wrangler.toml` 的 `not_found_handling = "404-page"`，
+   自己的服务器上就是上面那条 `error_page`。不配的话未知路径落到服务器默认的 404 页，
+   站点自己做的 404 页就白做了。
+4. **Service Worker 的硬条件：HTTPS 或 `localhost`**。用 `http://192.168.x.x` 从手机上看，
+   页面照常打开，但 PWA / 离线不会生效（浏览器规定）。
+
+只想在内网临时跑一下、不装 nginx：
+
+```bash
+npx --yes serve out -l 4173            # 与 npm run preview 同一条；前台跑着，Ctrl+C 停
+python3 -m http.server 8000 -d out     # 只做冒烟（没有 404 兜底那层），别长期用
+```
+
+### 3.3 与 Cloudflare 那一套的关系
+
+同一份 `out/`：放 Cloudflare Workers 就用 `npm run deploy`（见第 5 节），放自己的机器就用上面那台
+静态服务器 —— **线上只能选一处**。站点内的链接都是根路径（`/zh/posts/…`），换域名不影响；
+换**子路径**要按 3.2 的第 2 条重新构建。另外 `npm run deploy` 需要 Cloudflare 凭据（本机第一次跑会要求登录），
+只想本地跑就完全不用碰它。
+
+---
+
+## 4. 写一篇文章
 
 最短的一篇（YAML frontmatter，`---` 包起来）：
 
@@ -90,7 +174,7 @@ tags = ["随笔"]
 
 ---
 
-## 4. 部署（Cloudflare Workers 静态资源）
+## 5. 部署（Cloudflare Workers 静态资源）
 
 静态导出后的 `out/` 交给 Cloudflare。`wrangler.toml` 已经配好：
 
@@ -117,7 +201,7 @@ html_handling = "auto-trailing-slash"    # 与 next.config.ts 的 trailingSlash 
 
 ---
 
-## 5. 目录结构（概要）
+## 6. 目录结构（概要）
 
 ```
 app/
@@ -141,7 +225,7 @@ public/                     sw.js、favicon.svg
 
 ---
 
-## 6. 需要你亲自填的地方（搜索「编辑此处」）
+## 7. 需要你亲自填的地方（搜索「编辑此处」）
 
 | 在哪里 | 填什么 |
 | --- | --- |
@@ -163,7 +247,7 @@ public/                     sw.js、favicon.svg
 
 ---
 
-## 7. 验证状态（如实说明）
+## 8. 验证状态（如实说明）
 
 这个项目的全部代码是在**没有 shell 的环境**里写的：没有在本机跑过 `npm install`、
 `npm run build`、也没有在真浏览器里点过。所以：
@@ -179,7 +263,7 @@ public/                     sw.js、favicon.svg
 
 ---
 
-## 8. 三条不能破的约定
+## 9. 三条不能破的约定
 
 1. **仓库不含文章**：`content/**/posts/` 里只有 `README.md`（写作规范），加载器显式跳过它。
    不写测试文章、不写示例文章。
