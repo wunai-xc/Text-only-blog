@@ -41,8 +41,9 @@ function shortUrl(url: string): string {
  * 免得滚到最底时齿轮压住版权行。
  *
  * ⚠️ 站内导航已移除：文章 / 标签 / 分类 / 归档 / 搜索 / 友链 现在只能靠站点地图
- *    或手敲 URL 到达（首页顶栏还留着「全部文章 →」与「友链」两个入口）。若之后要恢复入口，
- *    记得把 `NAV.map` 那段加回来并补上 `RouteLink`、`NAV`、`ROUTES` 的 import。
+ *    或手敲 URL 到达（顶栏还留着「全部文章 →」与「友链」两个入口）。
+ *    若之后要恢复入口，记得把 `NAV.map` 那段加回来并补上
+ *    `RouteLink`、`NAV`、`ROUTES` 的 import。
  */
 export default function SiteFooter({ lang }: { lang: Lang }) {
   const t = SITE.i18n[lang];
