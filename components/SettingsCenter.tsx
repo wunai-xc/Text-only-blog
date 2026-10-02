@@ -10,14 +10,23 @@ import {
   CUSTOM_FONT_ENABLED,
   READING_DEFAULTS,
   READING_KEYS,
+  READING_SLIDER_BASE,
+  READING_SLIDERS,
   READING_VARS,
+  currentReadingNumbers,
+  formatReadingNumber,
+  isSliderKey,
+  readingNumberText,
   readingOptions,
   readingValue,
   readReadingPrefs,
   resetReadingPrefs,
   setReadingPrefs,
+  subscribeReadingPrefs,
   type ReadingKey,
+  type ReadingOptionKey,
   type ReadingPrefs,
+  type ReadingSliderKey,
 } from "@/lib/prefs";
 import {
   LocalFontError,
@@ -48,12 +57,16 @@ import {
  *   1. 外观：跟随系统 / 纸 / 亮 / 暗 —— 直接调 lib/theme.ts 的 setThemeChoice()，
  *      不在这里碰 localStorage 与 data-theme（约定第 7 条）；
  *   2. 阅读偏好：正文字体 / 宽度 / 字号 / 行距 / 首行缩进 —— 写到 `--reading-*` 令牌上
- *      （lib/prefs.ts），正文已经在读它们，所以改完立刻生效、不需要通知任何组件；
+ *      （lib/prefs.ts），正文已经在读它们，所以改完立刻生效、不需要通知任何组件。
+ *      宽度 / 字号 / 行距是**滑块**，字体与首行缩进是**档位按钮**（两组各有各的道理：
+ *      前三个是连续量，后者是「选哪一种」）；
  *   3. 语言：中英切换（与页脚的导航栏共用 components/LangSwitcher.tsx）；
  *   4. 恢复默认：清掉偏好键 + 移除行内 CSS 变量。
  *
  * 首帧与主题按钮同理：先按默认值渲染（服务端与浏览器算出来的一样），挂载后再读真实值，
- * 否则 React 会报水合不一致。
+ * 否则 React 会报水合不一致。滑块的位置有个额外的坑：读者没拖过时它要显示的是
+ * **CSS 里按屏幕大小算出来的那个默认值**，那是服务端拿不到的，所以挂载后再从令牌读回来
+ * （lib/prefs.ts 的 currentReadingNumbers）。
  *
  * 这个组件只负责**内容**，不管容器：抽屉在 components/SettingsDock.tsx，
  * 第 13 项的 /[lang]/settings/ 页面直接把它放进一个 .page 里即可，样式是同一套。
@@ -67,7 +80,7 @@ type ReadingLabelKey =
   | "readingIndent";
 
 /** 各组的标签与图标：标签文案在 lib/site.ts 的 I18N 里，图标在这里。
-    「首行缩进」是唯一的两档开关（关 / 两格），其余四组都是三档。 */
+    「首行缩进」是唯一的两档开关（关 / 两格），宽度 / 字号 / 行距是滑块。 */
 const GROUP_META: Record<ReadingKey, { label: ReadingLabelKey; icon: IconName }> = {
   font: { label: "readingFont", icon: "mdi:format-font" },
   width: { label: "readingWidth", icon: "mdi:arrow-expand-horizontal" },
@@ -82,6 +95,8 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
   const t = SITE.i18n[lang];
   const [choice, setChoice] = useState<ThemeChoice | null>(null);
   const [prefs, setPrefs] = useState<ReadingPrefs | null>(null);
+  // 滑块的当前数值（= 令牌实际生效的值）：读者拖过就是他的，没拖过就是按屏幕算出来的
+  const [numbers, setNumbers] = useState<Record<ReadingSliderKey, number> | null>(null);
   // 读者上传的自定义字体（lib/local-font.ts）：元信息、正在读写、上一次的错误
   const [localFont, setLocalFont] = useState<LocalFontMeta | null>(null);
   const [fontBusy, setFontBusy] = useState(false);
@@ -89,8 +104,14 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
 
   useEffect(() => {
     setChoice(currentThemeChoice());
-    setPrefs(readReadingPrefs());
+    // 偏好与滑块数值一起刷新：滑块的源是令牌本身，所以两者永远一致
+    const sync = () => {
+      setPrefs(readReadingPrefs());
+      setNumbers(currentReadingNumbers());
+    };
+    sync();
     const unsubscribeTheme = subscribeTheme(() => setChoice(currentThemeChoice()));
+    const unsubscribePrefs = subscribeReadingPrefs(sync);
     const unsubscribeFont = subscribeLocalFont((meta) => setLocalFont(meta));
 
     // 已经有哪一份字体（只读元信息；注册 FontFace 的活归 components/LocalFontSync.tsx）
@@ -102,22 +123,35 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
     return () => {
       alive = false;
       unsubscribeTheme();
+      unsubscribePrefs();
       unsubscribeFont();
     };
   }, []);
 
   const activeChoice = choice ?? DEFAULT_THEME_CHOICE;
   const activePrefs = prefs ?? READING_DEFAULTS;
+  /** 滑块位置：挂载前用首帧兜底值（服务端不知道屏幕多大），挂载后是真令牌里的数 */
+  const sliderNumber = (key: ReadingSliderKey): number =>
+    numbers?.[key] ?? READING_SLIDER_BASE[key];
 
   function pickTheme(value: ThemeChoice) {
     setThemeChoice(value);
     setChoice(value);
   }
 
-  function pickReading(key: ReadingKey, id: string) {
+  function pickReading(key: ReadingOptionKey, id: string) {
     // 只给变的那一项：先落到 Partial<ReadingPrefs>（计算键写成 as 断言不够明确）
     const patch: Partial<ReadingPrefs> = {};
     patch[key] = id;
+    setPrefs(setReadingPrefs(patch));
+  }
+
+  function slideReading(key: ReadingSliderKey, value: number) {
+    const patch: Partial<ReadingPrefs> = {};
+    patch[key] = readingNumberText(key, value);
+    // 写的是**数字**（`44`），不是 `44rem` —— 单位由 lib/prefs.ts 拼，
+    // 所以同一条量程改了单位也不用去翻旧存档。写完令牌派发事件，
+    // 订阅那边再把滑块数值读回来（值以令牌为准，不在这里自己算一份）
     setPrefs(setReadingPrefs(patch));
   }
 
@@ -170,9 +204,12 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
     setChoice(DEFAULT_THEME_CHOICE);
   }
 
-  // 把当前各令牌的**实际取值**显示出来：调完能立刻看到 rem / 倍率 / 字体栈变成了什么
-  const tokenLine = READING_KEYS.map(
-    (key) => `${READING_VARS[key]}: ${readingValue(key, activePrefs[key])}`,
+  // 把当前各令牌的**实际取值**显示出来：调完能立刻看到 rem / 倍率 / 字体栈变成了什么。
+  // 滑块的取值来自令牌本身（没拖过时那边是媒体查询按屏幕算的默认值），所以这一行与滑块读数一致
+  const tokenLine = READING_KEYS.map((key) =>
+    isSliderKey(key)
+      ? `${READING_VARS[key]}: ${formatReadingNumber(key, sliderNumber(key))}`
+      : `${READING_VARS[key]}: ${readingValue(key, activePrefs[key])}`,
   ).join(" · ");
 
   return (
@@ -233,29 +270,49 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
                 {t[meta.label]}
               </span>
               <div className="settings-row">
-                {readingOptions(key).map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    className="settings-opt"
-                    aria-pressed={activePrefs[key] === option.id}
-                    onClick={() => pickReading(key, option.id)}
-                    title={option.value}
-                  >
-                    <Icon
-                      icon={icons["mdi:check"]}
-                      className="opt-check"
-                      width="1em"
-                      height="1em"
+                {/* 宽度 / 字号 / 行距是连续量，用滑块；字体与首行缩进是「选哪一种」，用按钮 */}
+                {isSliderKey(key) ? (
+                  <div className="settings-slider">
+                    <input
+                      type="range"
+                      className="settings-range"
+                      min={READING_SLIDERS[key].min}
+                      max={READING_SLIDERS[key].max}
+                      step={READING_SLIDERS[key].step}
+                      value={sliderNumber(key)}
+                      aria-label={t[meta.label]}
+                      // 拖动过程中每一格都立刻落到令牌上：正文就在旁边，看得见
+                      onChange={(event) => slideReading(key, Number(event.target.value))}
                     />
-                    <span>{option[lang]}</span>
-                    {/* 字体那一组不给数值角标：字体栈是一长串名字，而档位标签（黑体 / 宋体…）
-                        已经说清是哪一个；**整个页面就是它的预览** —— 点一下全站文字立刻换字体 */}
-                    {key === "font" ? null : (
-                      <span className="settings-opt-value">{option.value}</span>
-                    )}
-                  </button>
-                ))}
+                    <span className="settings-range-value">
+                      {formatReadingNumber(key, sliderNumber(key))}
+                    </span>
+                  </div>
+                ) : (
+                  readingOptions(key).map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      className="settings-opt"
+                      aria-pressed={activePrefs[key] === option.id}
+                      onClick={() => pickReading(key, option.id)}
+                      title={option.value}
+                    >
+                      <Icon
+                        icon={icons["mdi:check"]}
+                        className="opt-check"
+                        width="1em"
+                        height="1em"
+                      />
+                      <span>{option[lang]}</span>
+                      {/* 字体那一组不给数值角标：字体栈是一长串名字，而档位标签（黑体 / 宋体…）
+                          已经说清是哪一个；**整个页面就是它的预览** —— 点一下全站文字立刻换字体 */}
+                      {key === "font" ? null : (
+                        <span className="settings-opt-value">{option.value}</span>
+                      )}
+                    </button>
+                  ))
+                )}
               </div>
 
               {/* 「自定义」那一档的上传区（选它之前也能先传：传完会自动切过去）。

@@ -191,15 +191,15 @@
 :root {
   --shape-radius: 8px;
   --shape-radius-lg: 12px;
-  /* 正文度量（第 8 项的阅读偏好改的就是这几个，全部只在这里定初值）：
-     宽 / 字号 / 行距是数值，字体是字体栈 —— 初值指向 --font-sans，
-     所以「没设置过」与「设置成黑体」看起来完全一样。
+  /* 正文度量（设置中心的阅读偏好改的就是这几个，全部只在这里定初值）：
+     字体是字体栈，初值指向 --font-sans，所以「没设置过」与「设置成黑体」看起来完全一样；
+     宽 / 字号 / 行距是滑块组的**手机那一档**初值，更大的屏在下面那三条媒体查询里抬上去。
      --reading-indent 是正文段落的**首行缩进**，默认「两格」（2em 跟着字号走，
      中文下一个字约一个 em）；不缩进写 0。读它的是 .article-body > p。 */
   --reading-font: var(--font-sans);
-  --reading-measure: 42rem;
-  --reading-size: 1.0625rem;
-  --reading-leading: 1.85;
+  --reading-measure: 34rem;
+  --reading-size: 1rem;
+  --reading-leading: 1.75;
   --reading-indent: 2em;
   /* 换页动效的两个时长（第 15 项）。**组件里的毫秒数必须与它们一致**：
      lib/decor.ts 的 FIGURE_SHIFT_MS / PAGE_FADE_MS
@@ -231,6 +231,41 @@
      它**由 --header-h 推出来**，所以顶栏高度变了这里不用跟着调（多出的 0.5rem 是留白）。 */
   --home-width: 68rem;
   --home-head-room: calc(var(--header-h) + 0.5rem);
+}
+
+/* 宽度 / 字号 / 行距的**默认值跟着屏幕走**：屏幕越大，一行放得下的字越多、字号也能大一档，
+   行距同理松一点。这是读者**没拖过滑块**时用的值（设置中心把它显示成滑块的起始位置）；
+   一旦拖过滑块，lib/prefs.ts 会把他的值写到 <html> 的行内变量上，盖过这一段；
+   「恢复默认」把行内变量移除，就又回到这里按屏幕算。
+   （读者拖过之后就是拖过的值，不随屏幕变 —— 那是他自己选的。）
+   ⚠️ 与下面 --header-h 那两条窄屏查询同理：**必须留在这一层**（不能进 @layer），
+   否则会被上面那条不分层的 `:root` 整个盖掉。
+   四档的数值要与 lib/prefs.ts 的 READING_SLIDER_BASE（= 手机那一档）和 READING_SLIDERS
+   的量程 / 步长对得上：默认值都落在 min + n×step 上，滑块才不会一开局就偏离令牌。
+   媒体查询里的 rem 一律按 16px 算（浏览器用的初值，不受 html 字号影响），
+   所以 48rem = 768px、75rem = 1200px、106.25rem = 1700px。 */
+@media (min-width: 48rem) {
+  :root {
+    --reading-measure: 38rem;
+    --reading-size: 1.05rem;
+    --reading-leading: 1.8;
+  }
+}
+
+@media (min-width: 75rem) {
+  :root {
+    --reading-measure: 44rem;
+    --reading-size: 1.1rem;
+    --reading-leading: 1.85;
+  }
+}
+
+@media (min-width: 106.25rem) {
+  :root {
+    --reading-measure: 50rem;
+    --reading-size: 1.15rem;
+    --reading-leading: 1.9;
+  }
 }
 
 /* 顶栏高度在窄屏收两档（宽度同时按屏幕收，那部分在「6b. 框架 UI」里）。
@@ -1373,6 +1408,39 @@ html[data-reading="hidden"] {
     display: flex;
     flex-wrap: wrap;
     gap: 0.35rem;
+  }
+
+  /* 滑块（宽度 / 字号 / 行距）。原生 range 只换配色，不重画轨道与滑块：
+     三套外观下都从 accent-color 取强调色，省掉一堆 ::-webkit-slider-thumb 的重写，
+     触屏与键盘（↑↓←→ / Home / End）的行为也是浏览器原生的那一套。
+     读数用等宽字、右对齐、给足固定宽度 —— 拖动时数字位数变化不会把滑块顶得左右跳。 */
+  .settings-slider {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    /* 它摆在 .settings-row（flex-wrap）里，撑满一整行，别跟按钮挤在一行 */
+    flex: 1 1 100%;
+    /* 与 .settings-row 里的按钮行同一层高度感，别让滑块显得矮一截 */
+    min-height: 1.6rem;
+  }
+
+  .settings-range {
+    flex: 1;
+    min-width: 0;
+    height: 1.2rem;
+    margin: 0;
+    accent-color: var(--c-accent);
+    cursor: pointer;
+  }
+
+  .settings-range-value {
+    flex: none;
+    min-width: 4.4rem;
+    color: var(--c-ink-subtle);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
   }
 
   .settings-hint {
