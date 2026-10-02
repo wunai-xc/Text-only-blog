@@ -1,87 +1,96 @@
 /**
- * lib/decor.ts —— 装饰层（第 8 项：装饰与动效）
+ * lib/decor.ts —— 几何实体层（第 15 项：几何实体与手绘草稿）
  *
- * 「背景图案随路由变」这件事的事实来源就在这一个文件里：**路径 → 图纸编号 + 图案名 + 图签文字**。
- * 全是纯函数与常量表（零依赖），服务端与浏览器都能 import；真正调用它的是客户端组件
- * `components/BlueprintBackground.tsx` —— 静态导出下服务端不知道当前路径，
- * 只有客户端的 `usePathname()` 能给出（构建期那一次由 Next 自己渲染，见组件的注释）。
+ * 「背景里的那块几何实体随路由变」这件事的事实来源就在这一个文件里：
+ * **路径 → 图纸编号 + 语言 + 主实体 / 卫星的规格**，全是纯函数与常量表（零依赖），
+ * 服务端与浏览器都能 import；真正渲染它的是客户端组件 `components/FigureLayer.tsx`
+ * —— 静态导出下服务端不知道当前路径，只有客户端的 `usePathname()` 能给出。
  *
- * 本文件还是**环境色层**（第 8 项的扩展：换页时形变的大色块 + 结构覆盖）的唯一事实来源：
- * 下面 `AMBIENTS` 表给出「每一页是三块什么颜色、什么位置、什么朝向的大色块，配哪一种结构图案」，
- * 由 `components/AmbientBackdrop.tsx` 渲染成固定层（`z-index: -1`，在正文下面）。
- * **颜料值不在这个文件里**：这里只说「用 1 号颜料」，色值在三套外观的令牌里
- * （`app/globals.css` 的 `--ambient-tint-1…6`，约定第 7 条）。
+ * 每页一枚**主实体 + 一枚小卫星**（`FIGURES`）。元素数量恒定（用不上的写 `fade: 0`，
+ * 不删行 —— 否则换页会变成「跳变」而不是「形变」）。换页时同一批 DOM 节点被赋予新规格，
+ * 浏览器按 CSS 的 transition 插值过去；**颜料值不在这个文件里**：这里只说「用 1 号颜料」，
+ * 色值在三套外观的令牌里（`app/globals.css` 的 `--figure-tint-1…8`）。
  *
- * ⚠️ **背景现在是纯色**（站长的要求）：图案整套代码都还在，只是被 `DECOR_PATTERNS` 这一个
- * 开关关掉了 —— 每页拿到的都是 `plain`（什么都不画），所以纸面只有 `--c-canvas` 一个颜色。
- * 想恢复「图纸图案随路由变」，把下面那个常量改成 `true` 即可，别的都不用动。
+ * 草稿线（轮廓双线 / 构造线 / 排线 / 尺寸标注）的「手绘」路径由**确定性**算法生成，种子来自路径字符串 ——
+ * 见 `components/FigureLayer.tsx`；这里只描述「这一页要哪一种线、多密」。
  *
- * 图案本身画在 `app/globals.css` 的第 5 节（按 `data-decor` 选层：没有图片、没有 JS 计算，
- * 所以断网 / PWA 离线时装饰也在）。**新增一个图案 = 这里加一行 + globals.css 加一条规则**，
- * 别在组件里写 if (pathname === …)。
- *
- * 约定第 5 条：装饰层 `aria-hidden` + `pointer-events: none`，且不得影响正文可读性
- * —— 所以新图案一律 1px 线宽，颜色只许用 `--bp-line` / `--bp-line-strong`（透明度 ≤ 0.26）。
+ * 约定：装饰层 `aria-hidden` + `pointer-events: none`，不得影响正文可读性、不引图片资源。
  */
 
 import { isLang, isRouteId, SITE, type Lang, type RouteId } from "./site";
-
-/** 图案名 —— 与 app/globals.css 里 `.blueprint[data-decor="…"]` 的取值一一对应 */
-export type DecorPattern =
-  | "sheet" /* 整幅图纸：细格 + 每 5 格一条粗格 + 虚线图框 */
-  | "columns" /* 分栏线 + 一条虚线中轴（列表页） */
-  | "measure" /* 左侧刻度尺（文章页：像在图纸上排版） */
-  | "grid" /* 更密的细格，没有粗格 */
-  | "dots" /* 点阵 */
-  | "hatch" /* 45° 剖面线 */
-  | "plain" /* 什么都不画（离线页） */;
 
 /** 一张「图纸」是哪一页 —— RouteId 之外还有文章正文 / 离线页 / 认不出来的路径 */
 export type DecorSection = RouteId | "article" | "offline" | "unknown";
 
 /* ------------------------------------------------------------------
-   环境色层（第 8 项的扩展）：**只有大色块**，没有图案、没有线格 ——
-   站长明确要求「不要任何格子背景，背景干净点」，所以这一层就是几块软边的大颜色，
-   随路径换位置 / 换形 / 换色，换页时**形变**成下一页的样子（不是整层换掉、不是闪一下）。
-   规格写在这里，怎么画（遮罩 / 过渡曲线）全在 globals.css 第 5c 节。
-   ⚠️ 往这里加「图案 / 格子 / 线」之前先问一声：那正是被否掉的东西。
+   几何实体（第 15 项）：**主实体 + 小卫星**，硬边、带描边，换页时形变。
+   站长这一轮的要求（原话摘）：「一眼又能看到它清晰的边框，以及它就在那里，
+   切换页面时色块运动到下一个位置」「就像一块小形状不断在变化」。
+   规格写在这里，怎么画（双描边 / 草稿线 / 滚动联动）全在 globals.css 第 5 节
+   与 components/FigureLayer.tsx。
    ------------------------------------------------------------------ */
 
-/** 颜料编号 —— 对应 globals.css 的 `--ambient-tint-1…6`（三套外观各一组色值） */
-export type AmbientTint = 1 | 2 | 3 | 4 | 5 | 6;
+/** 颜料编号 —— 对应 globals.css 的 `--figure-tint-1…8`（三套外观各一组色值） */
+export type FigureTint = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
-/** 一块大色块。圆心是**视口百分比**，直径是**视口长边的倍数**（60 = 0.6 个 vmax） */
-export interface AmbientBlob {
-  /** 颜料号（1~6）—— 色值在三套外观的令牌里，这里只说用哪一号 */
-  tint: AmbientTint;
-  /** 圆心横坐标（视口宽度的百分比；可以超出 0~100，让色块只露出一角） */
+/** 形状集合：V1 的三种（rect / bar / circle）+ V2 的三种（triangle / cross / arc）。 */
+export type FigureShape = "rect" | "bar" | "circle" | "triangle" | "cross" | "arc";
+
+/** 注解贴在这个实体的哪个角上 */
+export type NoteSpot = "tl" | "tr" | "bl" | "br";
+
+/** 草稿线：轮廓双线（V1）+ 构造线（V1）+ 排线 / 尺寸标注（V2）。 */
+export interface Sketch {
+  /** 沿实体边界画两条略微抖动的线 */
+  contour: boolean;
+  /** 中心十字 / 对角线 */
+  construction: boolean;
+  /** 1 = 只中心十字；2 = 再加对角线 */
+  density: number;
+  /** V2：45° 细排线，用实体的实心轮廓裁剪 —— 只在实体内，绝不铺到实体之外 */
+  hatch?: boolean;
+  /** V2：实体下方一条尺寸线 + 刻度 / 箭头，配一行尺寸文字（达芬奇图纸那种） */
+  dimension?: boolean;
+}
+
+/** 一枚几何实体。圆心是**视口百分比**（vw / vh），尺寸是 vmax 的倍数。 */
+export interface Figure {
+  shape: FigureShape;
+  /** 圆心横坐标（视口宽度的百分比；可以超出 0~100，让实体只露出一角） */
   x: number;
   /** 圆心纵坐标（视口高度的百分比） */
   y: number;
-  /** 直径（vmax 的倍数） */
-  size: number;
-  /** 纵向再拉长多少（1 = 正圆，>1 = 竖椭圆） */
-  stretch?: number;
-  /** 旋转（度）：圆看不出旋转，椭圆看得出朝向 */
-  rot?: number;
-  /** 这一块自己的浓度（默认 1；0 = 这一页不用它 —— 但位置仍然写出来，
-      换到下一页时它照样参与形变，不会「凭空冒出来」） */
+  /** 宽（vmax 的倍数） */
+  w: number;
+  /** 高（vmax 的倍数） */
+  h: number;
+  /** 朝向（度） */
+  rot: number;
+  /** 颜料号（1~8）—— 色值在三套外观的令牌里，这里只说用哪一号 */
+  tint: FigureTint;
+  /** 这一块自己的浓度（默认 1；用不上的写 0 —— 但规格仍然写出来，换页时才不会跳变） */
   fade?: number;
+  /** 草稿线种类与密度 */
+  sketch: Sketch;
+  /** 注解位置（贴在这枚实体的角上，随它一起动） */
+  note: NoteSpot;
 }
 
-export interface Ambient {
-  /** **固定三块**：换页时元素不增不减，只改 transform / 颜色 / 浓度 —— 这才有「形变」 */
-  blobs: [AmbientBlob, AmbientBlob, AmbientBlob];
+/** 一页 = 一枚主实体 + 一枚小卫星（元素数量恒定） */
+export interface FigurePair {
+  main: Figure;
+  satellite: Figure;
 }
 
-/** 换页时色块形变的时长（毫秒）；**必须与 globals.css 的 `--ambient-shift` 一致** */
-export const AMBIENT_SHIFT_MS = 1100;
+/** 换页时实体形变的时长（毫秒）；**必须与 globals.css 的 `--figure-shift` 一致** */
+export const FIGURE_SHIFT_MS = 1100;
 
-/**
- * 色块的基准方框（vmax）。组件只写**恒定**的宽高，靠 `transform: scale()` 放大到 `size`：
- * 方框尺寸一变，遮罩就得每帧重新栅格化，手机上会发涩 —— 所以这个数不要按路由变。
- */
-export const AMBIENT_BASE_VMAX = 36;
+/** 卫星比主实体晚动多少（毫秒）：看起来才像「一个东西带着一个小东西走」。
+    V2 把它从 120 提到 160（配合 CSS 里卫星那条带过冲的曲线，即「二阶运动」）。 */
+export const FIGURE_SATELLITE_DELAY_MS = 160;
+
+/** 滚动联动的位移上限（vh）：实体任何时刻都要有一大半留在视口里 */
+export const FIGURE_SCROLL_SHIFT_VH = 8;
 
 /** 换页后正文渐入的时长（毫秒）；`components/PageIntro.tsx` 用它决定何时摘掉属性，
     与 globals.css 里 `page-fade-in` 的那条动画一致 */
@@ -89,49 +98,13 @@ export const PAGE_FADE_MS = 420;
 
 export interface Decor {
   section: DecorSection;
-  pattern: DecorPattern;
-  /** 图纸编号（图签上印的两位数字） */
+  /** 图纸编号（实体注解上印的两位数字） */
   sheet: string;
   /** 这张图纸的语言（`/offline/` 之类没有语言段时退回站点默认语言） */
   lang: Lang;
-  /** 这一页的大色块与结构图案（第 8 项扩展，见 `AMBIENTS` 与 globals.css 第 5c 节） */
-  ambient: Ambient;
+  /** 这一页的几何实体（主实体 + 卫星），见 `FIGURES` 与 globals.css 第 5 节 */
+  figure: FigurePair;
 }
-
-/**
- * 背景图案总开关。
- *
- * `false` = **全站纯色背景**：每一页拿到的都是 `plain`（CSS 里那一条就是
- * `background-image: none`），所以纸面只有 `--c-canvas` 一个颜色 ——
- * 没有网格、没有边缘淡出、没有虚线图框。右下角那张「图纸图签」不受这个开关影响
- * （它是内容里的装饰字，不是背景；嫌它碍眼就把 components/BlueprintBackground.tsx 里
- * 那个 `.blueprint-tag` 删掉，或给 globals.css 加一条 `.blueprint-tag { display: none }`）。
- *
- * `true` = 恢复第 8 项那套「一页一张图纸」：首页整幅网格、列表页分栏线、文章页刻度尺……
- * 图案与编号的对应表就在下面（`PATTERNS` / `SHEETS`），CSS 全在 globals.css 第 5 节，
- * 一行都没删 —— 关掉只是为了把背景做成纯色。
- */
-export const DECOR_PATTERNS = false;
-
-/**
- * 路由 → 图案。顺序与 lib/site.ts 的 ROUTES 无关（这里按 DecorSection 排），
- * 改一张图纸的图案只动这一行。
- * ⚠️ 这张表只在 `DECOR_PATTERNS` 为 `true` 时生效。
- */
-const PATTERNS: Record<DecorSection, DecorPattern> = {
-  home: "sheet",
-  posts: "columns",
-  article: "measure",
-  tags: "grid",
-  categories: "hatch",
-  archives: "columns",
-  search: "dots",
-  links: "hatch",
-  about: "grid",
-  settings: "columns",
-  offline: "plain",
-  unknown: "sheet",
-};
 
 /** 路由 → 图纸编号。空号（00）留给「认不出来的路径」，编号跳号也说明少了一张图纸 */
 const SHEETS: Record<DecorSection, string> = {
@@ -150,120 +123,332 @@ const SHEETS: Record<DecorSection, string> = {
 };
 
 /**
- * 路由 → 环境色层（第 8 项的扩展）。
+ * 路由 → 几何实体（第 15 项）。
  *
- * 与 `PATTERNS` / `SHEETS` 是同一种做法（穷尽表 + 一行一页），但目的不同：
- * `PATTERNS` 决定纸上的「图纸图案」（现在被 `DECOR_PATTERNS` 关着），这一张决定
- * **正文底下那几块颜色** —— 每页一组，换页时形变过去。**这一层里没有图案**（站长的要求：
- * 不要任何格子背景），只有三块软边的大色块。
+ * 与 `SHEETS` 是同一种做法（穷尽表 + 一行一页）：新加一页忘了给规格，TypeScript 直接报错。
+ * **每页不一样**靠**形状 / 位置 / 尺寸 / 朝向 / 颜料**五样一起变（相邻两页一定不同）；
+ * **每页两枚**（主 + 卫星），元素数量恒定 —— 用不上的写 `fade: 0` 而不是删掉。
  *
- * 三条读这张表时要记住的事：
- *   1. **三块，永远三块**（元素的增删会让形变变成「跳变」，所以用不到的块写 `fade: 0.3` 那种
- *      很低的浓度，而不是删掉一行）；
- *   2. **浓度是「整层 × 这一块」两级**：整层一个 `--ambient-alpha`（三套外观各一档，
- *      见 globals.css），单块再乘 `fade`。所以这里写 0.6 只是「比别页淡一点」，不是绝对透明度；
- *   3. **文章页刻意最淡**（正文页只在两个角留一点色）：读者在这儿停留最久，装饰要让路 ——
- *      见 globals.css 里 `.ambient[data-route="article"]` 那一条。
+ * 文章页按站长原话 = **竖放的朱红 `rect`**（tint 1 = 朱），摆在偏左的位置，
+ * 让开右侧的目录 / 进度条 / 回顶与左下角的齿轮（那些悬浮件有各自的不透明底）。
  *
- * 「每页独特」靠的是**位置 / 大小 / 椭圆朝向 / 颜料**四样一起变（相邻的两页一定不一样）——
- * 不是靠换图案：图案那套已经被否掉了。
+ * 浓度是「整层 × 这一块」两级：整层一个 `--figure-alpha`（三套外观各一档，见 globals.css），
+ * 单块再乘 `fade`。所以这里写 0.8 只是「比別页淡一点」，不是绝对透明度。
  */
-const AMBIENTS: Record<DecorSection, Ambient> = {
-  /* 01 首页：暖褐大块压左上（整页最大的一块）、陶土在右、苔绿从下沿露出来 */
+const FIGURES: Record<DecorSection, FigurePair> = {
+  /* 01 首页：群青大长方形压左上（整页最大的一块）+ 右上角一枚青灰小圆 */
   home: {
-    blobs: [
-      { tint: 1, x: 16, y: 18, size: 84, stretch: 1.1, rot: -16 },
-      { tint: 4, x: 88, y: 32, size: 62, stretch: 0.92, rot: 22 },
-      { tint: 2, x: 38, y: 98, size: 76, stretch: 1.05, fade: 0.8 },
-    ],
+    main: {
+      shape: "rect",
+      x: 18,
+      y: 30,
+      w: 30,
+      h: 38,
+      rot: -12,
+      tint: 7,
+      sketch: { contour: true, construction: true, density: 2 },
+      note: "bl",
+    },
+    satellite: {
+      shape: "circle",
+      x: 86,
+      y: 74,
+      w: 14,
+      h: 14,
+      rot: 0,
+      tint: 3,
+      fade: 0.9,
+      sketch: { contour: true, construction: false, density: 1 },
+      note: "tr",
+    },
   },
-  /* 02 文章列表：两条竖长色斑贴着左右边缘（像两栏文稿纸），底下再压一块紫褐 */
+  /* 02 文章列表：贴左边缘一条青的长条（像一栏文稿纸）+ 右上角一枚芥黄小圆 */
   posts: {
-    blobs: [
-      { tint: 3, x: -8, y: 36, size: 80, stretch: 1.3 },
-      { tint: 1, x: 108, y: 26, size: 68, stretch: 1.4, rot: 6 },
-      { tint: 5, x: 48, y: 110, size: 72, stretch: 0.9, fade: 0.6 },
-    ],
+    main: {
+      shape: "bar",
+      x: 8,
+      y: 40,
+      w: 8,
+      h: 64,
+      rot: 8,
+      tint: 6,
+      sketch: { contour: true, construction: true, density: 1, hatch: true },
+      note: "br",
+    },
+    satellite: {
+      shape: "circle",
+      x: 90,
+      y: 22,
+      w: 16,
+      h: 16,
+      rot: 0,
+      tint: 4,
+      fade: 0.85,
+      sketch: { contour: true, construction: false, density: 1 },
+      note: "bl",
+    },
   },
-  /* 03 正文：右上角一点青灰、左下角一点暖褐，第三块不用（`fade: 0`）—— 全站最安静的一页 */
+  /* 03 正文：竖放的**朱红**长方形（这一页的主角，不再整体压淡）——
+     摆在偏左，让开右侧的目录 / 进度 / 回顶与左下角的齿轮 */
   article: {
-    blobs: [
-      { tint: 6, x: 98, y: 6, size: 58, fade: 0.7 },
-      { tint: 1, x: -6, y: 92, size: 66, stretch: 1.2, fade: 0.55 },
-      { tint: 3, x: 60, y: 46, size: 40, fade: 0 },
-    ],
+    main: {
+      shape: "rect",
+      x: 30,
+      y: 46,
+      w: 16,
+      h: 54,
+      rot: 0,
+      tint: 1,
+      sketch: { contour: true, construction: true, density: 2, hatch: true, dimension: true },
+      note: "bl",
+    },
+    satellite: {
+      shape: "circle",
+      x: 50,
+      y: 80,
+      w: 8,
+      h: 8,
+      rot: 0,
+      tint: 3,
+      fade: 0.7,
+      sketch: { contour: true, construction: false, density: 1 },
+      note: "br",
+    },
   },
-  /* 04 标签：苔绿与陶土分居左上 / 右上，青灰压在下半页 */
+  /* 04 标签：右上角一枚苔绿大圆（像索引纸上的色环）+ 左下角一块陶土小方 */
   tags: {
-    blobs: [
-      { tint: 2, x: 20, y: 12, size: 62, stretch: 1.15, rot: -10 },
-      { tint: 4, x: 80, y: 20, size: 54 },
-      { tint: 6, x: 52, y: 92, size: 68, stretch: 0.95, fade: 0.7 },
-    ],
+    main: {
+      shape: "circle",
+      x: 78,
+      y: 26,
+      w: 26,
+      h: 26,
+      rot: 0,
+      tint: 5,
+      sketch: { contour: true, construction: true, density: 2 },
+      note: "bl",
+    },
+    satellite: {
+      shape: "rect",
+      x: 16,
+      y: 70,
+      w: 12,
+      h: 20,
+      rot: 20,
+      tint: 4,
+      fade: 0.9,
+      sketch: { contour: true, construction: false, density: 1 },
+      note: "tr",
+    },
   },
-  /* 05 分类：紫褐在左下、灰蓝在右下、苔绿从顶上露一角 */
+  /* 05 分类：左上角一枚紫的**三角形**（V2 新形状，像一面小旗）+ 右下角一枚暖褐小圆 */
   categories: {
-    blobs: [
-      { tint: 5, x: 10, y: 64, size: 72, stretch: 1.25, rot: 28 },
-      { tint: 3, x: 88, y: 68, size: 58, stretch: 1.1, rot: -24 },
-      { tint: 2, x: 50, y: -8, size: 58, fade: 0.65 },
-    ],
+    main: {
+      shape: "triangle",
+      x: 16,
+      y: 48,
+      w: 22,
+      h: 22,
+      rot: -6,
+      tint: 8,
+      sketch: { contour: true, construction: true, density: 1, hatch: true },
+      note: "br",
+    },
+    satellite: {
+      shape: "circle",
+      x: 70,
+      y: 78,
+      w: 14,
+      h: 14,
+      rot: 0,
+      tint: 2,
+      fade: 0.85,
+      sketch: { contour: true, construction: false, density: 1 },
+      note: "tr",
+    },
   },
-  /* 06 归档：左上暖褐、右下青灰、中间一块很淡的陶土 */
+  /* 06 归档：右下角一条青的长横条（时间线的意思）+ 左上角一枚朱红小圆 */
   archives: {
-    blobs: [
-      { tint: 1, x: 6, y: 14, size: 74, stretch: 1.05 },
-      { tint: 6, x: 94, y: 80, size: 66 },
-      { tint: 4, x: 44, y: 50, size: 46, fade: 0.3 },
-    ],
+    main: {
+      shape: "bar",
+      x: 60,
+      y: 70,
+      w: 44,
+      h: 9,
+      rot: -14,
+      tint: 6,
+      sketch: { contour: true, construction: true, density: 1 },
+      note: "tl",
+    },
+    satellite: {
+      shape: "circle",
+      x: 20,
+      y: 24,
+      w: 12,
+      h: 12,
+      rot: 0,
+      tint: 1,
+      fade: 0.85,
+      sketch: { contour: true, construction: false, density: 1 },
+      note: "br",
+    },
   },
-  /* 07 搜索：灰蓝在左下、暖褐在右上、中间几乎不留色 */
+  /* 07 搜索：左上角一枚芥黄**弧**（V2 新形状，半圆穹顶，像放大镜的弧）+ 右下一条青的竖条 */
   search: {
-    blobs: [
-      { tint: 3, x: 26, y: 82, size: 70, stretch: 1.2, rot: 12 },
-      { tint: 1, x: 76, y: 16, size: 60 },
-      { tint: 6, x: 50, y: 48, size: 44, fade: 0.25 },
-    ],
+    main: {
+      shape: "arc",
+      x: 32,
+      y: 48,
+      w: 28,
+      h: 24,
+      rot: 0,
+      tint: 4,
+      sketch: { contour: true, construction: true, density: 2 },
+      note: "br",
+    },
+    satellite: {
+      shape: "bar",
+      x: 74,
+      y: 72,
+      w: 10,
+      h: 34,
+      rot: 24,
+      tint: 6,
+      fade: 0.8,
+      sketch: { contour: true, construction: false, density: 1 },
+      note: "tl",
+    },
   },
-  /* 08 友链：陶土在左上、紫褐在右侧（这一页最斜的一块）、灰蓝从底下露一角 */
+  /* 08 友链：右上角一枚陶土**十字**（V2 新形状，像节点）+ 左下角一枚群青小圆 */
   links: {
-    blobs: [
-      { tint: 4, x: 16, y: 22, size: 66, stretch: 1.1, rot: -12 },
-      { tint: 5, x: 86, y: 54, size: 72, stretch: 1.3, rot: -32 },
-      { tint: 3, x: 44, y: 106, size: 58, fade: 0.5 },
-    ],
+    main: {
+      shape: "cross",
+      x: 74,
+      y: 48,
+      w: 22,
+      h: 22,
+      rot: 0,
+      tint: 3,
+      sketch: { contour: true, construction: true, density: 1 },
+      note: "tl",
+    },
+    satellite: {
+      shape: "circle",
+      x: 20,
+      y: 82,
+      w: 13,
+      h: 13,
+      rot: 0,
+      tint: 7,
+      fade: 0.85,
+      sketch: { contour: true, construction: false, density: 1 },
+      note: "tr",
+    },
   },
-  /* 09 关于：青灰在右上、苔绿在左下、中间一块很淡的暖褐 */
+  /* 09 关于：右下角一枚暖褐大圆 + 左上角一块紫的小方 */
   about: {
-    blobs: [
-      { tint: 6, x: 86, y: 12, size: 68, stretch: 1.15, rot: 18 },
-      { tint: 2, x: 8, y: 74, size: 64 },
-      { tint: 1, x: 52, y: 44, size: 52, fade: 0.25 },
-    ],
+    main: {
+      shape: "circle",
+      x: 82,
+      y: 70,
+      w: 24,
+      h: 24,
+      rot: 0,
+      tint: 2,
+      sketch: { contour: true, construction: true, density: 2 },
+      note: "tl",
+    },
+    satellite: {
+      shape: "rect",
+      x: 24,
+      y: 20,
+      w: 16,
+      h: 12,
+      rot: -22,
+      tint: 5,
+      fade: 0.9,
+      sketch: { contour: true, construction: false, density: 1 },
+      note: "br",
+    },
   },
-  /* 10 设置：两条竖长色斑压左右边缘、紫褐从底下露一角 */
+  /* 10 设置：贴右边缘一条朱红竖条（这一页最窄）+ 左下角一枚青小圆 */
   settings: {
-    blobs: [
-      { tint: 3, x: -10, y: 22, size: 68, stretch: 1.25 },
-      { tint: 1, x: 110, y: 72, size: 62, stretch: 1.15 },
-      { tint: 5, x: 52, y: 114, size: 56, fade: 0.45 },
-    ],
+    main: {
+      shape: "bar",
+      x: 88,
+      y: 40,
+      w: 7,
+      h: 52,
+      rot: -6,
+      tint: 1,
+      sketch: { contour: true, construction: true, density: 1 },
+      note: "tl",
+    },
+    satellite: {
+      shape: "circle",
+      x: 12,
+      y: 76,
+      w: 11,
+      h: 11,
+      rot: 0,
+      tint: 6,
+      fade: 0.75,
+      sketch: { contour: true, construction: false, density: 1 },
+      note: "tr",
+    },
   },
-  /* 11 离线：纸面最干净 —— 只有上下两片很淡的色 */
+  /* 11 离线：纸面最干净 —— 只有上下两片很淡的实体 */
   offline: {
-    blobs: [
-      { tint: 1, x: 50, y: -12, size: 62, fade: 0.3 },
-      { tint: 3, x: 50, y: 114, size: 58, stretch: 1.2, fade: 0.3 },
-      { tint: 5, x: 120, y: 50, size: 40, fade: 0 },
-    ],
+    main: {
+      shape: "rect",
+      x: 50,
+      y: 40,
+      w: 26,
+      h: 20,
+      rot: -8,
+      tint: 2,
+      fade: 0.5,
+      sketch: { contour: true, construction: true, density: 1 },
+      note: "br",
+    },
+    satellite: {
+      shape: "circle",
+      x: 50,
+      y: 88,
+      w: 10,
+      h: 10,
+      rot: 0,
+      tint: 3,
+      fade: 0.35,
+      sketch: { contour: true, construction: false, density: 1 },
+      note: "tr",
+    },
   },
-  /* 00 认不出来的路径：紫褐在左下、青灰在右上、中间一块淡灰蓝 */
+  /* 00 认不出来的路径：左上角一枚紫的圆 + 右下角一块陶土的长方形 */
   unknown: {
-    blobs: [
-      { tint: 5, x: 20, y: 86, size: 66, stretch: 1.15, rot: 24 },
-      { tint: 6, x: 82, y: 18, size: 60 },
-      { tint: 3, x: 50, y: 50, size: 48, fade: 0.35 },
-    ],
+    main: {
+      shape: "circle",
+      x: 24,
+      y: 26,
+      w: 22,
+      h: 22,
+      rot: 0,
+      tint: 5,
+      sketch: { contour: true, construction: true, density: 2 },
+      note: "br",
+    },
+    satellite: {
+      shape: "rect",
+      x: 78,
+      y: 72,
+      w: 14,
+      h: 22,
+      rot: 26,
+      tint: 3,
+      fade: 0.8,
+      sketch: { contour: true, construction: false, density: 1 },
+      note: "tl",
+    },
   },
 };
 
@@ -308,21 +493,18 @@ export function decorate(pathname: string): Decor {
   const section = sectionFromPath(pathname);
   return {
     section,
-    // 图案关了（背景纯色）就给每页同一个 plain；开关见上面的 DECOR_PATTERNS
-    pattern: DECOR_PATTERNS ? PATTERNS[section] : "plain",
     sheet: SHEETS[section],
     lang: langFromPath(pathname),
-    // 环境色层不受 DECOR_PATTERNS 影响：它是「正文底下的颜色」，与纸上的图纸图案是两件事
-    ambient: AMBIENTS[section],
+    figure: FIGURES[section],
   };
 }
 
-/** 图签上的编号，例如 `TOB-ZH-04`（TOB = Text-Only-Blog） */
+/** 实体注解上的编号，例如 `TOB-ZH-04`（TOB = Text-Only-Blog） */
 export function decorCode(decor: Decor): string {
   return `TOB-${decor.lang.toUpperCase()}-${decor.sheet}`;
 }
 
-/** 图签上的名字：RouteId 的图纸复用导航文案（`SITE.i18n.nav`，那一排入口现在在页脚），
+/** 实体注解上的名字：RouteId 的图纸复用导航文案（`SITE.i18n.nav`，那一排入口现在在页脚），
     其余三张在 `SITE.i18n.decor` 里 */
 export function decorLabel(section: DecorSection, lang: Lang): string {
   const t = SITE.i18n[lang];
