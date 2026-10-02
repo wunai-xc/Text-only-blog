@@ -94,22 +94,21 @@
   --c-danger: #b23a2b;
   --c-mark: #f0e2ba; /* 选区 */
 
-  /* 蓝图背景层（第 6 项）：透明度都压得很低，只做气质，不抢字 */
-  --bp-line: rgba(120, 100, 60, 0.12);
-  --bp-line-strong: rgba(120, 100, 60, 0.2);
-  --bp-frame: rgba(120, 100, 60, 0.26);
-
-  /* 环境色层（第 8 项扩展）：大色块的六号颜料。
-     色值写**不透明**的，浓淡一律交给 `--ambient-alpha`（整层乘一次）——
-     想调「这片色重不重」只改那一个数，六号颜料不用动。
-     ⚠️ 这一层只有色块、没有任何线 / 网格（站长的要求），所以没有「结构线色」这种令牌。 */
-  --ambient-tint-1: #b08a52; /* 暖褐（与重点色同一家族） */
-  --ambient-tint-2: #8c9a63; /* 苔绿 */
-  --ambient-tint-3: #7d93a8; /* 灰蓝 */
-  --ambient-tint-4: #c08055; /* 陶土 */
-  --ambient-tint-5: #9c7b96; /* 紫褐 */
-  --ambient-tint-6: #6f9a92; /* 青灰 */
-  --ambient-alpha: 0.18;
+  /* 几何实体层（第 15 项）：八号颜料 + 整层浓度 + 两道墨线。
+     色值写**不透明**的，浓淡一律交给 `--figure-alpha`（整层乘一次）——
+     想调「这片色重不重」只改那一个数，八号颜料不用动。
+     浅底（纸 / 亮）用**重色**、深底（暗）用**浅色**，见 PROJECTS.md §15.2 那张表。 */
+  --figure-tint-1: #a63a24; /* 朱 */
+  --figure-tint-2: #8a6a3b; /* 暖褐 */
+  --figure-tint-3: #b4623a; /* 陶土 */
+  --figure-tint-4: #9c7a1e; /* 芥黄 */
+  --figure-tint-5: #5c7a3a; /* 苔绿 */
+  --figure-tint-6: #2f6f6a; /* 青 */
+  --figure-tint-7: #33517f; /* 群青 */
+  --figure-tint-8: #6b4a80; /* 紫 */
+  --figure-alpha: 0.26;
+  --figure-ink: rgba(60, 48, 28, 0.45); /* 轮廓主线 */
+  --figure-ink-soft: rgba(60, 48, 28, 0.24); /* 第二道描边 / 构造线 */
 
   --shape-shadow: 0 1px 2px rgba(70, 58, 34, 0.06);
 }
@@ -131,18 +130,18 @@
   --c-danger: #c0392b;
   --c-mark: #d7e7ee;
 
-  --bp-line: rgba(29, 79, 99, 0.1);
-  --bp-line-strong: rgba(29, 79, 99, 0.18);
-  --bp-frame: rgba(29, 79, 99, 0.24);
-
-  /* 环境色层：亮外观偏冷（纸是暖的，这里就走青蓝那一侧） */
-  --ambient-tint-1: #2f6b80;
-  --ambient-tint-2: #6aa0b5;
-  --ambient-tint-3: #3f7f6a;
-  --ambient-tint-4: #5f79a8;
-  --ambient-tint-5: #8a6f9c;
-  --ambient-tint-6: #4d8f96;
-  --ambient-alpha: 0.14;
+  /* 几何实体层：亮外观偏冷（纸是暖的，这里就走青蓝那一侧）；仍是浅底 → 重色 */
+  --figure-tint-1: #b03a2e;
+  --figure-tint-2: #6f5a2e;
+  --figure-tint-3: #c0663c;
+  --figure-tint-4: #8a6a12;
+  --figure-tint-5: #4f6b30;
+  --figure-tint-6: #1f6b6b;
+  --figure-tint-7: #2a4a86;
+  --figure-tint-8: #5c3f7a;
+  --figure-alpha: 0.22;
+  --figure-ink: rgba(20, 40, 50, 0.4);
+  --figure-ink-soft: rgba(20, 40, 50, 0.22);
 
   --shape-shadow: 0 1px 2px rgba(20, 40, 50, 0.06);
 }
@@ -164,18 +163,18 @@
   --c-danger: #ff8b7a;
   --c-mark: #1c3b45;
 
-  --bp-line: rgba(127, 195, 218, 0.08);
-  --bp-line-strong: rgba(127, 195, 218, 0.15);
-  --bp-frame: rgba(127, 195, 218, 0.2);
-
-  /* 环境色层：暗外观下纸是近黑的，色块要**亮**一点才看得出来（这里比另两套高一档） */
-  --ambient-tint-1: #2a6a80;
-  --ambient-tint-2: #2f7f74;
-  --ambient-tint-3: #3a5f86;
-  --ambient-tint-4: #55648f;
-  --ambient-tint-5: #5c4a78;
-  --ambient-tint-6: #2f7f8c;
-  --ambient-alpha: 0.22;
+  /* 几何实体层：暗外观下纸是近黑的，颜料要**浅**一点才看得出来（高明度、低饱和） */
+  --figure-tint-1: #f0a08c;
+  --figure-tint-2: #dcbf94;
+  --figure-tint-3: #f2b28c;
+  --figure-tint-4: #e6cf86;
+  --figure-tint-5: #b6d0a0;
+  --figure-tint-6: #9ed6d0;
+  --figure-tint-7: #a8bce6;
+  --figure-tint-8: #cbb0e0;
+  --figure-alpha: 0.30;
+  --figure-ink: rgba(200, 225, 230, 0.35);
+  --figure-ink-soft: rgba(200, 225, 230, 0.2);
 
   --shape-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
@@ -187,15 +186,13 @@
 :root {
   --shape-radius: 8px;
   --shape-radius-lg: 12px;
-  --bp-grid: 24px; /* 细格 */
-  --bp-grid-major: 120px; /* 粗格：每 5 格一条 */
   --reading-measure: 42rem;
   --reading-size: 1.0625rem;
   --reading-leading: 1.85;
-  /* 换页动效的两个时长（第 8 项扩展）。**组件里的毫秒数必须与它们一致**：
-     lib/decor.ts 的 AMBIENT_SHIFT_MS / PAGE_FADE_MS
-     —— 配对关系写在 components/AmbientBackdrop.tsx 与 components/PageIntro.tsx 的文件头。 */
-  --ambient-shift: 1100ms; /* 大色块形变（挪位 / 换形 / 换色） */
+  /* 换页动效的两个时长（第 15 项）。**组件里的毫秒数必须与它们一致**：
+     lib/decor.ts 的 FIGURE_SHIFT_MS / PAGE_FADE_MS
+     —— 配对关系写在 components/FigureLayer.tsx 与 components/PageIntro.tsx 的文件头。 */
+  --figure-shift: 1100ms; /* 实体形变（挪位 / 换形 / 换色） */
   --page-fade: 420ms; /* 换页后正文渐入 */
   /*
    * 顶栏高度：**只有一个事实来源**。
@@ -278,314 +275,271 @@
 }
 
 /* ============================================================
-   5. 蓝图草图背景层（第 6 项）
-   ⚠️ **背景现在是纯色**：`lib/decor.ts` 的 `DECOR_PATTERNS = false`，所以每页都是
-   `[data-decor="plain"]` —— 不画网格、不画图框、不做边缘淡出，纸面只有 `<html>` 上那一层
-   `--c-canvas`。下面这套「细格 + 每 5 格一条粗格 + 边缘淡出 + 虚线图框」与「5b」那七套图案
-   一行都没删，把那个开关改回 `true` 就全部恢复。
-   约定第 5 条：装饰层必须 aria-hidden、pointer-events: none，且不得影响正文可读性
-   —— 所以线是 1px、透明度不超过 0.26，边框只做大屏、手机上直接不显示。
-   第 8 项已按这个约定接上路由：元素上挂 data-decor / data-route / data-redraw
-   （路径 → 图纸的映射在 lib/decor.ts，图案在下面「5b. 图案随路由变」一节）。
+   5. 几何实体层（第 15 项：几何实体与手绘草稿）
+   取代上一版的两层（蓝图图案层 + 环境色大色块层）。
+   规格在 lib/decor.ts 的 FIGURES（每页主实体 + 小卫星）；这里只负责「怎么画」：
+   硬边实心块 + 两道描边 + 手绘草稿线（轮廓双线 / 构造线）+ 滚动联动。
+   渲染它的组件是 components/FigureLayer.tsx（客户端，读 usePathname）。
+
+   整层 position: fixed; inset: 0; z-index: -1; pointer-events: none; aria-hidden ——
+   **永不**上移，实体**永远在文字后面**（正文列不加不透明底、没有前景装饰层）。
+   线宽 0.6~1px、只跟着实体走，**没有满页网格 / 点阵**（那正是被否掉的东西）。
+   浓度只有一处 `--figure-alpha`（纸 0.26 / 亮 0.22 / 暗 0.30），八号颜料的色值在三套令牌里。
+
+   滚动联动：组件往这一层写 `--scroll-shift`（±8vh），`.figure-slot` 的 translateY 读它 ——
+   那条 transform **故意不设 transition**，滚动才跟手（形变的过渡在 left/top/width/height 上）。
    ============================================================ */
 @layer components {
-  .blueprint {
+  .figure {
     position: fixed;
     inset: 0;
     z-index: -1;
+    overflow: hidden; /* 实体允许超出视口，但不该让页面多出滚动条 */
     pointer-events: none;
-    background-image:
-      repeating-linear-gradient(
-        to right,
-        var(--bp-line-strong) 0 1px,
-        transparent 1px var(--bp-grid-major)
-      ),
-      repeating-linear-gradient(
-        to bottom,
-        var(--bp-line-strong) 0 1px,
-        transparent 1px var(--bp-grid-major)
-      ),
-      repeating-linear-gradient(to right, var(--bp-line) 0 1px, transparent 1px var(--bp-grid)),
-      repeating-linear-gradient(to bottom, var(--bp-line) 0 1px, transparent 1px var(--bp-grid));
-  }
-
-  /* 边缘用底色淡出网格，像一张摊在桌上的图纸 */
-  .blueprint::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image: radial-gradient(130% 120% at 50% 0%, transparent 55%, var(--c-canvas) 100%);
-  }
-
-  /* 图纸边框（虚线的图框），只在大屏出现 */
-  .blueprint::after {
-    content: "";
-    position: absolute;
-    inset: 14px;
-    border: 1px dashed var(--bp-frame);
-    border-radius: var(--shape-radius-lg);
-  }
-
-  @media (max-width: 48rem) {
-    .blueprint::after {
-      display: none;
-    }
-  }
-
-  /* ---------- 5b. 图案随路由变（第 8 项：装饰与动效） ----------
-     ⚠️ 这一节现在**默认不生效**（背景是纯色，见文件头第 5 节那句）：
-     `lib/decor.ts` 的 `DECOR_PATTERNS = false` 让每页都是 `plain`。
-     把那个开关改成 `true`，下面七套图案与对应的编号立刻回来。
-
-     谁是哪一张图纸由 lib/decor.ts 决定，这里只按 data-decor 选层。
-     想看全部图案：/zh/（整幅图纸）→ /zh/posts/（分栏线）→ 文章页（刻度尺）→
-     /zh/tags/（密格）→ /zh/categories/（剖面线）→ /zh/search/（点阵）→ /offline/（空纸）。
-
-     ⚠️ 线宽一律 1px、颜色只用 --bp-line / --bp-line-strong（透明度 ≤ 0.26）：
-     装饰不得抢正文的字，也不得让手机上的滚动变卡（全是 CSS 渐变，没有图片与滤镜）。
-     新增一个图案 = lib/decor.ts 的 PATTERNS 加一行 + 这里加一条 [data-decor="…"]。 */
-
-  /* 01 首页 / 未知路径：整幅图纸 —— 就是上面 .blueprint 的默认图案（细格 + 粗格 + 图框） */
-
-  /* 02 列表页：每 16rem 一根竖向分栏线 + 正中一条虚线中轴（像一栏栏的文稿纸） */
-  .blueprint[data-decor="columns"] {
-    background-image:
-      repeating-linear-gradient(to right, var(--bp-line) 0 1px, transparent 1px 16rem),
-      repeating-linear-gradient(to bottom, var(--bp-line-strong) 0 8px, transparent 8px 16px);
-    background-size: auto, 1px 100%;
-    background-position: 0 0, center top;
-    background-repeat: repeat, no-repeat;
-  }
-
-  /* 03 文章页：左边缘一把刻度尺（短刻度 8px、长刻度 40px）—— 在纸上排版的感觉 */
-  .blueprint[data-decor="measure"] {
-    background-image:
-      repeating-linear-gradient(to bottom, var(--bp-line-strong) 0 1px, transparent 1px 40px),
-      repeating-linear-gradient(to bottom, var(--bp-line) 0 1px, transparent 1px 8px);
-    background-size: 11px 100%, 6px 100%;
-    background-position: left top, left top;
-    background-repeat: no-repeat, no-repeat;
-  }
-
-  /* 04 标签页：只有细格，格子更小更密（近景翻阅一张索引纸） */
-  .blueprint[data-decor="grid"] {
-    --bp-grid: 16px;
-    background-image:
-      repeating-linear-gradient(to right, var(--bp-line) 0 1px, transparent 1px var(--bp-grid)),
-      repeating-linear-gradient(to bottom, var(--bp-line) 0 1px, transparent 1px var(--bp-grid));
-  }
-
-  /* 05 分类页：45° 剖面线（图纸上表示「剖开看」的那种线） */
-  .blueprint[data-decor="hatch"] {
-    background-image: repeating-linear-gradient(
-      45deg,
-      var(--bp-line) 0 1px,
-      transparent 1px 18px
-    );
-  }
-
-  /* 07 搜索页：点阵（像坐标纸上的取样点） */
-  .blueprint[data-decor="dots"] {
-    background-image: radial-gradient(var(--bp-line-strong) 1px, transparent 1.6px);
-    background-size: 18px 18px;
-  }
-
-  /* 11 离线页：什么都不画 —— 断网时纸面最干净，也最省电 */
-  .blueprint[data-decor="plain"] {
-    background-image: none;
-  }
-
-  /* 纯色背景（默认状态）：`lib/decor.ts` 的 `DECOR_PATTERNS = false` 让每一页都是 plain，
-     连边缘淡出也一并关掉 —— 这一层于是彻底不画任何东西，页面只剩 <html> 的 --c-canvas。 */
-  .blueprint[data-decor="plain"]::before {
-    display: none;
-  }
-
-  /* 近景图案不配图框：一页一眼就能看出「换了一张图纸」 */
-  .blueprint[data-decor="grid"]::after,
-  .blueprint[data-decor="dots"]::after,
-  .blueprint[data-decor="hatch"]::after,
-  .blueprint[data-decor="plain"]::after {
-    display: none;
-  }
-
-  /* 图框与边缘淡出按「哪一页」微调（data-route 的唯一用处）：
-     文章页收得更紧一点，读正文时视线落在中间；其余图纸用基线那条淡出。
-     想再加一处就写 [data-route="…"]，别在组件里做判断。 */
-  .blueprint[data-route="article"]::before {
-    background-image: radial-gradient(115% 105% at 50% 0%, transparent 45%, var(--c-canvas) 100%);
-  }
-
-  /* 换页时的「纸面重铺」：只淡一次，不做转场动画（第 8 项的全部动效就这一处 + 顶栏光标） */
-  @media (prefers-reduced-motion: no-preference) {
-    .blueprint[data-redraw="true"] {
-      animation: blueprint-redraw 0.32s ease-out both;
-    }
-  }
-
-  @keyframes blueprint-redraw {
-    from {
-      opacity: 0.45;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  /* 右下角的图签（图纸标题栏）：编号 + 这一页的名字。
-     它挂在这一层里（z-index: -1），所以永远在正文下面 —— 角落通常没有内容，
-     真被压住也无所谓：这是装饰，不是信息（内容统计印在页脚第一块）。 */
-  .blueprint-tag {
-    position: absolute;
-    right: 1.9rem;
-    bottom: 1.9rem;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.1rem;
-    padding: 0.3rem 0.55rem;
-    border: 1px dashed var(--bp-frame);
-    border-radius: var(--shape-radius);
-    color: var(--c-ink-subtle);
-    font-family: var(--font-mono);
-    font-size: 0.66rem;
-    line-height: 1.4;
-    letter-spacing: 0.06em;
-    opacity: 0.8;
-  }
-
-  .blueprint-tag-name {
-    color: var(--c-ink-muted);
-    letter-spacing: 0.02em;
-  }
-
-  /* 手机上不印图签：屏幕小，角落那几平方厘米留给正文（图框本来也隐掉了） */
-  @media (max-width: 48rem) {
-    .blueprint-tag {
-      display: none;
-    }
-  }
-
-  /* ==========================================================
-     5c. 环境色层（第 8 项扩展：大色块，随路由形变）
-     谁是哪一页的规格（颜料号 / 圆心 / 直径 / 朝向 / 浓度）在 lib/decor.ts 的 AMBIENTS；
-     这里只负责「怎么画」：遮罩做软边、transform 做形变。
-     渲染它的组件是 components/AmbientBackdrop.tsx（客户端，读 usePathname），
-     挂载顺序在 app/layout.tsx：**环境色层在蓝图层前面** = 画在它下面。
-
-     ⚠️ 这一层**只有大色块，没有图案 / 格子 / 线**（站长的要求：「不要任何格子背景，背景干净点」）。
-
-     ⚠️ 可读性预算（约定第 5 条：装饰不得影响正文可读性）——改这里的数之前先读这一句：
-     整层只有一处 `opacity: var(--ambient-alpha)`（纸 0.18 / 亮 0.14 / 暗 0.22），
-     也就是说纸面上最浓的一处叠加不到 18%，而色块的边缘还是软下去的；
-     正文的 --c-ink 与 --c-canvas 对比度在 12:1 以上，压上这一层仍然远超 AAA。
-     另外**没有任何一处会动尺寸或位置**：这一层 position: fixed、不占文档流，
-     所以它既不会引起版面跳动（CLS），也不会改变任何一行字的位置。
-     ========================================================== */
-  .ambient {
-    position: fixed;
-    inset: 0;
-    z-index: -1; /* 与蓝图层同级：谁在上面由挂载顺序决定（环境色在下） */
-    overflow: hidden; /* 色块允许超出视口，但不该让页面多出滚动条 */
-    pointer-events: none;
-    opacity: var(--ambient-alpha);
+    opacity: var(--figure-alpha);
     transition: opacity 0.18s ease; /* 与 <html> 换底色同一个节拍 */
   }
 
-  /* 正文页让路：读者在文章页停留最久，这一页整层再压到六成（规格那边本身也已经最淡） */
-  .ambient[data-route="article"] {
-    opacity: calc(var(--ambient-alpha) * 0.6);
-  }
-
-  /* 窄屏也压一档：手机上一块 80vmax 的色块占的视野比桌面上大得多 */
-  @media (max-width: 48rem) {
-    .ambient {
-      opacity: calc(var(--ambient-alpha) * 0.82);
-    }
-
-    .ambient[data-route="article"] {
-      opacity: calc(var(--ambient-alpha) * 0.5);
-    }
-  }
-
-  /* 色块的容器：三块都是它的绝对定位子元素（圆心按视口百分比算，与文档滚动无关）。
-     它自己只管定位 —— 让「整层浓度」（.ambient 的 opacity）与「单块几何」（行内 transform）分家 */
-  .ambient-field {
+  /* 实体的容器：两枚都是它的绝对定位子元素（圆心按视口百分比算，与文档滚动无关） */
+  .figure-field {
     position: absolute;
     inset: 0;
   }
 
-  /* 一块大色块。宽高由行内样式给（**恒定**，见 lib/decor.ts 的 AMBIENT_BASE_VMAX），
-     位置 / 远近 / 朝向全在 transform 上 —— 换页时浏览器插值这几个数，这就是「形变」。
-     软边用遮罩（radial-gradient）而不是 filter: blur()：手机上 blur 会让整块每帧重新栅格化，
-     遮罩是一次性的；颜色写在 background-color 上，所以换颜料（换页 / 换外观）也平滑。
-     border-radius 只是兜底：老浏览器没有 mask 时，至少还是一块圆的色斑而不是方角。 */
-  .ambient-blob {
+  /* 一枚实体的定位框：管**位置与尺寸**，换页时浏览器插值 left/top/width/height（这就是形变）。
+     `transform` 只做两件事 —— 把圆心对齐到 (x, y)、叠加滚动联动的 translateY；
+     它**故意不设 transition**，所以滚动是跟手的（形变过渡在 left/top/width/height 上）。
+     y 的偏向由 `--figure-ease` 决定：主实体是标准 ease-out。 */
+  .figure-slot {
     position: absolute;
-    left: 0;
-    top: 0;
-    border-radius: 50%;
-    background-color: var(--ambient-tint-1);
-    -webkit-mask-image: radial-gradient(
-      closest-side,
-      #000 0%,
-      rgba(0, 0, 0, 0.78) 36%,
-      rgba(0, 0, 0, 0.3) 68%,
-      transparent 100%
-    );
-    mask-image: radial-gradient(
-      closest-side,
-      #000 0%,
-      rgba(0, 0, 0, 0.78) 36%,
-      rgba(0, 0, 0, 0.3) 68%,
-      transparent 100%
-    );
+    --figure-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+    transform: translate(-50%, -50%) translateY(var(--scroll-shift, 0px));
     transition:
-      transform var(--ambient-shift) cubic-bezier(0.22, 0.61, 0.36, 1),
-      opacity var(--ambient-shift) ease,
-      background-color calc(var(--ambient-shift) * 0.5) ease;
+      left var(--figure-shift) var(--figure-ease),
+      top var(--figure-shift) var(--figure-ease),
+      width var(--figure-shift) var(--figure-ease),
+      height var(--figure-shift) var(--figure-ease);
+    transition-delay: var(--figure-delay, 0ms);
     will-change: transform;
   }
 
-  /* 六号颜料（色值在三套外观的令牌里） */
-  .ambient-blob[data-tint="1"] {
-    background-color: var(--ambient-tint-1);
+  /* 卫星（V2「二阶运动」）：
+     ① 换页时比主实体晚动（160ms），且用一条**带过冲**的曲线 —— 像被主实体拖过去；
+     ② 滚动联动的位移读另一个变量 `--scroll-shift-satellite`（组件里是欠阻尼弹簧），
+        所以卫星总比主实体晚半拍。变量没写时退回主实体的位移。 */
+  .figure-slot[data-variant="satellite"] {
+    --figure-delay: 160ms;
+    --figure-ease: cubic-bezier(0.34, 1.42, 0.5, 1);
+    transform: translate(-50%, -50%)
+      translateY(var(--scroll-shift-satellite, var(--scroll-shift, 0px)));
   }
 
-  .ambient-blob[data-tint="2"] {
-    background-color: var(--ambient-tint-2);
+  /* body：只负责**朝向 / 浓度**的过渡。注解与尺寸文字挂在这一层 ——
+     这样即使实体本身被 clip-path 裁成三角形 / 十字，文字也不会被一起裁掉。 */
+  .figure-body {
+    position: absolute;
+    inset: 0;
+    transition:
+      transform var(--figure-shift) var(--figure-ease),
+      opacity calc(var(--figure-shift) * 0.6) ease;
+    transition-delay: var(--figure-delay, 0ms);
   }
 
-  .ambient-blob[data-tint="3"] {
-    background-color: var(--ambient-tint-3);
+  /* 实体本身（硬边实心块）：形状 / 颜料在这里过渡。
+     两道描边 —— 主线走 border，第二道走一个错位 1.5px 的 box-shadow（透明度约六成）。
+     没有模糊、没有遮罩：边缘是硬的（站长要的「清晰的边框」）。 */
+  .figure-item {
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--figure-ink);
+    box-shadow: 1.5px 1.5px 0 var(--figure-ink-soft);
+    background-color: var(--figure-tint-1);
+    transition:
+      background-color calc(var(--figure-shift) * 0.5) ease,
+      border-radius var(--figure-shift) var(--figure-ease);
+    transition-delay: var(--figure-delay, 0ms);
   }
 
-  .ambient-blob[data-tint="4"] {
-    background-color: var(--ambient-tint-4);
+  .figure-item[data-shape="circle"] {
+    border-radius: 50%;
   }
 
-  .ambient-blob[data-tint="5"] {
-    background-color: var(--ambient-tint-5);
+  .figure-item[data-shape="bar"] {
+    border-radius: 2px;
   }
 
-  .ambient-blob[data-tint="6"] {
-    background-color: var(--ambient-tint-6);
+  /* 弧（V2）：半圆穹顶 —— 上面两角全圆、下边平；border 跟着圆角走，两道描边照旧 */
+  .figure-item[data-shape="arc"] {
+    border-radius: 100% 100% 0 0;
   }
 
-  /* ---------- 这一层里没有图案 ----------
-     站长否掉了「结构覆盖 / 格子背景」：「不要任何格子背景，背景干净点」。
-     所以这里只剩上面那几块软边大色块 —— 没有线、没有网格、没有点阵。
-     （`.blueprint` 那一套图纸图案是**另一层**，由 lib/decor.ts 的 `DECOR_PATTERNS` 控制，默认关着。）
-     要在背景上加线条 / 网格之前先问一声：那正是被否掉的东西。 */
+  /* 三角形 / 十字（V2）：clip-path 切形。被裁掉的那部分连 border / box-shadow 一起没了，
+     所以这里显式去掉它们 —— 这两种形状的两道边界交给 SVG 的轮廓双线
+     （figure-outline / figure-outline-soft）来画。顶点必须与 FigureLayer.tsx 的常量一致。 */
+  .figure-item[data-shape="triangle"] {
+    border: 0;
+    box-shadow: none;
+    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  }
 
-  /* 减少动效：色块不做过渡，换页时一帧到位（大小 / 位置 / 颜色都直接跳过去）。
-     换外观时那一层 0.18s 的浓度过渡也一起关掉 —— 与 <html> 底色那条 transition 同一个口径。 */
+  .figure-item[data-shape="cross"] {
+    border: 0;
+    box-shadow: none;
+    clip-path: polygon(
+      35% 0%,
+      65% 0%,
+      65% 35%,
+      100% 35%,
+      100% 65%,
+      65% 65%,
+      65% 100%,
+      35% 100%,
+      35% 65%,
+      0% 65%,
+      0% 35%,
+      35% 35%
+    );
+  }
+
+  /* 八号颜料（色值在三套外观的令牌里） */
+  .figure-item[data-tint="1"] {
+    background-color: var(--figure-tint-1);
+  }
+
+  .figure-item[data-tint="2"] {
+    background-color: var(--figure-tint-2);
+  }
+
+  .figure-item[data-tint="3"] {
+    background-color: var(--figure-tint-3);
+  }
+
+  .figure-item[data-tint="4"] {
+    background-color: var(--figure-tint-4);
+  }
+
+  .figure-item[data-tint="5"] {
+    background-color: var(--figure-tint-5);
+  }
+
+  .figure-item[data-tint="6"] {
+    background-color: var(--figure-tint-6);
+  }
+
+  .figure-item[data-tint="7"] {
+    background-color: var(--figure-tint-7);
+  }
+
+  .figure-item[data-tint="8"] {
+    background-color: var(--figure-tint-8);
+  }
+
+  /* 手绘草稿线（内联 SVG）：轮廓双线 + 构造线。
+     `overflow: visible` 让抖动到边界外的线也画出来；线宽靠 non-scaling-stroke 保持 1px，
+     不随实体被非等比拉伸。颜色只用 --figure-ink / --figure-ink-soft。 */
+  .figure-sketch {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .figure-outline {
+    fill: none;
+    stroke: var(--figure-ink);
+    stroke-width: 1;
+  }
+
+  .figure-outline-soft {
+    stroke: var(--figure-ink-soft);
+  }
+
+  .figure-construct {
+    fill: none;
+    stroke: var(--figure-ink-soft);
+    stroke-width: 0.8;
+    stroke-dasharray: 3 4;
+  }
+
+  /* 排线（V2）：45° 细线，填充范围是实体的实心轮廓（见 FigureLayer.tsx 的 fillPath）——
+     所以只在实体内、绝不会铺到实体之外。线宽用 non-scaling-stroke 保持 1px。 */
+  .figure-hatch-line {
+    stroke: var(--figure-ink-soft);
+    stroke-width: 1;
+  }
+
+  /* 尺寸标注（V2）：实体**左侧**竖着一条尺寸线 + 两端刻度与箭头，细、淡，用同一套墨色 */
+  .figure-dim-line {
+    fill: none;
+    stroke: var(--figure-ink-soft);
+    stroke-width: 0.8;
+  }
+
+  /* 尺寸标注的那行文字（HTML，与 SVG 那条竖尺寸线配成一组）：贴在实体的左侧、垂直居中 */
+  .figure-dim {
+    position: absolute;
+    right: calc(100% + 1.4rem);
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    color: var(--figure-ink-soft);
+    white-space: nowrap;
+  }
+
+  /* 实体注解（答复 7）：原右下角图签合并到这里，贴在实体的角上、随它一起动。
+     等宽小字，颜色走墨色令牌；它是装饰不是信息（所以整层 aria-hidden）。 */
+  .figure-note {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    line-height: 1.35;
+    letter-spacing: 0.06em;
+    color: var(--figure-ink);
+    white-space: nowrap;
+  }
+
+  .figure-note[data-note="tl"] {
+    top: 0.35rem;
+    left: 0.5rem;
+  }
+
+  .figure-note[data-note="tr"] {
+    top: 0.35rem;
+    right: 0.5rem;
+    align-items: flex-end;
+  }
+
+  .figure-note[data-note="bl"] {
+    bottom: 0.35rem;
+    left: 0.5rem;
+  }
+
+  .figure-note[data-note="br"] {
+    bottom: 0.35rem;
+    right: 0.5rem;
+    align-items: flex-end;
+  }
+
+  .figure-note-name {
+    opacity: 0.75;
+  }
+
+  /* 减少动效：不形变、不联动，实体直接落位（照样看得见） */
   @media (prefers-reduced-motion: reduce) {
-    .ambient,
-    .ambient-blob {
+    .figure,
+    .figure-slot,
+    .figure-body,
+    .figure-item {
       transition: none;
     }
   }
+
 
   /* ==========================================================
      5d. 换页渐入（第 8 项扩展）
@@ -3324,14 +3278,6 @@
     stroke-linecap: round;
   }
 
-  /* 文章页右下角让给回顶按钮：图签是装饰、回顶是功能，两者都在这个角上会叠在一起。
-     图纸编号在这页的页头（decor.sheet）照样印着，信息没丢。
-     ⚠️ 判据是 **data-route**（这一页是哪一张图纸）而不是 data-decor（图案名）：
-     背景改纯色之后每页的 data-decor 都是 plain，用图案名判断就再也不成立了。 */
-  .blueprint[data-route="article"] .blueprint-tag {
-    display: none;
-  }
-
   /* ---------- 上下篇（文章末尾 full / 悬浮目录里 compact，共用一份组件） ---------- */
 
   .article-pager {
@@ -3713,12 +3659,9 @@
    故意留在 layer 外面：它要盖住 components 与工具类。
    ============================================================ */
 @media print {
-  .blueprint {
-    display: none; /* 网格会把纸面弄灰 */
-  }
-
-  /* 第 8 项扩展的环境色层：纸上没有「背景气氛」这回事，半透明色块印出来只会是脏色 */
-  .ambient {
+  /* 几何实体层（第 15 项）：纸上没有「背景里的几何实体」这回事，半透明色块与草稿线
+     印出来只会是脏色 —— 整层不印。 */
+  .figure {
     display: none;
   }
 
