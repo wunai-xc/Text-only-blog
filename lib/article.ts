@@ -100,11 +100,21 @@ export function commentsTerm(href: string): string {
 
 /* ------------------------------ 上下篇 ------------------------------ */
 
+/**
+ * 上下篇里的一格：要么是另一篇文章，要么是「全部文章」出口。
+ *
+ * 出口只在**卡组内**的文章走到组的两头时出现（见 `articleNeighbors`）——
+ * 它是一个普通链接，没有日期也没有标题，所以不能塞成一篇文章的形状。
+ */
+export type PagerTarget =
+  | { kind: "post"; post: ListPost }
+  | { kind: "all"; href: string };
+
 export interface ArticleNeighbors {
   /** 时间更**新**的一篇（列表里在它前面）；没有就是 null */
-  newer: ListPost | null;
+  newer: PagerTarget | null;
   /** 时间更**旧**的一篇（列表里在它后面）；没有就是 null */
-  older: ListPost | null;
+  older: PagerTarget | null;
 }
 
 /**
@@ -115,14 +125,34 @@ export interface ArticleNeighbors {
  *   - `older`（上一篇）= 列表里它后面那篇；
  *   - `newer`（下一篇）= 列表里它前面那篇。
  * 页面上两个方向都带着日期，所以「上/下」不会读错。
+ *
+ * **卡组（目录）里的文章只在卡组内前后走**：拿全站序列把《微时序笔记》串到《医药学笔记》
+ * 上去是错的，它们不是一套内容。走到卡组的两头（组里时间最早 / 最新的那一篇）时，
+ * 那一头不再空着，而是换成 `kind: "all"` 的出口 ——「全部文章」→ 列表页 `/<lang>/posts/`：
+ * 读者累完一个卡组，想去的是那一整页，而不是另一个卡组的文章。
+ * 顶层文章（`group === ""`）不属于任何卡组，照旧在全站序列上走，两头就是空（不留按钮）。
  */
 export function articleNeighbors(posts: ListPost[], slug: string): ArticleNeighbors {
-  const index = posts.findIndex((post) => post.slug === slug);
+  const current = posts.find((post) => post.slug === slug);
+  if (!current) return { newer: null, older: null };
+
+  const inGroup = current.group !== "";
+  const scope = inGroup ? posts.filter((post) => post.group === current.group) : posts;
+  const index = scope.findIndex((post) => post.slug === slug);
   if (index < 0) return { newer: null, older: null };
-  return {
-    newer: index > 0 ? posts[index - 1] : null,
-    older: index + 1 < posts.length ? posts[index + 1] : null,
-  };
+
+  /** 卡组两头那个出口；地址与 EmptyArticlePage 里那个「全部文章」是同一个 */
+  const exit: PagerTarget = { kind: "all", href: `/${current.lang}/posts/` };
+
+  const newer: PagerTarget | null =
+    index > 0 ? { kind: "post", post: scope[index - 1] } : inGroup ? exit : null;
+  const older: PagerTarget | null =
+    index + 1 < scope.length ? { kind: "post", post: scope[index + 1] } : inGroup ? exit : null;
+
+  // 组里只有一篇文章时两头都是出口 —— 别并排两个一模一样的「全部文章」，只留一个
+  if (newer?.kind === "all" && older?.kind === "all") return { newer: null, older: exit };
+
+  return { newer, older };
 }
 
 /* --------------------------- frontmatter: typography --------------------------- */
@@ -205,6 +235,8 @@ export interface ArticleText {
   older: string;
   /** 时间更新的那一篇 */
   newer: string;
+  /** 卡组走到头时那一头换成的出口：回列表页看全部文章 */
+  allPosts: string;
 
   commentsTitle: string;
   commentsNote: string;
@@ -238,6 +270,7 @@ const ZH: ArticleText = {
   pagerLabel: "上下篇",
   older: "上一篇",
   newer: "下一篇",
+  allPosts: "全部文章",
 
   commentsTitle: "评论",
   commentsNote:
@@ -273,6 +306,7 @@ const EN: ArticleText = {
   pagerLabel: "Previous and next",
   older: "Previous",
   newer: "Next",
+  allPosts: "All posts",
 
   commentsTitle: "Comments",
   commentsNote:

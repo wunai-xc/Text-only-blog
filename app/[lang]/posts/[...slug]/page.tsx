@@ -55,7 +55,8 @@ import { feedAlternatesTypes, isLang, LANGS, SITE, type Lang } from "@/lib/site"
  *   - 渲染：第 3 项的 `renderMarkdown`（GFM / KaTeX / 高亮 / 五类图表占位 / 角标 / 目录）；
  *   - 图纸编号（页头那个 03）：第 8 项的 `decorate()`，与右下角图签同一个来源；
  *   - 上下篇：`articleNeighbors()`（lib/article.ts），顺序就是 `getPosts` 的时间倒序，
- *     这里不再排一遍；
+ *     这里不再排一遍；卡组里的文章只在组内前后走，组的两头换成「全部文章」出口
+ *     （那一头本来就没有邻居，现在是回列表页的链接）；
  *   - 评论：第 12 项的 giscus（配置在 lib/site.ts 的 `COMMENTS`，没填就显示「编辑此处」）。
  *   - 标签 / 分类片的地址：`facetHref()`（lib/list.ts），与第 13 项的标签页同一个来源。
  *

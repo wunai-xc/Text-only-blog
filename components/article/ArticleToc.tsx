@@ -5,9 +5,8 @@ import { Icon } from "@iconify/react/offline";
 
 import ArticlePager from "./ArticlePager";
 import { useActiveHeading } from "./useActiveHeading";
-import { ARTICLE_TEXT, TOC_MAX_DEPTH, tocIndent } from "@/lib/article";
+import { ARTICLE_TEXT, TOC_MAX_DEPTH, tocIndent, type PagerTarget } from "@/lib/article";
 import { icons } from "@/lib/icons";
-import type { ListPost } from "@/lib/list";
 import type { TocEntry } from "@/lib/markdown";
 import type { Lang } from "@/lib/site";
 
@@ -49,8 +48,9 @@ export default function ArticleToc({
 }: {
   lang: Lang;
   toc: TocEntry[];
-  older: ListPost | null;
-  newer: ListPost | null;
+  /** 上下篇的格子：可能是一篇文章，也可能是「全部文章」出口（见 lib/article.ts） */
+  older: PagerTarget | null;
+  newer: PagerTarget | null;
 }) {
   const t = ARTICLE_TEXT[lang];
   const [open, setOpen] = useState(false);

@@ -3525,6 +3525,41 @@ html[data-reading="hidden"] {
     overflow-wrap: anywhere;
   }
 
+  /* full 档（文章末尾那一份）：目录面板里已经有一份 compact 的上下篇，
+     所以这一份收小一号就够 —— 它不是正文的一部分，别在文章底下占掉一大块 */
+  .article-pager[data-variant="full"] .article-pager-link {
+    padding: 0.42rem 0.6rem;
+  }
+
+  .article-pager[data-variant="full"] .article-pager-label {
+    font-size: 0.64rem;
+  }
+
+  .article-pager[data-variant="full"] .article-pager-title {
+    font-size: 0.82rem;
+  }
+
+  /* 卡组走到头那一格：「全部文章」出口，只有一行字，没有日期与标题 ——
+     所以竖直居中（另一格多高它就多高），字号回到正文字体，颜色也给足，别像一条脚注 */
+  .article-pager-link[data-kind="all"] {
+    justify-content: center;
+    min-height: 2.4rem;
+  }
+
+  .article-pager-link[data-kind="all"] .article-pager-label {
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    color: var(--c-ink);
+  }
+
+  @media (min-width: 40rem) {
+    /* 组里只有一篇文章时只有这一个出口：占满整行并居中，别缩在左半边 */
+    .article-pager[data-variant="full"] .article-pager-link[data-kind="all"]:only-child {
+      grid-column: 1 / -1;
+      align-items: center;
+    }
+  }
+
   /* 悬浮目录里那一份：窄条、字号再小一档，底色用画布色（它贴着的是一块 .panel） */
   .article-pager[data-variant="compact"] .article-pager-link {
     padding: 0.4rem 0.5rem;
