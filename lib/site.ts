@@ -212,6 +212,16 @@ export interface SiteStrings {
   languageHint: string;
   reset: string;
   resetHint: string;
+  /* 设置中心：「自定义」字体（读者自己上传字体文件） */
+  localFontUpload: string;
+  localFontReplace: string;
+  localFontRemove: string;
+  localFontEmpty: string;
+  localFontHint: string;
+  localFontErrType: string;
+  localFontErrSize: string;
+  localFontErrRead: string;
+  localFontErrStore: string;
 }
 
 const I18N: Record<Lang, SiteStrings> = {
@@ -253,11 +263,11 @@ const I18N: Record<Lang, SiteStrings> = {
     settingsOpen: "打开设置",
     settingsClose: "关闭设置",
     settingsIntro:
-      "这里改的都是你浏览器里的偏好：存在本机（localStorage），不上传任何服务器，换设备不会跟着走。",
+      "这里改的都是你浏览器里的偏好：存在本机（偏好是 localStorage，上传的字体文件是 IndexedDB），不上传任何服务器，换设备不会跟着走。",
     appearance: "外观",
     reading: "阅读偏好",
     readingHint:
-      "调的是正文的字体 / 宽度 / 字号 / 行距（第 6 项那四个 --reading-* 令牌），改完立刻生效，全站通用。字体那四档用的都是你设备上已有的字体，不下载任何字体文件。",
+      "调的是正文的字体 / 宽度 / 字号 / 行距（第 6 项那四个 --reading-* 令牌），改完立刻生效，全站通用。字体四档（黑体 / 宋体 / 楷体 / 等宽）用的都是你设备上已有的字体，不下载任何字体文件；「自定义」那一档用的则是你自己上传的字体文件，只存在你的浏览器里。",
     readingFont: "正文字体",
     readingWidth: "正文宽度",
     readingSize: "正文字号",
@@ -267,6 +277,16 @@ const I18N: Record<Lang, SiteStrings> = {
     languageHint: "中英文各有一份内容，切换语言不会丢掉这里的设置。",
     reset: "恢复默认",
     resetHint: "把外观与阅读偏好都还原成默认值（文章内容不受影响）。",
+    localFontUpload: "上传字体文件",
+    localFontReplace: "更换",
+    localFontRemove: "移除",
+    localFontEmpty: "还没有上传字体文件 —— 上传一份，就能用上你自己的字体。",
+    localFontHint:
+      "选你设备上的一份字体文件（woff2 / woff / ttf / otf，单份不超过 30 MB）。它只在你的浏览器里读、存本机（IndexedDB），不会上传到服务器，也不会跟着账号走。",
+    localFontErrType: "只认 woff2 / woff / ttf / otf 这几种字体文件。",
+    localFontErrSize: "字体文件太大了（上限 30 MB）。",
+    localFontErrRead: "这个文件里读不出有效字体，换一份试试。",
+    localFontErrStore: "浏览器没能存下这份字体（隐私模式或存储空间不足）。",
   },
   en: {
     navLabel: "Site navigation",
@@ -306,11 +326,11 @@ const I18N: Record<Lang, SiteStrings> = {
     settingsOpen: "Open settings",
     settingsClose: "Close settings",
     settingsIntro:
-      "Everything here is a preference in your own browser: stored locally (localStorage), never uploaded, not shared between devices.",
+      "Everything here is a preference in your own browser: stored locally (preferences in localStorage, an uploaded font file in IndexedDB), never uploaded, not shared between devices.",
     appearance: "Appearance",
     reading: "Reading",
     readingHint:
-      "Changes the font / width / size / leading of the body text (the four --reading-* tokens from item 6). Takes effect immediately, site-wide. All four font presets use fonts already installed on your device — nothing is downloaded.",
+      "Changes the font / width / size / leading of the body text (the four --reading-* tokens from item 6). Takes effect immediately, site-wide. The four font presets use fonts already installed on your device — nothing is downloaded. The Custom preset uses a font file you upload yourself, kept in your browser only.",
     readingFont: "Font",
     readingWidth: "Width",
     readingSize: "Font size",
@@ -320,6 +340,16 @@ const I18N: Record<Lang, SiteStrings> = {
     languageHint: "Each language has its own content; switching keeps your settings here.",
     reset: "Reset to defaults",
     resetHint: "Restores appearance and reading preferences (your posts are untouched).",
+    localFontUpload: "Upload a font file",
+    localFontReplace: "Replace",
+    localFontRemove: "Remove",
+    localFontEmpty: "No font file uploaded yet — upload one to read in your own font.",
+    localFontHint:
+      "Pick a font file from your device (woff2 / woff / ttf / otf, up to 30 MB). It is read and stored inside your browser only (IndexedDB) — never uploaded, and it does not follow your account.",
+    localFontErrType: "Only woff2 / woff / ttf / otf font files are supported.",
+    localFontErrSize: "That font file is too large (30 MB max).",
+    localFontErrRead: "No usable font could be read from that file — try another one.",
+    localFontErrStore: "Your browser could not store this font (private mode or no space).",
   },
 };
 

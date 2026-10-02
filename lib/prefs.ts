@@ -55,23 +55,28 @@ export const READING_LEADINGS: ReadingOption[] = [
 ];
 
 /**
- * 「自定义」那一档要不要摆出来。**默认 false** —— 放字体文件是站长的活，
- * 文件还没放就把这一档摆出来，读者选中它只会落回黑体，白高兴一场（还多一个 404）。
+ * 「自定义」那一档要不要摆出来。**默认 true** —— 这一档现在是**读者自己上传字体文件**
+ * （lib/local-font.ts：文件在浏览器里读成 FontFace，存 IndexedDB，不上传服务器），
+ * 不依赖站长准备任何文件，所以默认可用。
  *
- * 怎么打开：把一份 woff2 放到 `public/fonts/custom.woff2`，再把这里改成 true。
- * 字体族名两边是**写死配对**的 —— 这一档的值是 `"Text Local", …`，
- * 对应的 @font-face 在 app/globals.css 的「1. 字体」一节（它用 `local()` 打头：
- * 读者机器上真装了这个名字的字体就直接用本地的，一个字节都不下载）。
+ * 想藏起来就改成 false：这一档不再出现在按钮里。读者之前存过的 "local" 不会变成坏 id
+ * （归一化读的仍是完整表，见下面的 readingOptions），只是按钮没了。
  */
-export const LOCAL_FONT_READY = false;
+export const CUSTOM_FONT_ENABLED = true;
 
 /**
- * 正文字体（第 8 项）。四档预设**全部是设备上已有的字体** —— 这一站到现在一个 webfont
- * 都没有，字体切换不该开这个口子：选哪一档都发不出一个网络请求，离线与国内可用性不受影响。
+ * 正文字体（第 8 项）。前四档**全是设备上已有的字体** —— 这一站一个 webfont 都不发：
+ * 选哪一档都发不出一个网络请求，离线与国内可用性不受影响。第五档「自定义」用的是
+ * **读者自己上传的字体文件**（lib/local-font.ts，存在浏览器里），同样不走网络。
  *
  * 每档写的是完整字体栈，中文名在前、西文名在后（正文里中文占多数，西文名跟在后面兜数字
  * 与英文的观感）；栈尾**接回 @theme 里那三个 --font-* 令牌**，而不是把同一串名字再抄一遍 ——
  * 3 套栈的兜底顺序只有 app/globals.css 一份事实来源。
+ *
+ * 「自定义」那一档的栈头 "Text Local Upload" 是 lib/local-font.ts 注册上传字体时
+ * **写死的族名** —— 两处是一对，改要一起改。读者还没传（或传的那份载入失败）就掉到
+ * 系统黑体。这里**故意不接一个 url() 兜底字体**：没上传时若还去取某个文件，
+ * 每次选中这一档都会白打一个 404。
  */
 export const READING_FONTS: ReadingOption[] = [
   {
@@ -100,7 +105,7 @@ export const READING_FONTS: ReadingOption[] = [
   },
   {
     id: "local",
-    value: '"Text Local", var(--font-sans)',
+    value: '"Text Local Upload", var(--font-sans)',
     zh: "自定义",
     en: "Custom",
   },
@@ -114,13 +119,13 @@ export const READING_GROUPS: Record<ReadingKey, ReadingOption[]> = {
 };
 
 /**
- * 给界面用的一档列表：与 READING_GROUPS 只差「还没准备好的档不摆出来」。
- * 归一化（normalizeReadingId）读的仍是完整的表 —— 站长把 LOCAL_FONT_READY 关回去时，
+ * 给界面用的一档列表：与 READING_GROUPS 只差「关掉的档不摆出来」。
+ * 归一化（normalizeReadingId）读的仍是完整的表 —— 把 CUSTOM_FONT_ENABLED 关回去时，
  * 读者存过的 "local" 不该变成一个坏 id，只是这一档不再出现在按钮里。
  */
 export function readingOptions(key: ReadingKey): ReadingOption[] {
   const options = READING_GROUPS[key];
-  return key === "font" && !LOCAL_FONT_READY
+  return key === "font" && !CUSTOM_FONT_ENABLED
     ? options.filter((option) => option.id !== "local")
     : options;
 }

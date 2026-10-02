@@ -4,6 +4,7 @@ import FigureLayer from "@/components/FigureLayer";
 import CardIntro from "@/components/CardIntro";
 import PageIntro from "@/components/PageIntro";
 import PrefsInit from "@/components/PrefsInit";
+import LocalFontSync from "@/components/LocalFontSync";
 import RouteLoading from "@/components/RouteLoading";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import ThemeInit from "@/components/ThemeInit";
@@ -56,6 +57,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <CardIntro />
         {/* 跟随系统深浅色变化（只在读者选择「跟随系统」时生效） */}
         <ThemeSync />
+        {/* 把读者上传的自定义字体（IndexedDB 里那份）注册回 FontFace，每个页面都要做一次 */}
+        <LocalFontSync />
         {children}
         {/* 第 5 项：生产构建里注册 Service Worker（离线 + 缓存）；dev 下它只负责清理旧 SW */}
         <ServiceWorkerRegistrar />

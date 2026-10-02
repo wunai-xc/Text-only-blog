@@ -134,7 +134,7 @@ export interface HomeText {
     features: string[];
   };
   themes: { lead: string; demo: string };
-  fonts: { lead: string; sample: string };
+  fonts: { lead: string; sample: string; custom: string };
 }
 
 const ZH: HomeText = {
@@ -206,7 +206,7 @@ const ZH: HomeText = {
     featuresLabel: "这一项已经做到的",
     features: [
       "护眼纸质底色，纸 / 亮 / 暗三套外观（第 7 栏可试）",
-      "正文字体四档（黑体 / 宋体 / 楷体 / 等宽，用的都是本地字体），宽度 / 字号 / 行距各三档（第 8 栏可调）",
+      "正文字体四档（黑体 / 宋体 / 楷体 / 等宽，用的都是本地字体）+ 自定义（上传自己的字体文件），宽度 / 字号 / 行距各三档（第 8 栏可调）",
       "代码高亮、KaTeX 公式（含 \\ce 化学式）、五类图表按需加载",
       "打印即排版好的 PDF（Ctrl+P 存一份）",
       "RSS 订阅、离线可用（Service Worker + 离线页）",
@@ -218,8 +218,10 @@ const ZH: HomeText = {
     demo: "只有一件事是不可或缺的：人必须达成自我满足，不管是通过诗歌还是艺术的方式；只有这样，人才值得一看。”然而，达成自我满足至多只是一个必要条件。世界上有许多人达成了自我满足，而且，也正因为如此，他们不值得一看。",
   },
   fonts: {
-    lead: "字体 / 宽度 / 字号 / 行距写的是 --reading-* 四个令牌：正文与下面这段示范用的是同一套度量，所以改完立刻生效。字体那四档用的都是你设备上已有的字体，选哪一档都不下载字体文件。",
+    lead: "字体 / 宽度 / 字号 / 行距写的是 --reading-* 四个令牌：正文与下面这段示范用的是同一套度量，所以改完立刻生效。四档预设用的都是你设备上已有的字体，第五档「自定义」用你自己上传的字体文件 —— 无论哪一档，都不下载任何字体文件。",
     sample: "阿尔伯特·爱因斯坦Albert Einstein， E = mc² 于1905年在狭义相对论框架下提出",
+    custom:
+      "「自定义」那一档要你先传一份字体文件：在左下角的设置中心里选一份（woff2 / woff / ttf / otf），它只在你的浏览器里读、存本机，不上传服务器。",
   },
 };
 
@@ -293,7 +295,7 @@ const EN: HomeText = {
     featuresLabel: "What is already in place",
     features: [
       "Eye-friendly paper background, three appearance token sets (try block 7)",
-      "Body font (four presets, all pulled from fonts on your device) plus width / size / leading, three steps each (block 8)",
+      "Body font (four presets pulled from fonts on your device, plus a Custom preset that uses a font file you upload) and width / size / leading, three steps each (block 8)",
       "Code highlighting, KaTeX math (incl. \\ce chemistry), five chart types loaded on demand",
       "Print to a properly typeset PDF (Ctrl+P)",
       "RSS feed and offline support (Service Worker + offline page)",
@@ -305,8 +307,10 @@ const EN: HomeText = {
     demo: "Edit here: this sample text is here to judge contrast in all three appearances — replace it with your own sentence.",
   },
   fonts: {
-    lead: "Font / width / size / leading are the four --reading-* tokens: the body text and the sample below share the same metrics, so changes apply instantly. Every font preset uses a typeface already on your device — nothing is downloaded.",
+    lead: "Font / width / size / leading are the four --reading-* tokens: the body text and the sample below share the same metrics, so changes apply instantly. The four presets use fonts already on your device; the fifth, Custom, uses a font file you upload yourself — either way, nothing is downloaded.",
     sample: "Edit here: this sample re-typesets to your choice. 中文 English mixed, numbers 2024 — all visible at once.",
+    custom:
+      "The Custom preset needs a font file from you first: pick one (woff2 / woff / ttf / otf) in the settings panel at the bottom-left. It is read and stored inside your browser only — never uploaded.",
   },
 };
 

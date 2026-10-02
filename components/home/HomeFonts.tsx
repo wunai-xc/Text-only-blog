@@ -97,6 +97,9 @@ export default function HomeFonts({ lang }: { lang: Lang }) {
               </button>
             ))}
           </div>
+          {/* 「自定义」那一档的字体文件在设置中心里传（这里不重复放上传控件）：
+              只是把入口说清楚，免得在这儿点了它却发现要换个地方传 */}
+          {group.key === "font" ? <p className="home-note">{t.custom}</p> : null}
         </div>
       ))}
 

@@ -33,18 +33,10 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-/* 自托管字体（第 8 项字体设置里「自定义」那一档）。字体族名固定叫 Text Local ——
-   lib/prefs.ts 的 READING_FONTS 里那一档写的正是这个名字，两处是一对，改要一起改。
-
-   `local()` 放在第一个：读者机器上真装了这个名字的字体就**直接用本地的**，一个字节都不下载；
-   没有才去取 public/fonts/custom.woff2。@font-face 本身不会产生请求 ——
-   浏览器只在真有文字用到这个族时才去取，所以没选这一档的读者、以及还没放文件的站，
-   完全不受影响（文件没放时这一档默认不出现，见 lib/prefs.ts 的 LOCAL_FONT_READY）。 */
-@font-face {
-  font-family: "Text Local";
-  src: local("Text Local"), url("/fonts/custom.woff2") format("woff2");
-  font-display: swap;
-}
+/* 这里**没有**给「自定义」那一档写 @font-face：那一档用的是**读者自己上传的字体**，
+   由 lib/local-font.ts 在浏览器里读成 FontFace 注册（族名 "Text Local Upload"），
+   不经过 CSS、也不请求任何字体文件。读者没上传时那一档直接掉到系统黑体 ——
+   要是在这儿再挂一个 url() 兜底，每次选中它都会白打一个 404。 */
 
 /* ============================================================
    2. 语义色令牌 → Tailwind 工具类
@@ -1438,6 +1430,64 @@ html[data-reading="hidden"] {
 
   .settings-reset {
     align-self: flex-start;
+  }
+
+  /* 「自定义」字体那一档的上传行（读者自带的字体文件，见 lib/local-font.ts）。
+     虚框是为了跟「已选中」的实框选项区分开：它不是一个档位，是一块操作区。 */
+  .settings-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.5rem 0.6rem;
+    border: 1px dashed var(--c-rule);
+    border-radius: var(--shape-radius);
+    background-color: var(--c-canvas);
+  }
+
+  .settings-upload-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .settings-upload-name {
+    flex: 1 1 8rem;
+    min-width: 0;
+    color: var(--c-ink);
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+  }
+
+  .settings-upload-size {
+    color: var(--c-ink-subtle);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+  }
+
+  .settings-upload-error {
+    margin: 0;
+    color: var(--c-danger);
+    font-size: 0.76rem;
+  }
+
+  /* 上传按钮其实是个 <label>（里面藏着真的 file input）—— 点它就开系统选文件框 */
+  .settings-upload-pick {
+    position: relative;
+  }
+
+  /* 输入框视觉上藏起来，但**留在可访问树里**（不像 `hidden` 那样整个抹掉）：
+     键盘 Tab 到它、回车开文件框都还能用。标准那套「只给屏幕阅读器」的写法 */
+  .settings-upload-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
   }
 
   /* 外观预览色块。

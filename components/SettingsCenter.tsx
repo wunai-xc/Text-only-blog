@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { Icon } from "@iconify/react/offline";
 
 import LangSwitcher from "./LangSwitcher";
 import { icons, type IconName } from "@/lib/icons";
 import { SITE, type Lang } from "@/lib/site";
 import {
+  CUSTOM_FONT_ENABLED,
   READING_DEFAULTS,
   READING_KEYS,
   READING_VARS,
@@ -18,6 +19,16 @@ import {
   type ReadingKey,
   type ReadingPrefs,
 } from "@/lib/prefs";
+import {
+  LocalFontError,
+  deleteLocalFont,
+  formatFontSize,
+  readLocalFontMeta,
+  saveLocalFont,
+  subscribeLocalFont,
+  type LocalFontErrorCode,
+  type LocalFontMeta,
+} from "@/lib/local-font";
 import {
   DEFAULT_THEME_CHOICE,
   THEME_CHIP_DOTS,
@@ -64,11 +75,28 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
   const t = SITE.i18n[lang];
   const [choice, setChoice] = useState<ThemeChoice | null>(null);
   const [prefs, setPrefs] = useState<ReadingPrefs | null>(null);
+  // 读者上传的自定义字体（lib/local-font.ts）：元信息、正在读写、上一次的错误
+  const [localFont, setLocalFont] = useState<LocalFontMeta | null>(null);
+  const [fontBusy, setFontBusy] = useState(false);
+  const [fontError, setFontError] = useState<LocalFontErrorCode | null>(null);
 
   useEffect(() => {
     setChoice(currentThemeChoice());
     setPrefs(readReadingPrefs());
-    return subscribeTheme(() => setChoice(currentThemeChoice()));
+    const unsubscribeTheme = subscribeTheme(() => setChoice(currentThemeChoice()));
+    const unsubscribeFont = subscribeLocalFont((meta) => setLocalFont(meta));
+
+    // 已经有哪一份字体（只读元信息；注册 FontFace 的活归 components/LocalFontSync.tsx）
+    let alive = true;
+    void readLocalFontMeta().then((meta) => {
+      if (alive) setLocalFont(meta);
+    });
+
+    return () => {
+      alive = false;
+      unsubscribeTheme();
+      unsubscribeFont();
+    };
   }, []);
 
   const activeChoice = choice ?? DEFAULT_THEME_CHOICE;
@@ -84,6 +112,48 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
     const patch: Partial<ReadingPrefs> = {};
     patch[key] = id;
     setPrefs(setReadingPrefs(patch));
+  }
+
+  /** 上传失败的原因 → 对应文案（lib/local-font.ts 只给代号，文案在 lib/site.ts） */
+  function fontErrorText(code: LocalFontErrorCode): string {
+    if (code === "type") return t.localFontErrType;
+    if (code === "size") return t.localFontErrSize;
+    if (code === "store") return t.localFontErrStore;
+    return t.localFontErrRead;
+  }
+
+  async function onPickFontFile(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.target;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    setFontBusy(true);
+    setFontError(null);
+    try {
+      setLocalFont(await saveLocalFont(file));
+      // 传完直接切到「自定义」那一档：读者刚做的事就是想用它
+      setPrefs(setReadingPrefs({ font: "local" }));
+    } catch (error) {
+      setFontError(error instanceof LocalFontError ? error.code : "read");
+    } finally {
+      setFontBusy(false);
+      // 清空要放在**读完之后**：先清空会把这份 File 一起废掉（size 变 0），
+      // 清空是为了让读者连着选同一个文件也能再次触发 change
+      input.value = "";
+    }
+  }
+
+  async function onRemoveFont() {
+    setFontBusy(true);
+    setFontError(null);
+    try {
+      await deleteLocalFont();
+      setLocalFont(null);
+      // 这一档已经没有字体可用了，退回默认黑体，免得界面停在「自定义」而实际是黑体
+      setPrefs(setReadingPrefs({ font: READING_DEFAULTS.font }));
+    } finally {
+      setFontBusy(false);
+    }
   }
 
   function resetAll() {
@@ -180,6 +250,52 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
                   </button>
                 ))}
               </div>
+
+              {/* 「自定义」那一档的上传区（选它之前也能先传：传完会自动切过去）。
+                  只在这份开关打开时出现，见 lib/prefs.ts 的 CUSTOM_FONT_ENABLED */}
+              {key === "font" && CUSTOM_FONT_ENABLED ? (
+                <div className="settings-upload">
+                  <div className="settings-upload-row">
+                    <Icon icon={icons["mdi:upload"]} width="1em" height="1em" />
+                    {localFont ? (
+                      <>
+                        <span className="settings-upload-name" title={localFont.name}>
+                          {localFont.name}
+                        </span>
+                        <span className="settings-upload-size">{formatFontSize(localFont.size)}</span>
+                      </>
+                    ) : (
+                      <span className="settings-upload-name">{t.localFontEmpty}</span>
+                    )}
+                    {/* 原生 label + 隐藏的 file input：点它就能开系统选文件框，
+                        不用 ref 去 .click()（少一处命令式代码，键盘也照样能操作） */}
+                    <label className="settings-opt settings-upload-pick">
+                      {localFont ? t.localFontReplace : t.localFontUpload}
+                      <input
+                        type="file"
+                        className="settings-upload-input"
+                        accept=".woff2,.woff,.ttf,.otf,.ttc,font/woff2,font/woff,font/ttf,font/otf"
+                        onChange={onPickFontFile}
+                      />
+                    </label>
+                    {localFont ? (
+                      <button
+                        type="button"
+                        className="settings-opt"
+                        disabled={fontBusy}
+                        onClick={onRemoveFont}
+                      >
+                        <Icon icon={icons["mdi:delete-outline"]} width="1em" height="1em" />
+                        {t.localFontRemove}
+                      </button>
+                    ) : null}
+                  </div>
+                  {fontError ? (
+                    <p className="settings-upload-error">{fontErrorText(fontError)}</p>
+                  ) : null}
+                  <p className="settings-hint">{t.localFontHint}</p>
+                </div>
+              ) : null}
             </div>
           );
         })}

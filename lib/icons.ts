@@ -39,6 +39,9 @@ import mdiTranslate from "@iconify/icons-mdi/translate";
 import mdiCheck from "@iconify/icons-mdi/check";
 import mdiRestore from "@iconify/icons-mdi/restore";
 import mdiClose from "@iconify/icons-mdi/close";
+/* 设置中心：「自定义」字体那一档的上传 / 移除（第 8 项字体设置） */
+import mdiUpload from "@iconify/icons-mdi/upload";
+import mdiDeleteOutline from "@iconify/icons-mdi/delete-outline";
 /* 页脚 */
 import mdiEmailOutline from "@iconify/icons-mdi/email-outline";
 import mdiGithub from "@iconify/icons-mdi/github";
@@ -92,6 +95,8 @@ export const icons = {
   "mdi:check": mdiCheck,
   "mdi:restore": mdiRestore,
   "mdi:close": mdiClose,
+  "mdi:upload": mdiUpload,
+  "mdi:delete-outline": mdiDeleteOutline,
   /* 页脚 */
   "mdi:email-outline": mdiEmailOutline,
   "mdi:github": mdiGithub,
