@@ -59,7 +59,12 @@ export default async function LangPosts({ params }: { params: Promise<{ lang: st
   if (!isLang(lang)) notFound();
 
   const t = LIST_TEXT[lang];
-  const posts = getPosts(lang);
+  /**
+   * 「关于」（frontmatter 里 `about: true`）不进这张清单 —— 它不是一篇普通文章，
+   * 是 `/zh/about/` 那一页的正文（第 13 项）。它有自己的地址、自己的页头，
+   * 混进「全部文章」里既多出一条重复入口，也让「共 N 篇」这个数字对不上。
+   */
+  const posts = getPosts(lang, { includeAbout: false });
   const list = posts.map(toListPost);
 
   const facets: ListFacets = {

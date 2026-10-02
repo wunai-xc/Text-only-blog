@@ -709,9 +709,9 @@ export function getPostSource(lang: Lang, slug: string, options?: ListOptions): 
   return loadLang(lang).sources.get(slug) ?? null;
 }
 
-/** 首页列表：置顶在前，排除 hiddenInHomeList 与 about */
+/** 首页列表：置顶在前，排除 hiddenInHomeList 与 about（about 是页面，不是文章） */
 export function getHomePosts(lang: Lang, options?: ListOptions): PostMeta[] {
-  const list = getPosts(lang, { includeHidden: false, ...options });
+  const list = getPosts(lang, { includeHidden: false, includeAbout: false, ...options });
   const pinned = list.filter((post) => post.pinned);
   const rest = list.filter((post) => !post.pinned);
   return [...pinned, ...rest];
@@ -860,6 +860,9 @@ export function getContentStats(lang?: Lang): ContentStats {
     stats.groups += entry.groups.length;
 
     for (const post of entry.posts) {
+      // 「关于」（about: true）不算一篇文章，只是一个页面 —— 列表页已经把它排除（「共 N 篇」），
+      // 统计口径要跟它一致，否则页脚会显示「5 篇」而对面的清单只有 4 条
+      if (post.about) continue;
       if (post.draft) {
         stats.drafts += 1;
         if (!includeDrafts) continue;

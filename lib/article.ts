@@ -130,14 +130,17 @@ export interface ArticleNeighbors {
  * 上去是错的，它们不是一套内容。走到卡组的两头（组里时间最早 / 最新的那一篇）时，
  * 那一头不再空着，而是换成 `kind: "all"` 的出口 ——「全部文章」→ 列表页 `/<lang>/posts/`：
  * 读者累完一个卡组，想去的是那一整页，而不是另一个卡组的文章。
- * 顶层文章（`group === ""`）不属于任何卡组，照旧在全站序列上走，两头就是空（不留按钮）。
+ * **未分组的文章同理，只在未分组的文章之间前后走**（`group === ""` 本身就算一个组）：
+ * 它不属于任何卡组，所以既不该串进某个卡组里，也不该被卡组的文章串上。两头就是空（不留按钮）——
+ * 未分组没有「组」这个概念，也就没有那个出口。
  */
 export function articleNeighbors(posts: ListPost[], slug: string): ArticleNeighbors {
   const current = posts.find((post) => post.slug === slug);
   if (!current) return { newer: null, older: null };
 
   const inGroup = current.group !== "";
-  const scope = inGroup ? posts.filter((post) => post.group === current.group) : posts;
+  /** 只在「同一组」里取序列：卡组是它自己，未分组（`group === ""`）也是它自己 */
+  const scope = posts.filter((post) => post.group === current.group);
   const index = scope.findIndex((post) => post.slug === slug);
   if (index < 0) return { newer: null, older: null };
 

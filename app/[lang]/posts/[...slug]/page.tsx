@@ -216,7 +216,9 @@ export default async function LangPost({
     console.warn(`[article] ${meta.file}：${warning}`);
   }
 
-  const posts = getPosts(lang).map(toListPost);
+  // 上下篇只在「同一组」里走（未分组也算一组，见 articleNeighbors）；这里顺便把 about 排除掉 ——
+  // 「关于」是一页说明，不该出现在任何一篇的上一篇 / 下一篇里，也不该被谁串上。
+  const posts = getPosts(lang, { includeAbout: false }).map(toListPost);
   const { older, newer } = articleNeighbors(posts, meta.slug);
 
   // 「下载 .md」给的是源文件原文（含 frontmatter，见 getPostSource）；取不到就退回渲染用的正文。
@@ -239,6 +241,13 @@ export default async function LangPost({
       <ReadingHeader />
 
       <article className="article" id="article-main">
+        {/* 纸上才出现的一行页眉（站名在左、篇名在右）：`.print-head` 在屏幕上不显示，
+            打印顶栏已经被整块藏掉，这一行就是纸上的「顶栏」 */}
+        <header className="print-head" aria-hidden="true">
+          <span className="print-head-site">{SITE.title}</span>
+          <span className="print-head-title">{meta.title}</span>
+        </header>
+
         {/* 粘性标题（第 12 项）：零高、贴在 <article> 里，标题滚出视野后在顶栏下面挂一条 */}
         <ArticleStickyTitle lang={lang} title={meta.title} />
 
@@ -276,28 +285,31 @@ export default async function LangPost({
             ) : null}
           </p>
 
-          {meta.tags.length + meta.categories.length > 0 ? (
-            <p className="article-chips">
-              {meta.tags.map((tag) => (
-                <a className="article-chip" key={`tag-${tag}`} href={facetHref(lang, "tag", tag)}>
-                  #{tag}
-                </a>
-              ))}
-              {meta.categories.map((category) => (
-                <a
-                  className="article-chip"
-                  data-kind="category"
-                  key={`cat-${category}`}
-                  href={facetHref(lang, "cat", category)}
-                >
-                  {category}
-                </a>
-              ))}
-            </p>
-          ) : null}
+          <div className="article-tools">
+            {meta.tags.length + meta.categories.length > 0 ? (
+              <p className="article-chips">
+                {meta.tags.map((tag) => (
+                  <a className="article-chip" key={`tag-${tag}`} href={facetHref(lang, "tag", tag)}>
+                    #{tag}
+                  </a>
+                ))}
+                {meta.categories.map((category) => (
+                  <a
+                    className="article-chip"
+                    data-kind="category"
+                    key={`cat-${category}`}
+                    href={facetHref(lang, "cat", category)}
+                  >
+                    {category}
+                  </a>
+                ))}
+              </p>
+            ) : null}
 
-          {/* 导出（下载 .md / 打印存 PDF）：客户端组件，两个按钮都在浏览器里做事 */}
-          <ArticleExport lang={lang} markdown={source} filename={downloadName} />
+            {/* 导出（下载 .md / 打印存 PDF）：客户端组件，两个按钮都在浏览器里做事。
+                靠右站：`.article-tools` 是两端对齐，它自己再用 margin-left: auto 顶到右边 */}
+            <ArticleExport lang={lang} markdown={source} filename={downloadName} />
+          </div>
         </header>
 
         <ArticleBody html={rendered.html} />
@@ -313,6 +325,12 @@ export default async function LangPost({
         <footer className="article-foot">
           {/* 文章末尾的上下篇（`full` 档）：窄屏上悬浮目录整块不显示，所以这一份是必需的 */}
           <ArticlePager lang={lang} older={older} newer={newer} variant="full" />
+        </footer>
+
+        {/* 纸上才出现的页脚（这一篇的完整地址 + 站名）：读纸的人点不了链接，只能照着敲地址 */}
+        <footer className="print-foot" aria-hidden="true">
+          <span className="print-foot-url">{`${SITE.url}${meta.href}`}</span>
+          <span className="print-foot-site">{SITE.title}</span>
         </footer>
       </article>
 

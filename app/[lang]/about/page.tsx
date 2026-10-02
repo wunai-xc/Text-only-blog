@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import ArticleBody from "@/components/ArticleBody";
 import { ARTICLE_TEXT, parseTypographyOption } from "@/lib/article";
 import { getAboutPost, getPostWithBody } from "@/lib/content";
-import { decorate } from "@/lib/decor";
 import type { RenderedMarkdown } from "@/lib/markdown";
 import { renderMarkdown } from "@/lib/markdown";
 import { PAGES_TEXT } from "@/lib/pages";
@@ -52,7 +51,6 @@ export default async function LangAbout({ params }: { params: Promise<{ lang: st
   if (!isLang(lang)) notFound();
 
   const t = PAGES_TEXT[lang].about;
-  const decor = decorate(`/${lang}/about/`);
   const meta = getAboutPost(lang);
   const data = meta ? getPostWithBody(lang, meta.slug) : null;
 
@@ -71,21 +69,20 @@ export default async function LangAbout({ params }: { params: Promise<{ lang: st
 
   return (
     <div className="page about-page">
-      <header className="list-head">
-        <p className="list-kicker">
-          <span className="list-no">{decor.sheet}</span>
-          {t.kicker}
-          <span className="list-rule" />
-        </p>
-        <h1 className="list-title">{t.title}</h1>
-        <p className="list-lead">{t.lead}</p>
-      </header>
-
       {data && rendered ? (
         <article className="article">
+          {/* 只留文章自己这一份标题 —— 原先页面上再叠一层 `.list-head`（kicker + 标题 + lead），
+              于是「关于」的标题与说明出现了两遍；那层 lead 还是在向作者解释 frontmatter 怎么写，
+              不该给读者看。所以整块删掉，关于页的页头就是这篇文章的页头。 */}
           <header className="article-head">
             <h1 className="article-title">{data.meta.title}</h1>
-            {data.meta.description ? <p className="article-lead">{data.meta.description}</p> : null}
+            {/* 导语只在作者**手写了 description** 时才出现。
+                没写时 lib/content.ts 会拿正文的 excerpt 兜底（卡片 / 搜索要用），而关于页
+                的正文通常不长、excerpt 往往就是全文 —— 照印的话，文章正文会在它上面先抄一遍
+                （这就是「重复展示两份内容」的另一半）。所以这里不认那份兜底。 */}
+            {data.meta.description && data.meta.description !== data.meta.excerpt ? (
+              <p className="article-lead">{data.meta.description}</p>
+            ) : null}
             <p className="article-meta">
               <span>{data.meta.date.slice(0, 10)}</span>
               {data.meta.updated ? (

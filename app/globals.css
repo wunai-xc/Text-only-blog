@@ -2988,39 +2988,58 @@ html[data-reading="hidden"] {
     color: var(--c-accent);
   }
 
-  /* ---------- 导出（下载 .md / 打印存 PDF，第 12 项） ----------
-     两个真按钮（要做的事在浏览器里），排版与卡片上的同名件同一档小字号、方角药丸。
-     打印时整行不印（见文件末尾的 @media print）：纸上没有「点按钮」这回事。 */
+  /* ---------- 文章头部的「件」：标签片在左，导出按钮在右 ----------
+     `.article-tools` 是一行两端对齐：左边是标签 / 分类片（元信息），右边是导出按钮。
+     两者**必须一眼分得开**，所以刻意做成完全不同的两套壳：
+       标签片 = 虚框 + 药丸圆角 + 只描字；导出按钮 = 实心强调色 + 方角 —— 长得像按钮而不是标签。 */
+  .article-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem 0.9rem;
+    margin: 0.15rem 0 0;
+  }
+
   .article-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
-    margin: 0.15rem 0 0;
+    /* 顶到最右：即使这一篇没有标签，两个按钮也贴着右边站 */
+    margin-left: auto;
   }
 
   .article-action {
     display: inline-flex;
     align-items: center;
-    gap: 0.32rem;
-    padding: 0.22rem 0.62rem;
-    border: 1px solid var(--c-rule);
-    border-radius: var(--shape-radius);
-    background: none;
-    color: var(--c-ink-muted);
+    gap: 0.34rem;
+    padding: 0.3rem 0.78rem;
+    border: 1px solid var(--c-accent);
+    /* 方角（标签片是 999px 药丸）—— 形状上就能区分「这是按钮，不是标签」 */
+    border-radius: 6px;
+    background: var(--c-accent);
+    color: var(--c-accent-ink);
     font-family: var(--font-mono);
     font-size: 0.72rem;
-    line-height: 1.5;
+    line-height: 1.4;
     cursor: pointer;
   }
 
   .article-action:hover {
-    border-color: var(--c-accent);
+    background: var(--c-accent-soft);
     color: var(--c-accent);
   }
 
   .article-action:focus-visible {
     outline: 2px solid var(--c-accent);
     outline-offset: 2px;
+  }
+
+  /* ---------- 纸上的页眉 / 页脚（只在打印出现） ----------
+     屏幕上没有它们（`display: none`），打印时顶栏与页脚整块藏掉、由它们顶上。
+     文章的页眉 / 页脚在 app/[lang]/posts/[...slug]/page.tsx 里渲染。 */
+  .print-head,
+  .print-foot {
+    display: none;
   }
 
   /* ---------- 粘性标题（大标题滚出视野后，顶栏下面挂一条同名的紧凑标题） ----------
@@ -4037,10 +4056,13 @@ html[data-reading="hidden"] {
     display: none;
   }
 
-  .site-header {
-    position: static;
-    border-bottom: 0;
-    backdrop-filter: none;
+  /* 第 7 项的框架件（2）：顶栏与页脚**整块不印** —— 顶栏是导航（纸上的链接点不动，
+     还平白占掉每页顶端）；页脚是语言切换 / 联系方式 / 统计 / 齿轮那一堆屏幕上的东西，
+     印出来全是噪音。纸上的「页眉 / 页脚」改由文章页渲染的那两条顶上
+     （`.print-head` / `.print-foot`，见 app/[lang]/posts/[...slug]/page.tsx）。 */
+  .site-header,
+  .site-footer {
+    display: none;
   }
 
   /* 顶栏的图片位（顶栏改版）：纸上一格空的虚线框是纯噪音；作者补了图之后它也只是装饰，
@@ -4110,6 +4132,41 @@ html[data-reading="hidden"] {
 
   .article-page {
     max-width: none;
+  }
+
+  /* 纸上的页眉 / 页脚：屏幕上藏起来的这两条，打印时显出来并排成一行
+     （左一项、右一项，底下 / 上面各压一条细线把它和正文分开） */
+  .print-head,
+  .print-foot {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    font-family: var(--font-mono);
+    font-size: 8.5pt;
+    color: #333;
+  }
+
+  .print-head {
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid #999;
+  }
+
+  .print-foot {
+    margin-top: 1.4rem;
+    padding-top: 0.35rem;
+    border-top: 1px solid #999;
+  }
+
+  .print-head-title {
+    color: #000;
+    font-weight: 600;
+  }
+
+  /* 长地址（带目录的 slug）不许顶破右边距 */
+  .print-foot-url {
+    overflow-wrap: anywhere;
   }
 
   .article-pager[data-variant="full"] {
