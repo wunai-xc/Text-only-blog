@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { Icon } from "@iconify/react/offline";
 
 import HomeBlockHead from "./HomeBlockHead";
+import ReadingSlider from "../ReadingSlider";
 import { icons, type IconName } from "@/lib/icons";
 import { HOME_TEXT } from "@/lib/home";
 import {
   READING_DEFAULTS,
   READING_SLIDER_BASE,
-  READING_SLIDERS,
   READING_VARS,
+  currentReadingDefaults,
   currentReadingNumbers,
   formatReadingNumber,
   isSliderKey,
@@ -57,20 +58,32 @@ export default function HomeFonts({ lang }: { lang: Lang }) {
   const [prefs, setPrefs] = useState<ReadingPrefs | null>(null);
   // 滑块的当前数值（= 令牌实际生效的值）：读者拖过就是他的，没拖过就是按屏幕算出来的
   const [numbers, setNumbers] = useState<Record<ReadingSliderKey, number> | null>(null);
+  // 当前屏幕下的默认值（= 导轨上那个固定点）：不随读者设置变，随屏幕宽度变
+  const [defaults, setDefaults] = useState<Record<ReadingSliderKey, number> | null>(null);
 
   useEffect(() => {
     const sync = () => {
       setPrefs(readReadingPrefs());
       setNumbers(currentReadingNumbers());
+      setDefaults(currentReadingDefaults());
     };
     sync();
-    return subscribeReadingPrefs(sync);
+    const unsubscribe = subscribeReadingPrefs(sync);
+    // 屏幕宽度跨过媒体查询的档位时，默认值（与没拖过时的生效值）会变，默认点要跟着挪
+    window.addEventListener("resize", sync);
+    return () => {
+      unsubscribe();
+      window.removeEventListener("resize", sync);
+    };
   }, []);
 
   const active = prefs ?? READING_DEFAULTS;
   /** 滑块位置：挂载前用首帧兜底值（服务端不知道屏幕多大），挂载后是真令牌里的数 */
   const sliderNumber = (key: ReadingSliderKey): number =>
     numbers?.[key] ?? READING_SLIDER_BASE[key];
+  /** 默认点位置：同上，挂载后才拿得到按屏幕算出来的默认值 */
+  const defaultNumber = (key: ReadingSliderKey): number =>
+    defaults?.[key] ?? READING_SLIDER_BASE[key];
 
   const groups: { key: HomeReadingKey; label: string }[] = [
     { key: "font", label: site.readingFont },
@@ -111,21 +124,13 @@ export default function HomeFonts({ lang }: { lang: Lang }) {
             {/* 宽度 / 字号 / 行距是连续量，用滑块（与设置中心同一套量程）；
                 字体是「选哪一种」，用按钮 */}
             {isSliderKey(key) ? (
-              <div className="settings-slider">
-                <input
-                  type="range"
-                  className="settings-range"
-                  min={READING_SLIDERS[key].min}
-                  max={READING_SLIDERS[key].max}
-                  step={READING_SLIDERS[key].step}
-                  value={sliderNumber(key)}
-                  aria-label={label}
-                  onChange={(event) => slide(key, Number(event.target.value))}
-                />
-                <span className="settings-range-value">
-                  {formatReadingNumber(key, sliderNumber(key))}
-                </span>
-              </div>
+              <ReadingSlider
+                sliderKey={key}
+                value={sliderNumber(key)}
+                defaultValue={defaultNumber(key)}
+                label={label}
+                onChange={(value) => slide(key, value)}
+              />
             ) : (
               readingOptions(key).map((option) => (
                 <button

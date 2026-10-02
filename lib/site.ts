@@ -268,7 +268,7 @@ const I18N: Record<Lang, SiteStrings> = {
     appearance: "外观",
     reading: "阅读偏好",
     readingHint:
-      "调的是正文的宽度 / 字号 / 行距 / 首行缩进与字体（第 6 项那几个 --reading-* 令牌），改完立刻生效，全站通用。宽度 / 字号 / 行距是滑块：没拖过时用的是按你屏幕大小算出来的默认值（屏大一点，一行的字多几个、字号也大一档），拖过之后以你选的为准，「恢复默认」会交还给屏幕。字体四档（黑体 / 宋体 / 楷体 / 等宽）用的都是你设备上已有的字体，不下载任何字体文件；「自定义」那一档用的则是你自己上传的字体文件，只存在你的浏览器里。",
+      "调的是正文的宽度 / 字号 / 行距 / 首行缩进与字体（第 6 项那几个 --reading-* 令牌），改完立刻生效，全站通用。宽度 / 字号 / 行距是滑块：没拖过时用的是按你屏幕大小算出来的默认值（屏大一点，一行的字多几个、字号也大一档），拖过之后以你选的为准，「恢复默认」会交还给屏幕。导轨上那圈小圆环标的就是「默认值」的位置，拖动时会吸附到刻度节点上。字体四档（黑体 / 宋体 / 楷体 / 等宽）用的都是你设备上已有的字体，不下载任何字体文件；「自定义」那一档用的则是你自己上传的字体文件，只存在你的浏览器里。",
     readingFont: "正文字体",
     readingWidth: "正文宽度",
     readingSize: "正文字号",
@@ -332,7 +332,7 @@ const I18N: Record<Lang, SiteStrings> = {
     appearance: "Appearance",
     reading: "Reading",
     readingHint:
-      "Changes the width / size / leading / first-line indent and font of the body text (the --reading-* tokens from item 6). Takes effect immediately, site-wide. Width, size and leading are sliders: until you drag one, its value is the default worked out from your screen size (a bigger screen gets a slightly wider column and larger type); once you drag it, yours wins, and “Reset” hands it back to the screen. The four font presets use fonts already installed on your device — nothing is downloaded. The Custom preset uses a font file you upload yourself, kept in your browser only.",
+      "Changes the width / size / leading / first-line indent and font of the body text (the --reading-* tokens from item 6). Takes effect immediately, site-wide. Width, size and leading are sliders: until you drag one, its value is the default worked out from your screen size (a bigger screen gets a slightly wider column and larger type); once you drag it, yours wins, and “Reset” hands it back to the screen. The small ring on the rail marks that default value, and dragging snaps to the tick nodes. The four font presets use fonts already installed on your device — nothing is downloaded. The Custom preset uses a font file you upload yourself, kept in your browser only.",
     readingFont: "Font",
     readingWidth: "Width",
     readingSize: "Font size",

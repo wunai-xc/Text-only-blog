@@ -4,6 +4,7 @@ import { useEffect, useState, type ChangeEvent } from "react";
 import { Icon } from "@iconify/react/offline";
 
 import LangSwitcher from "./LangSwitcher";
+import ReadingSlider from "./ReadingSlider";
 import { icons, type IconName } from "@/lib/icons";
 import { SITE, type Lang } from "@/lib/site";
 import {
@@ -11,8 +12,8 @@ import {
   READING_DEFAULTS,
   READING_KEYS,
   READING_SLIDER_BASE,
-  READING_SLIDERS,
   READING_VARS,
+  currentReadingDefaults,
   currentReadingNumbers,
   formatReadingNumber,
   isSliderKey,
@@ -97,6 +98,8 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
   const [prefs, setPrefs] = useState<ReadingPrefs | null>(null);
   // 滑块的当前数值（= 令牌实际生效的值）：读者拖过就是他的，没拖过就是按屏幕算出来的
   const [numbers, setNumbers] = useState<Record<ReadingSliderKey, number> | null>(null);
+  // 当前屏幕下的默认值（= 导轨上那个固定点）：不随读者设置变，随屏幕宽度变
+  const [defaults, setDefaults] = useState<Record<ReadingSliderKey, number> | null>(null);
   // 读者上传的自定义字体（lib/local-font.ts）：元信息、正在读写、上一次的错误
   const [localFont, setLocalFont] = useState<LocalFontMeta | null>(null);
   const [fontBusy, setFontBusy] = useState(false);
@@ -104,15 +107,18 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
 
   useEffect(() => {
     setChoice(currentThemeChoice());
-    // 偏好与滑块数值一起刷新：滑块的源是令牌本身，所以两者永远一致
+    // 偏好、滑块数值、默认点一起刷新：滑块与默认点的源都是令牌本身，所以三者永远一致
     const sync = () => {
       setPrefs(readReadingPrefs());
       setNumbers(currentReadingNumbers());
+      setDefaults(currentReadingDefaults());
     };
     sync();
     const unsubscribeTheme = subscribeTheme(() => setChoice(currentThemeChoice()));
     const unsubscribePrefs = subscribeReadingPrefs(sync);
     const unsubscribeFont = subscribeLocalFont((meta) => setLocalFont(meta));
+    // 屏幕宽度跨过媒体查询的档位时，默认值（与没拖过时的生效值）会变，默认点要跟着挪
+    window.addEventListener("resize", sync);
 
     // 已经有哪一份字体（只读元信息；注册 FontFace 的活归 components/LocalFontSync.tsx）
     let alive = true;
@@ -122,6 +128,7 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
 
     return () => {
       alive = false;
+      window.removeEventListener("resize", sync);
       unsubscribeTheme();
       unsubscribePrefs();
       unsubscribeFont();
@@ -133,6 +140,9 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
   /** 滑块位置：挂载前用首帧兜底值（服务端不知道屏幕多大），挂载后是真令牌里的数 */
   const sliderNumber = (key: ReadingSliderKey): number =>
     numbers?.[key] ?? READING_SLIDER_BASE[key];
+  /** 默认点位置：同上，挂载后才拿得到按屏幕算出来的默认值 */
+  const defaultNumber = (key: ReadingSliderKey): number =>
+    defaults?.[key] ?? READING_SLIDER_BASE[key];
 
   function pickTheme(value: ThemeChoice) {
     setThemeChoice(value);
@@ -272,22 +282,13 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
               <div className="settings-row">
                 {/* 宽度 / 字号 / 行距是连续量，用滑块；字体与首行缩进是「选哪一种」，用按钮 */}
                 {isSliderKey(key) ? (
-                  <div className="settings-slider">
-                    <input
-                      type="range"
-                      className="settings-range"
-                      min={READING_SLIDERS[key].min}
-                      max={READING_SLIDERS[key].max}
-                      step={READING_SLIDERS[key].step}
-                      value={sliderNumber(key)}
-                      aria-label={t[meta.label]}
-                      // 拖动过程中每一格都立刻落到令牌上：正文就在旁边，看得见
-                      onChange={(event) => slideReading(key, Number(event.target.value))}
-                    />
-                    <span className="settings-range-value">
-                      {formatReadingNumber(key, sliderNumber(key))}
-                    </span>
-                  </div>
+                  <ReadingSlider
+                    sliderKey={key}
+                    value={sliderNumber(key)}
+                    defaultValue={defaultNumber(key)}
+                    label={t[meta.label]}
+                    onChange={(value) => slideReading(key, value)}
+                  />
                 ) : (
                   readingOptions(key).map((option) => (
                     <button

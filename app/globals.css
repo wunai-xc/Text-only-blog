@@ -197,9 +197,17 @@
      --reading-indent 是正文段落的**首行缩进**，默认「两格」（2em 跟着字号走，
      中文下一个字约一个 em）；不缩进写 0。读它的是 .article-body > p。 */
   --reading-font: var(--font-sans);
-  --reading-measure: 34rem;
-  --reading-size: 1rem;
-  --reading-leading: 1.75;
+  /* 「屏幕默认值」：**只有下面那几条媒体查询会改它**，读者的行内设置碰不到它。
+     滑块导轨上那个固定的「默认点」读的就是它 —— 所以读者把滑块拖走后，
+     那个点仍停在当前屏幕对应的位置上。 */
+  --reading-measure-default: 34rem;
+  --reading-size-default: 1rem;
+  --reading-leading-default: 1.75;
+  /* 生效值：没被读者覆盖时等于上一条；读者拖过滑块，lib/prefs.ts 会把同名行内变量
+     写在 <html> 上（--reading-measure 等），盖过这里的声明。 */
+  --reading-measure: var(--reading-measure-default);
+  --reading-size: var(--reading-size-default);
+  --reading-leading: var(--reading-leading-default);
   --reading-indent: 2em;
   /* 换页动效的两个时长（第 15 项）。**组件里的毫秒数必须与它们一致**：
      lib/decor.ts 的 FIGURE_SHIFT_MS / PAGE_FADE_MS
@@ -234,9 +242,12 @@
 }
 
 /* 宽度 / 字号 / 行距的**默认值跟着屏幕走**：屏幕越大，一行放得下的字越多、字号也能大一档，
-   行距同理松一点。这是读者**没拖过滑块**时用的值（设置中心把它显示成滑块的起始位置）；
-   一旦拖过滑块，lib/prefs.ts 会把他的值写到 <html> 的行内变量上，盖过这一段；
-   「恢复默认」把行内变量移除，就又回到这里按屏幕算。
+   行距同理松一点。改的是上面那三个 `--reading-*-default`（**不是**生效值）——
+   生效值由 `:root` 里那句 `var(...)` 从它推出来。这样做的好处是：
+     · 读者**没拖过滑块**时，生效值就等于这里的屏幕默认值；
+     · 读者拖过之后，lib/prefs.ts 把行内变量写在**生效值**上，盖过 `:root` 那一句，
+       而这里这个 `-default` 原封不动 —— 滑块上的「默认点」因此仍指向屏幕默认值，
+       读者一眼能看出自己偏离了多少；「恢复默认」移除行内变量，生效值又回到这里。
    （读者拖过之后就是拖过的值，不随屏幕变 —— 那是他自己选的。）
    ⚠️ 与下面 --header-h 那两条窄屏查询同理：**必须留在这一层**（不能进 @layer），
    否则会被上面那条不分层的 `:root` 整个盖掉。
@@ -246,25 +257,25 @@
    所以 48rem = 768px、75rem = 1200px、106.25rem = 1700px。 */
 @media (min-width: 48rem) {
   :root {
-    --reading-measure: 38rem;
-    --reading-size: 1.05rem;
-    --reading-leading: 1.8;
+    --reading-measure-default: 38rem;
+    --reading-size-default: 1.05rem;
+    --reading-leading-default: 1.8;
   }
 }
 
 @media (min-width: 75rem) {
   :root {
-    --reading-measure: 44rem;
-    --reading-size: 1.1rem;
-    --reading-leading: 1.85;
+    --reading-measure-default: 44rem;
+    --reading-size-default: 1.1rem;
+    --reading-leading-default: 1.85;
   }
 }
 
 @media (min-width: 106.25rem) {
   :root {
-    --reading-measure: 50rem;
-    --reading-size: 1.15rem;
-    --reading-leading: 1.9;
+    --reading-measure-default: 50rem;
+    --reading-size-default: 1.15rem;
+    --reading-leading-default: 1.9;
   }
 }
 
@@ -1410,10 +1421,13 @@ html[data-reading="hidden"] {
     gap: 0.35rem;
   }
 
-  /* 滑块（宽度 / 字号 / 行距）。原生 range 只换配色，不重画轨道与滑块：
-     三套外观下都从 accent-color 取强调色，省掉一堆 ::-webkit-slider-thumb 的重写，
-     触屏与键盘（↑↓←→ / Home / End）的行为也是浏览器原生的那一套。
-     读数用等宽字、右对齐、给足固定宽度 —— 拖动时数字位数变化不会把滑块顶得左右跳。 */
+  /* 滑块（宽度 / 字号 / 行距）：**一条细导轨 + 一个圆形滑块**，与全站的细线语言一致
+     （参考稿里没有大块的实心控件）。原生 range 只负责交互与吸附 —— `step` 就是「节点」，
+     浏览器保证滑块停在节点上；导轨 / 刻度 / 默认点这三样是 .settings-rail 自己画的，
+     所以先把原生外观整个关掉（appearance: none），再逐块重画。
+
+     --slider-thumb 是圆形滑块的直径：导轨左右各内缩它的一半，于是滑块**圆心**的行程
+     恰好等于导轨长度，百分比（刻度、默认点）与滑块圆心就能一一对上。 */
   .settings-slider {
     display: flex;
     align-items: center;
@@ -1422,17 +1436,125 @@ html[data-reading="hidden"] {
     flex: 1 1 100%;
     /* 与 .settings-row 里的按钮行同一层高度感，别让滑块显得矮一截 */
     min-height: 1.6rem;
+    --slider-thumb: 0.9rem;
+  }
+
+  .settings-track {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    height: 1.4rem;
+    display: flex;
+    align-items: center;
+  }
+
+  /* 导轨 / 刻度 / 默认点的画布：垂直居中，左右内缩半个滑块（对上滑块圆心的行程）。
+     它整体不吃指针事件 —— 点击与拖动都交给上面那层 input。 */
+  .settings-rail {
+    position: absolute;
+    top: 50%;
+    left: calc(var(--slider-thumb) / 2);
+    right: calc(var(--slider-thumb) / 2);
+    height: 0;
+    pointer-events: none;
+  }
+
+  /* 细线导轨：1px，比正文的分隔线略重一点，暗色下也看得清 */
+  .settings-rail-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 1px;
+    background: var(--c-rule-strong);
+    /* 垂直居中压在这条 0 高度的画布上，与滑块圆心同一水平线 */
+    transform: translateY(-50%);
+  }
+
+  /* 刻度：把导轨均分成几段（见 components/ReadingSlider.tsx 的 TRACK_DIVISIONS），
+     拖到哪一段一目了然；比导轨略高一点点，像一根根短竖线压在线上 */
+  .settings-tick {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 0.3rem;
+    background: var(--c-rule-strong);
+    opacity: 0.65;
+    transform: translate(-50%, -50%);
+  }
+
+  /* 「屏幕默认值」的固定点：读者拖走后它留在原处，用来对照自己偏离了多少。
+     空心小圆环（强调色描边），压在导轨上；不吃指针事件，免得挡住点击 */
+  .settings-default {
+    position: absolute;
+    top: 0;
+    width: 0.5rem;
+    height: 0.5rem;
+    border: 1.5px solid var(--c-accent);
+    border-radius: 50%;
+    background: var(--c-surface);
+    transform: translate(-50%, -50%);
   }
 
   .settings-range {
-    flex: 1;
-    min-width: 0;
-    height: 1.2rem;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 1.4rem;
     margin: 0;
-    accent-color: var(--c-accent);
+    background: transparent;
+    -webkit-appearance: none;
+    appearance: none;
     cursor: pointer;
   }
 
+  /* 原生轨道透明 —— 看得见的线是上面那条 .settings-rail-line */
+  .settings-range::-webkit-slider-runnable-track {
+    height: 1px;
+    background: transparent;
+  }
+
+  .settings-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    /* border-box：让 0.9rem 就是**含描边**的直径，导轨内缩半个才与圆心对得上
+       （通用选择器选不中伪元素，这里必须自己写一遍） */
+    box-sizing: border-box;
+    width: var(--slider-thumb);
+    height: var(--slider-thumb);
+    border: 2px solid var(--c-accent);
+    border-radius: 50%;
+    background: var(--c-surface);
+    /* 让圆心压在那条 1px 的导轨上：(导轨高 - 直径) / 2 */
+    margin-top: calc((1px - var(--slider-thumb)) / 2);
+  }
+
+  .settings-range::-moz-range-track {
+    height: 1px;
+    background: transparent;
+  }
+
+  .settings-range::-moz-range-thumb {
+    box-sizing: border-box;
+    width: var(--slider-thumb);
+    height: var(--slider-thumb);
+    border: 2px solid var(--c-accent);
+    border-radius: 50%;
+    background: var(--c-surface);
+  }
+
+  /* 键盘操作（←→ / Home / End）时给滑块一圈柔光 —— 只有键盘聚焦才出现，鼠标点不闪 */
+  .settings-range:focus-visible {
+    outline: none;
+  }
+  .settings-range:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px var(--c-accent-soft);
+  }
+  .settings-range:focus-visible::-moz-range-thumb {
+    box-shadow: 0 0 0 3px var(--c-accent-soft);
+  }
+
+  /* 读数用等宽字、右对齐、给足固定宽度 —— 拖动时数字位数变化不会把滑块顶得左右跳 */
   .settings-range-value {
     flex: none;
     min-width: 4.4rem;

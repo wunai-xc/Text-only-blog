@@ -296,6 +296,32 @@ export function currentReadingNumbers(): Record<ReadingSliderKey, number> {
   return { width: read("width"), size: read("size"), leading: read("leading") };
 }
 
+/**
+ * 「屏幕默认值」的令牌名。与 READING_VARS（生效值）是两套：
+ *   - READING_VARS 会被读者拖动的结果盖掉（行内变量）；
+ *   - 这几个只由 app/globals.css 的媒体查询按屏幕宽度给，读者改不了它。
+ * 滑块导轨上那个固定的「默认点」读的就是它 —— 所以读者把滑块拖走后，
+ * 那个点仍停在**当前屏幕**对应的位置，一眼能看出自己偏离默认多少。
+ */
+export const READING_DEFAULT_VARS: Record<ReadingSliderKey, string> = {
+  width: "--reading-measure-default",
+  size: "--reading-size-default",
+  leading: "--reading-leading-default",
+};
+
+/** 三个滑块在当前屏幕下的默认值（不受读者设置影响）；服务端给首帧兜底值 */
+export function currentReadingDefaults(): Record<ReadingSliderKey, number> {
+  const read = (key: ReadingSliderKey): number => {
+    if (typeof document === "undefined") return READING_SLIDER_BASE[key];
+    const raw = window
+      .getComputedStyle(document.documentElement)
+      .getPropertyValue(READING_DEFAULT_VARS[key]);
+    const value = Number.parseFloat(raw);
+    return Number.isFinite(value) ? value : READING_SLIDER_BASE[key];
+  };
+  return { width: read("width"), size: read("size"), leading: read("leading") };
+}
+
 function storage(): Storage | null {
   if (typeof window === "undefined") return null;
   try {
