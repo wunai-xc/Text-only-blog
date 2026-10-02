@@ -984,7 +984,8 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 - **标签 / 分类片是链接**：链到列表页的筛选（`/zh/posts/?tag=…`、`?cat=…`），
   编解码只有 `lib/list.ts` 一处实现（约定第 9 条）—— 第 13 项的标签 / 分类页落地前，
   这就是站内唯一「按标签看文章」的入口。
-- **giscus 评论**（`GiscusComments`）：配置在 `lib/site.ts` 的 `COMMENTS`（四个值**全部留空**，
+- **giscus 评论**（`GiscusComments`）：配置在 `lib/site.ts` 的 `COMMENTS`（已接上
+  `wunai-xc/Text-only-blog` 的 `Announcements` 分类；四个值只要有一个留空，就退回
   按约定第 2 条显示「编辑此处」+ 怎么配，而不是一个空壳 iframe）。四项都填了才会真的挂上去，
   并且：
   1. **懒加载**：滚到评论区附近（`rootMargin: 600px`）才插 giscus 的脚本 ——

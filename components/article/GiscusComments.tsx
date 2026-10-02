@@ -21,7 +21,7 @@ import { currentTheme, subscribeTheme, type Theme } from "@/lib/theme";
  * 取舍写在明面上，也写在页面上：
  *   1. **懒加载**：先用 IntersectionObserver 等到读者滚到评论区附近（rootMargin 600px）
  *      才把 giscus.app 的 `<script>` 插进去 —— 不读评论的读者，一个字节都不会连到那边；
- *   2. **没配置就说明白**：`lib/site.ts` 的 `COMMENTS` 四个值还空着时（仓库现状），
+ *   2. **没配置就说明白**：`lib/site.ts` 的 `COMMENTS` 四个值还空着时，
  *      显示「编辑此处」与怎么配，而不是一个空白框（约定第 2 条）；
  *   3. **外观跟着站点走**：三套外观映射成 giscus 的 light / dark（表在 lib/article.ts）。
  *      换外观时用 `postMessage` 通知 iframe 换配色（giscus 的官方接口），**不重新加载**
