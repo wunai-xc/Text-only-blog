@@ -7,7 +7,9 @@
  *      `lib/site.ts` 的 `CONTACT.repo`。优先走它的理由与参考项目一致
  *      （wunai-Blog 的 `scripts/generate-changelog.mjs` 就是这么写的）：
  *      云构建常常是**浅克隆**，`git log` 在那种环境里只剩触发构建的那一条提交，
- *      更新日志会缩成孤零零一行；
+ *      更新日志会缩成孤零零一行。
+ *      ⚠️ 这一跳用 `node:https` 而不是 `fetch` —— Next 会把 `force-cache` 的 fetch 结果
+ *      跨构建缓存 1 年，首页那一栏会永久停在第一次的样子，详见 `githubJson()`；
  *   2. **本地 `git log`**（要有完整历史；GitHub Actions 那边靠 `fetch-depth: 0`）。
  *
  * 两条都失败时返回空数组并打一条警告 —— **绝不让构建失败**：更新日志是装饰，不是内容。
@@ -21,6 +23,7 @@
  */
 
 import { execFileSync } from "node:child_process";
+import { get as httpsGet } from "node:https";
 
 import { CONTACT } from "./site";
 
@@ -84,6 +87,63 @@ interface GitHubCommit {
 }
 
 /**
+ * 取一次 GitHub API 的 JSON —— **刻意不用全局 `fetch`**。
+ *
+ * ⚠️ 这是本站踩过的坑，别再改回去：Next 会把构建期 `fetch` 的结果写进
+ * `.next/cache/fetch-cache`，`cache: "force-cache"` 给的默认 `revalidate` 是 **1 年**
+ * （`{"kind":"FETCH", … "revalidate":31536000}`）。构建机（Cloudflare Workers Builds）
+ * 的缓存是**跨构建**留着的，于是第一次那份响应被永久钉住，此后每次构建都不再请求
+ * GitHub —— 首页「更新日志」栏会停在那一刻，而 `source` 还一直显示 `github`，
+ * 看起来「API 调用成功了」，最难查的就是这一点。
+ *   现场（2026-10-02）：构建时间 15:55:50Z，30 条却全部停在 `ce38419`（08:55 提交），
+ *   当时 main 的 HEAD 已经比它新十来个提交。
+ *
+ * 也不能改成 `no-store`：那会把页面标记成「动态渲染」，而本站是 `output: "export"`
+ * 的静态导出，构建期直接报错。所以直接走 `node:https`，绕开 Next 的 fetch 缓存。
+ */
+function githubJson(url: string, timeoutMs = 15000): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const request = httpsGet(
+      url,
+      {
+        headers: {
+          Accept: "application/vnd.github+json",
+          // GitHub API 要求带 User-Agent，否则 403
+          "User-Agent": "text-only-blog-changelog",
+        },
+      },
+      (response) => {
+        const status = response.statusCode ?? 0;
+        if (status < 200 || status >= 300) {
+          response.resume(); // 丢掉响应体，让连接能回收
+          reject(new Error(`GitHub API ${status}`));
+          return;
+        }
+
+        response.setEncoding("utf8");
+        let text = "";
+        response.on("data", (chunk: string) => {
+          text += chunk;
+        });
+        response.on("end", () => {
+          try {
+            resolve(JSON.parse(text) as unknown);
+          } catch (error) {
+            const detail = error instanceof Error ? error.message : String(error);
+            reject(new Error(`GitHub API 返回的不是 JSON（${detail}）`));
+          }
+        });
+      },
+    );
+
+    request.setTimeout(timeoutMs, () => {
+      request.destroy(new Error(`GitHub API 超时（${timeoutMs}ms）`));
+    });
+    request.on("error", reject);
+  });
+}
+
+/**
  * 来源一：GitHub API。
  *
  * `per_page` 多要几条是为了过滤合并提交后仍然够数（`git log` 那边有 `--no-merges`）。
@@ -95,20 +155,9 @@ async function fromGitHub(
   includeMerges: boolean,
 ): Promise<ChangelogEntry[]> {
   const perPage = Math.min(100, includeMerges ? limit : limit + 10);
-  const response = await fetch(`https://api.github.com/repos/${repo}/commits?per_page=${perPage}`, {
-    headers: {
-      Accept: "application/vnd.github+json",
-      // GitHub API 要求带 User-Agent，否则 403
-      "User-Agent": "text-only-blog-changelog",
-    },
-    // 注意：这里**必须**用 force-cache，不能用 no-store —— `no-store` 的 fetch 会把
-    // 用到它的页面标记成「动态渲染」，而本站是 `output: "export"` 的静态导出，
-    // 那样会在构建期直接报错。构建期本来就只读一次，缓存开关不影响结果。
-    cache: "force-cache",
-  });
-  if (!response.ok) throw new Error(`GitHub API ${response.status}`);
-
-  const payload: unknown = await response.json();
+  const payload = await githubJson(
+    `https://api.github.com/repos/${repo}/commits?per_page=${perPage}`,
+  );
   if (!Array.isArray(payload)) throw new Error("GitHub API 没有返回数组");
 
   const entries: ChangelogEntry[] = [];
