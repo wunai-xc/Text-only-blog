@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "@iconify/react/offline";
 
 import ArticlePager from "./ArticlePager";
-import { ARTICLE_TEXT, TOC_ACTIVE_OFFSET, TOC_MAX_DEPTH, tocIndent } from "@/lib/article";
+import { useActiveHeading } from "./useActiveHeading";
+import { ARTICLE_TEXT, TOC_MAX_DEPTH, tocIndent } from "@/lib/article";
 import { icons } from "@/lib/icons";
 import type { ListPost } from "@/lib/list";
 import type { TocEntry } from "@/lib/markdown";
@@ -19,9 +20,9 @@ import type { Lang } from "@/lib/site";
  * 五个设计决定：
  *   1. **它就是一组真锚点**（`<a href="#heading-id">`）：没有 JS 也能跳（只是不会高亮），
  *      id 是第 3 项 `rehype-slug` 给的，与正文标题、`#` 锚点同一套，不需要另造一套 slug；
- *   2. **高亮用 IntersectionObserver**（不挂滚动监听）：判定带取「顶栏下方 → 视口 30% 处」
- *      这一条带，带里的第一条就是「正在读的小节」。带里一条都没有时**保留上一次的高亮**
- *      （不清空），否则小节之间会闪；这一条与首页侧边指示器（HomeIndex）是同一个做法；
+ *   2. **高亮当前小节**：判定只有一份 —— 在 ./useActiveHeading.ts（IntersectionObserver
+ *      取「顶栏下方 → 视口 30% 处」那条带，带里的第一条就是正在读的小节）。右侧进度条的
+ *      节点层要的是**同一个答案**，所以两处共用它，不各观察一遍；
  *   3. 层级只用于缩进，不折叠：纯文字博客的目录通常十几条，折叠反而要多点一次；
  *      深于 `TOC_MAX_DEPTH` 的标题不列（缩进到第 3 档就没法再区分了）；
  *   4. 上下篇挂在面板底部（面板默认收起，所以文章末尾还有一份 `full` 档的上下篇
@@ -52,46 +53,9 @@ export default function ArticleToc({
   newer: ListPost | null;
 }) {
   const t = ARTICLE_TEXT[lang];
-  const [active, setActive] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const active = useActiveHeading(toc);
   const root = useRef<HTMLElement | null>(null);
-  const visible = useRef<Set<string>>(new Set());
-
-  useEffect(() => {
-    /** 文档顺序的 id 表：高亮要「带里的第一条」，所以顺序是这件事的关键 */
-    const ids: string[] = [];
-    const collect = (entries: TocEntry[]): void => {
-      for (const entry of entries) {
-        ids.push(entry.id);
-        collect(entry.children);
-      }
-    };
-    collect(toc);
-
-    const elements = ids
-      .map((id) => document.getElementById(id))
-      .filter((element): element is HTMLElement => element !== null);
-    if (elements.length === 0 || typeof IntersectionObserver === "undefined") return;
-
-    const observer = new IntersectionObserver(
-      (records) => {
-        for (const record of records) {
-          if (record.isIntersecting) visible.current.add(record.target.id);
-          else visible.current.delete(record.target.id);
-        }
-        const first = ids.find((id) => visible.current.has(id));
-        if (first) setActive(first);
-      },
-      // 上边界避开吸顶顶栏，下边界收掉 70%：中间那条带就是「正在读」的位置
-      { rootMargin: `-${TOC_ACTIVE_OFFSET}px 0px -70% 0px` },
-    );
-
-    for (const element of elements) observer.observe(element);
-    return () => {
-      observer.disconnect();
-      visible.current.clear();
-    };
-  }, [toc]);
 
   /** 面板是浮层：点面板外面、或按 Esc，都要收起来（与设置抽屉同一种做法） */
   useEffect(() => {

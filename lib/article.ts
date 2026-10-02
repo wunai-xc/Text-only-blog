@@ -65,6 +65,13 @@ export const TOC_ACTIVE_OFFSET = 120;
 export const PROGRESS_KEY_STEP = 5;
 
 /**
+ * 拖动进度条时，滑块离章节节点多近就报出该节点的标题（占整页的比例，与参考稿的
+ * NEAR_THRESHOLD 同值）。太小则几乎「停」不出标题，太大则一路都在跳。
+ * 指尖设备没有 hover，那条路只能靠它（见 ArticleProgress）。
+ */
+export const PROGRESS_NEAR_THRESHOLD = 0.05;
+
+/**
  * 判定「正文标题已经滚出视野」的线（粘性标题用它决定出现 / 消失）。
  * 与目录高亮那条 `TOC_ACTIVE_OFFSET` **同值** —— 两者要的都是「吸顶顶栏的下沿」，
  * 只是用途不同（一个高亮小节、一个挂标题）。分成两个名字是为了读代码时不别扭，数只有一个。
@@ -189,6 +196,8 @@ export interface ArticleText {
   progressLabel: string;
   /** 进度条的悬停说明：它现在是个**滑块**（能拖、也能用方向键） */
   progressHint: string;
+  /** 轨道上那列章节方块（一组按钮）的名字 */
+  progressSections: string;
   backToTop: string;
 
   pagerLabel: string;
@@ -223,6 +232,7 @@ const ZH: ArticleText = {
 
   progressLabel: "阅读进度",
   progressHint: "拖动跳到任意位置（也可以用方向键）",
+  progressSections: "章节跳转",
   backToTop: "回到顶部",
 
   pagerLabel: "上下篇",
@@ -257,6 +267,7 @@ const EN: ArticleText = {
 
   progressLabel: "Reading progress",
   progressHint: "Drag to jump anywhere (arrow keys work too)",
+  progressSections: "Jump to section",
   backToTop: "Back to top",
 
   pagerLabel: "Previous and next",

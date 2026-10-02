@@ -225,7 +225,8 @@ export default async function LangPost({
   return (
     <main className="page article-page">
       <ArticleToc lang={lang} toc={rendered.toc} older={older} newer={newer} />
-      <ArticleProgress lang={lang} />
+      {/* 进度条也读同一份目录：轨道上那列章节方块就是它的第二形态（点一下跳到那一节） */}
+      <ArticleProgress lang={lang} toc={rendered.toc} />
       {/* 阅读时顶栏自动收起、双击呼出（只写 <html> 的一个属性，样式在 globals.css 的 6b） */}
       <ReadingHeader />
 

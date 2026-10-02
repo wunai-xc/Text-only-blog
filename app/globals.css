@@ -2819,6 +2819,10 @@ html[data-reading="hidden"] {
 
   .article-page {
     max-width: calc(var(--reading-measure) + 3rem);
+    /* 右侧那几件浮动件（进度线 / 滑块 / 章节方块）的**轴线**：距视口右缘多远。
+       取值 = 章节方块命中区（0.75rem）的一半 —— 方块贴右缘摆，轴心就正好落在那条线上，
+       于是「线、滑块圆心、方块心」三样都压在同一个 x 上，也不用把方块伸出视口。 */
+    --progress-axis: 0.375rem;
   }
 
   /* 目录跳转时标题停在吸顶顶栏下面。这里读 --chrome-top（平时 = --header-h + 0.5rem 留白，
@@ -3162,13 +3166,12 @@ html[data-reading="hidden"] {
     outline-offset: -2px;
   }
 
-  /* 轨道底与已读填充是**同一条线**；`right: calc(0.3rem - 1px)` 是为了让拇指的圆心
-     正好压在这条线上（拇指宽 0.6rem、贴右摆放，两者因此对齐）。 */
+  /* 轨道底与已读填充是**同一条线**，压在那条轴线上（线宽 2px，所以右缘再退 1px） */
   .article-progress-rail,
   .article-progress-fill {
     position: absolute;
     top: 0;
-    right: calc(0.3rem - 1px);
+    right: calc(var(--progress-axis) - 1px);
     width: 2px;
   }
 
@@ -3189,7 +3192,8 @@ html[data-reading="hidden"] {
   /* 拇指：那颗能抓的小圆点（同样只在悬停 / 聚焦 / 拖动时出现） */
   .article-progress-thumb {
     position: absolute;
-    right: 0;
+    /* 贴右缘退半格：0.6rem 的圆心正好落在轴线上（与那 2px 的线同心） */
+    right: calc(var(--progress-axis) - 0.3rem);
     width: 0.6rem;
     height: 0.6rem;
     margin-top: -0.3rem; /* 圆心落在百分比位置上 */
@@ -3249,6 +3253,138 @@ html[data-reading="hidden"] {
       color: var(--c-ink-subtle);
       font-family: var(--font-mono);
       font-size: 0.66rem;
+    }
+  }
+
+  /* ---------- 轨道上的章节节点（压在细线上的一列小方块） ----------
+     方块是**按钮**（点一下跳到那一节），所以它自己收指针；承载它的这一层只是定位壳子，
+     铺满视口但 `pointer-events: none` —— 空白处的按压照旧漏给下面那条可拖动的轨道。
+     层序与进度线同为 19，且在 DOM 里更靠后，所以方块画在那条细线之上、不会被埋住。
+
+     对齐：方块心、滑块圆心、那 2px 的线，三样必须压在同一个 x 上（即 `--progress-axis`，
+     见 .article-page）。所以方块在 0.75rem 的命中区里**居中**摆 —— 方块多大都自动落在轴线上，
+     不用为每个尺寸各调一次偏移。 */
+  .article-progress-marks {
+    position: fixed;
+    z-index: 19;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 0.75rem;
+    pointer-events: none;
+  }
+
+  .article-progress-dot {
+    position: absolute;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 0.75rem;
+    height: 0.75rem;
+    margin-top: -0.375rem; /* 方块心落在百分比位置上（半格） */
+    padding: 0;
+    border: 0;
+    background: none;
+    appearance: none;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  .article-progress-dot:focus-visible {
+    outline: 2px solid var(--c-accent);
+    outline-offset: -1px;
+    border-radius: 2px;
+  }
+
+  /* 方块本体：默认是个只有轮廓的空框（「还没读到」），填不填墨由状态决定 */
+  .article-progress-dot-core {
+    display: block;
+    width: 0.34rem;
+    height: 0.34rem;
+    border: 1px solid var(--c-rule-strong);
+    border-radius: 1px;
+    background-color: var(--c-canvas);
+  }
+
+  /* 层级只影响大小，不影响颜色：章节越深方块越小，一眼看得出结构。
+     一级 / 二级同为「章节」档（都用上面的基准尺寸，所以不写规则）；
+     再深才逐档收小 —— 但留 0.2rem 的下限，别小成一个看不见的点。 */
+  .article-progress-dot[data-depth="3"] .article-progress-dot-core {
+    width: 0.26rem;
+    height: 0.26rem;
+  }
+
+  .article-progress-dot[data-depth="4"] .article-progress-dot-core {
+    width: 0.2rem;
+    height: 0.2rem;
+  }
+
+  /* 读到过（滑块已越过它）：填墨，但压淡一点，别抢正在读的那一颗 */
+  .article-progress-dot[data-reached="true"] .article-progress-dot-core {
+    border-color: var(--c-accent);
+    background-color: var(--c-accent);
+    opacity: 0.5;
+  }
+
+  /* 正在读：与悬浮目录高亮的是同一份判定（见 useActiveHeading），实心 + 一圈光晕 */
+  .article-progress-dot[data-active="true"] .article-progress-dot-core {
+    border-color: var(--c-accent);
+    background-color: var(--c-accent);
+    opacity: 1;
+    box-shadow: 0 0 0 3px var(--c-accent-soft);
+    transform: scale(1.4);
+  }
+
+  /* 悬停 / 聚焦 / 拖动靠近：放大报「你指的是这一节」 */
+  .article-progress-dot:hover .article-progress-dot-core,
+  .article-progress-dot[data-near="true"] .article-progress-dot-core {
+    border-color: var(--c-accent);
+    background-color: var(--c-accent);
+    opacity: 1;
+    transform: scale(1.4);
+  }
+
+  /* 标题签：朝左弹出（右边缘没有余地）。平时透明，只有 data-show 时才浮出来 */
+  .article-progress-dot-label {
+    position: absolute;
+    right: calc(100% + 0.4rem);
+    max-width: 12rem;
+    padding: 0.16rem 0.42rem;
+    border: 1px solid var(--c-rule);
+    border-radius: 3px;
+    background-color: var(--c-surface);
+    color: var(--c-ink);
+    box-shadow: var(--shape-shadow);
+    font-size: 0.7rem;
+    line-height: 1.45;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0;
+    transform: translateX(0.3rem);
+    pointer-events: none;
+  }
+
+  .article-progress-dot-label[data-show="true"] {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .article-progress-dot-core,
+    .article-progress-dot-label {
+      transition: opacity 0.16s ease, transform 0.16s ease, background-color 0.16s ease,
+        border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+  }
+
+  /* 窄屏：正文已经贴到边缘，这一列方块会跟「右边缘滚页面」抢手指，
+     只留章节（二级），更深的收起来 —— 反正那几档方块也小得看不清 */
+  @media (max-width: 59.999rem) {
+    .article-progress-dot[data-depth="3"],
+    .article-progress-dot[data-depth="4"] {
+      display: none;
     }
   }
 
@@ -3782,6 +3918,7 @@ html[data-reading="hidden"] {
   .article-toc,
   .article-sticky,
   .article-progress,
+  .article-progress-marks,
   .article-progress-value,
   .article-top,
   .article-comments {
