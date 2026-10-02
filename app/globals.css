@@ -4066,20 +4066,27 @@ html[data-reading="hidden"] {
     text-underline-offset: 3px;
   }
 
-  /* 行内外链：链接文字前一枚站点图标（lib/link-cards.ts 给的 --link-icon）。
-     为什么用 ::before + 自定义属性、而不是插一个 <img>：
-       - 图标取不到时只是一块透明区域，不会出现浏览器的碎图占位符；
-       - 伪元素不进无障碍树、不占 Tab 顺序，读屏软件只念链接文字。
-     1em 方图 + 一点点下沉对齐：整行高度由行距（--reading-leading 最小 1.3）兜住，
-     所以它「与正文字号同大」却不会把上下行距撑开。 */
-  .article-body a.link-external::before {
-    content: "";
+  /* 链接图标（lib/link-cards.ts 生成的 <img class="link-icon">，行内链接与卡片共用）。
+     行内时「与正文字号同大」：1em 方图 + 一点点下沉对齐，整行高度由行距
+     （--reading-leading 最小 1.3）兜住，所以不会把上下行距撑开。
+     图标源取不到时，components/ArticleBody.tsx 会把这个 <img> 换成一个带
+     .link-icon-fallback 的 <span>，图标画在下面那条规则里（内联 SVG，不联网）。 */
+  .article-body .link-icon {
     display: inline-block;
     width: 1em;
     height: 1em;
     margin-right: 0.3em;
     vertical-align: -0.14em;
-    background: var(--link-icon) center / contain no-repeat;
+    object-fit: contain;
+  }
+
+  /* 本地兜底图标：不联网，所以断网、被墙、图标源挂了都一定有。
+     用 mask + background-color 而不是 <img>：颜色能跟着主题走（--c-ink-subtle）。 */
+  .article-body .link-icon-fallback {
+    --icon-link: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7a5 5 0 0 0 0 10h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4a5 5 0 0 0 0-10z'/%3E%3C/svg%3E");
+    background-color: var(--c-ink-subtle);
+    -webkit-mask: var(--icon-link) center / contain no-repeat;
+    mask: var(--icon-link) center / contain no-repeat;
   }
 
   /* 单独成行的外链 → 整张可点的卡片（.panel 给边框与底色，这里只改排版）。
@@ -4101,15 +4108,24 @@ html[data-reading="hidden"] {
     border-color: var(--c-rule-strong);
   }
 
-  /* 通用卡片的站点图标（GitHub 卡片用的是头像，见下） */
+  /* 通用卡片的站点图标（GitHub 卡片用的是头像，见下）：带边框的方块，图标居中 */
   .link-card-icon {
     flex: 0 0 auto;
+    display: grid;
+    place-items: center;
     width: 1.7rem;
     height: 1.7rem;
     border: 1px solid var(--c-rule);
     border-radius: var(--shape-radius);
-    background: var(--link-icon) center / contain no-repeat;
     background-color: var(--c-surface);
+  }
+
+  /* 卡片里的图标不用行内那套 1em + 下沉对齐，按方块缩一点居中 */
+  .article-body .link-card-icon .link-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin: 0;
+    vertical-align: baseline;
   }
 
   /* GitHub 头像：脚本从接口取到后写成背景图；取不到就留一块空底，不出现碎图 */

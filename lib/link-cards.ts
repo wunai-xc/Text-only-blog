@@ -4,8 +4,8 @@
  * 作者什么都不用加，插件按「链接怎么写」自己判断，两种处理：
  *
  *   1. **行内链接**（前后还有别的字）：在链接文字前加一枚与正文字号同大的站点图标。
- *      图标按域名向第三方图标服务取（见 FAVICON_SERVICE）。取不到时只是一块透明区域，
- *      不会出现碎图占位符，也不会把行距撑开（样式见 globals.css 里的 .link-external::before）。
+ *      图标按域名向图标服务取（见 ICON_SOURCES）。取不到时换成本地图标（纯 CSS 内联 SVG，
+ *      不联网，见 globals.css 的 .link-icon-fallback），既不会出现碎图，也不会把行距撑开。
  *      只处理**站外** http(s) 链接；站内相对链接、锚点、脚注角标、标题里的链接都不加。
  *
  *   2. **单独成行的链接**（整个段落只有这一条链接）：换成一张整块可点的卡片。
@@ -25,8 +25,23 @@
  * 标题里的链接本来也被 HEADING_TAGS 挡掉了。
  */
 
-/** 图标服务：按域名取站点图标。想换服务只改这一个常量（路径拼接方式见 faviconUrl） */
-export const FAVICON_SERVICE = "https://icons.duckduckgo.com/ip3/";
+/**
+ * 站点图标源：按顺序试，前一个取不到就换下一个，全都取不到就换成本地图标
+ * （画在 CSS 里，不联网）。每个源就是一条「域名 → 图标地址」的规则，加源只塞进这个数组。
+ *
+ * 为什么国内源排前面：图标源都是「别人家的服务」，可达性一直在变 ——
+ * 第一版用 `icons.duckduckgo.com` 在国内直接连不上；第二版换成 `favicon.im`，
+ * 它挂在 Cloudflare 上，国内时通时不通，表现就是「只有 GitHub 卡片有图（头像走 GitHub
+ * 自己的 CDN），其余链接的图标全空」。现在把两个有国内 IP（腾讯云 EdgeOne）的源放前面：
+ *   - `api.xinac.net`：国内，实测覆盖最全 —— b23.tv 这种短链、techmc.wiki 这类自建站都命中；
+ *   - `favicon.cccyun.cc`：同样国内，做备用；
+ *   - `favicon.im`：海外 Cloudflare，覆盖最全，放最后兜底。
+ */
+export const ICON_SOURCES: Array<(host: string) => string> = [
+  (host) => `https://api.xinac.net/icon/?url=${encodeURIComponent(host)}`,
+  (host) => `https://favicon.cccyun.cc/${encodeURIComponent(host)}`,
+  (host) => `https://favicon.im/${encodeURIComponent(host)}`,
+];
 
 const HEADING_TAGS = new Set(["h1", "h2", "h3", "h4", "h5", "h6"]);
 
@@ -104,9 +119,26 @@ export function linkHost(url: string): string {
   }
 }
 
-/** 图标服务地址：`https://icons.duckduckgo.com/ip3/<域名>.ico` */
-export function faviconUrl(host: string): string {
-  return `${FAVICON_SERVICE}${encodeURIComponent(host)}.ico`;
+/** 按 ICON_SOURCES 算出候选图标地址，顺序就是尝试顺序 */
+function iconUrls(host: string): string[] {
+  return ICON_SOURCES.map((build) => build(host));
+}
+
+/**
+ * 站点图标 `<img>`：`src` 放第一个源，其余源按顺序塞进 `data-icon-alt`（空格分隔），
+ * 由 components/ArticleBody.tsx 在加载失败时依次换上，最后一个也失败就换成本地图标。
+ */
+function iconImage(host: string, className: string): HastNode {
+  const [primary, ...rest] = iconUrls(host);
+  return element("img", {
+    className: [className],
+    src: primary,
+    ...(rest.length > 0 ? { "data-icon-alt": rest.join(" ") } : {}),
+    alt: "",
+    loading: "lazy",
+    decoding: "async",
+    referrerPolicy: "no-referrer",
+  });
 }
 
 /** `github.com/<用户名>` 这种个人主页 → 用户名；仓库页、组织页、保留路径都返回空串 */
@@ -154,13 +186,6 @@ function plainText(node: HastNode): string {
   return children.map((child) => plainText(child)).join("");
 }
 
-/** 把 `--link-icon:url(...)` 追加上去；作者写过的其它内联样式保留 */
-function appendStyle(node: HastNode, declaration: string): void {
-  const existing = stringProperty(node, "style");
-  const head = existing === "" ? "" : existing.trimEnd().endsWith(";") ? existing : `${existing};`;
-  node.properties = { ...(node.properties ?? {}), style: `${head}${declaration}` };
-}
-
 /* ------------------------------ 判断与改写 ------------------------------ */
 
 /** 段落里是不是只有一条链接（其余只有空白文本）？是则返回那条链接 */
@@ -199,7 +224,7 @@ function decorateIcon(link: HastNode): void {
   const host = linkHost(stringProperty(link, "href"));
   if (host === "") return;
   addClass(link, "link-external");
-  appendStyle(link, `--link-icon:url("${faviconUrl(host)}")`);
+  link.children = [iconImage(host, "link-icon"), ...(link.children ?? [])];
 }
 
 /** 单独成行的链接 → 卡片 */
@@ -239,11 +264,7 @@ function decorateCard(link: HastNode): void {
   }
 
   link.children = [
-    element("span", {
-      className: ["link-card-icon"],
-      style: `--link-icon:url("${faviconUrl(host)}")`,
-      ariaHidden: "true",
-    }),
+    element("span", { className: ["link-card-icon"] }, [iconImage(host, "link-icon")]),
     element("span", { className: ["link-card-text"] }, [
       element("span", { className: ["link-card-title"] }, [text(bare ? host : label)]),
       ...(bare ? [] : [element("span", { className: ["link-card-host"] }, [text(host)])]),

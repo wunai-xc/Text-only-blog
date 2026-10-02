@@ -37,6 +37,13 @@ function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+/**
+ * 链接图标的看门狗时长（毫秒）：图标请求超过这么久还没出图就认为这个源不行，换下一个。
+ * 之所以需要它：被墙的域名常常是「连接挂着」而不是「被拒绝」，不给 `error` 事件，
+ * 光听事件图标会永远空着。4 秒足够国内源正常出图，又不至于让人干等。
+ */
+const ICON_TIMEOUT = 4000;
+
 /** 出错时把原因写在图的位置上，作者一眼能看到，读者也不会看到半张图 */
 function markError(block: HTMLElement, message: string): void {
   block.dataset.chartState = "error";
@@ -210,6 +217,103 @@ export default function ArticleBody({ html, className }: ArticleBodyProps) {
     void Promise.all(cards.map((card) => load(card)));
     return () => {
       cancelled = true;
+    };
+  }, [html]);
+
+  /**
+   * 链接图标（lib/link-cards.ts 生成的 `<img class="link-icon">`）的兜底。
+   *
+   * 图标源都是别人家的服务，国内可达性说不准（第一版 DuckDuckGo 国内连不上；
+   * 第二版 favicon.im 挂在 Cloudflare 上，时通时不通 —— 表现就是只有 GitHub 卡片
+   * 有图、其余链接全空）。所以：`src` 放第一个源，其余源排在 `data-icon-alt` 里，
+   * 这里逐个换着试，全试完就换成 `.link-icon-fallback` 的 `<span>`（图标画在 CSS 里，
+   * 内联 SVG，不联网，断网 / PWA 离线也一定有）。
+   *
+   * 两种失败都要管：
+   *   - `error`：连接被拒 / 403 / 404，事件会来；
+   *   - **卡住不响应**：请求挂着既不 load 也不 error（被墙时很常见），光听事件会永远空着，
+   *     所以要有个看门狗 —— 超过 ICON_TIMEOUT 还没出图就当成失败，换下一个源。
+   *
+   * 看门狗只在图标进入视口后才开始计（图片是 `loading="lazy"` 的，滚动到才发请求）：
+   * 否则「还没轮到加载」会被误判成「取不到」，人还没滚到就把图标换掉了。
+   */
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+
+    const icons = Array.from(host.querySelectorAll<HTMLImageElement>("img.link-icon"));
+    if (icons.length === 0) return;
+
+    const cleanups: Array<() => void> = [];
+
+    for (const img of icons) {
+      let timer: number | undefined;
+      let settled = false; // 已经出图（load）或已经换成本地图标，不再折腾
+
+      const stopTimer = (): void => {
+        if (timer !== undefined) {
+          window.clearTimeout(timer);
+          timer = undefined;
+        }
+      };
+
+      /** 换下一个源；源都试完了就本地兜底。换源后重新开始计时。 */
+      const recover = (): void => {
+        stopTimer();
+        const [next, ...rest] = (img.dataset.iconAlt ?? "").split(" ").filter(Boolean);
+        if (next) {
+          img.dataset.iconAlt = rest.join(" ");
+          img.src = next;
+          arm();
+          return;
+        }
+        settled = true;
+        const fallback = document.createElement("span");
+        fallback.className = `${img.className} link-icon-fallback`;
+        img.replaceWith(fallback);
+      };
+
+      /** 开始看门狗：到点还没出图就当这个源不行 */
+      const arm = (): void => {
+        stopTimer();
+        timer = window.setTimeout(() => {
+          if (!settled && img.naturalWidth === 0) recover();
+        }, ICON_TIMEOUT);
+      };
+
+      const onLoad = (): void => {
+        settled = true;
+        stopTimer();
+      };
+      const onError = (): void => recover();
+
+      img.addEventListener("load", onLoad);
+      img.addEventListener("error", onError);
+
+      // 水合之前就出结果的那批补一次：已经失败的（error 早跑完了）立刻接着试下一个源；
+      // `currentSrc` 为空说明是还没轮到的懒加载图，不算失败
+      if (img.complete && img.currentSrc !== "") {
+        if (img.naturalWidth > 0) onLoad();
+        else recover();
+      }
+
+      const observer = new IntersectionObserver((entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect(); // 只管「第一次进入视口」，之后换源不再需要它
+        arm();
+      });
+      observer.observe(img);
+
+      cleanups.push(() => {
+        stopTimer();
+        observer.disconnect();
+        img.removeEventListener("load", onLoad);
+        img.removeEventListener("error", onError);
+      });
+    }
+
+    return () => {
+      for (const cleanup of cleanups) cleanup();
     };
   }, [html]);
 
