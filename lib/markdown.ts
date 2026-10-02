@@ -14,6 +14,7 @@
  *   remarkCitations          [reference:N] → 角标链接
  *   remark-rehype            mdast → hast（保留内联 HTML）
  *   rehype-raw               解析正文里的内联 HTML
+ *   rehypeLinkCards          外链：行内加站点图标，单独成行的换成卡片（见 lib/link-cards.ts）
  *   rehype-slug              给标题加 id（目录靠它）
  *   rehypeCollectHeadings    收集标题 → 目录
  *   rehype-autolink-headings 标题末尾加 # 锚点
@@ -65,6 +66,7 @@ import { unified } from "unified";
 
 import { chartLanguage } from "./charts";
 import type { ReferenceEntry } from "./frontmatter";
+import { rehypeLinkCards } from "./link-cards";
 import { remarkCjkTypography, type TypographyOptions, type TypographyStats } from "./typography";
 
 /* --------------------------- KaTeX 自定义宏 --------------------------- */
@@ -637,6 +639,7 @@ export async function renderMarkdown(
     .use(remarkCitations, { index, cited, warn })
     .use(remarkRehype, { allowDangerousHtml: options.allowRawHtml !== false })
     .use(rehypeRaw)
+    .use(rehypeLinkCards)
     .use(rehypeSlug)
     .use(rehypeCollectHeadings, { collect: (heading: HeadingRecord) => headings.push(heading) })
     .use(rehypeAutolinkHeadings, AUTOLINK_HEADING_OPTIONS)

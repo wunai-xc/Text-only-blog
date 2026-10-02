@@ -50,6 +50,35 @@ function markError(block: HTMLElement, message: string): void {
   console.error("[chart]", message);
 }
 
+/** GitHub 公共接口 /users/:login 里我们用到的字段 */
+interface GitHubUser {
+  login: string;
+  name: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+}
+
+/**
+ * 把 GitHub 用户信息填进卡片骨架。
+ *
+ * 骨架（lib/link-cards.ts 生成）本来就是一个能点的链接，显示用户名 + 域名；
+ * 这里只是「有则换、无则留」地补上头像 / 名称 / 简介 —— 任何一项缺失都不影响其余部分。
+ */
+function fillGitHubCard(card: HTMLElement, user: GitHubUser): void {
+  const name = card.querySelector<HTMLElement>("[data-github-name]");
+  if (name && user.name) name.textContent = user.name;
+
+  // 骨架那行本来印的是域名，拿到接口后补成「@用户名 · 域名」
+  const meta = card.querySelector<HTMLElement>("[data-github-meta]");
+  if (meta && user.login) meta.textContent = `@${user.login} · github.com`;
+
+  const bio = card.querySelector<HTMLElement>("[data-github-bio]");
+  if (bio && user.bio) bio.textContent = user.bio;
+
+  const avatar = card.querySelector<HTMLElement>(".link-card-avatar");
+  if (avatar && user.avatar_url) avatar.style.backgroundImage = `url("${user.avatar_url}")`;
+}
+
 export interface ArticleBodyProps {
   /** lib/markdown.ts 渲染出来的正文 HTML */
   html: string;
@@ -140,6 +169,49 @@ export default function ArticleBody({ html, className }: ArticleBodyProps) {
       for (const cleanup of cleanups) cleanup();
     };
   }, [html, theme]);
+
+  /**
+   * GitHub 个人主页卡片（lib/link-cards.ts 生成的骨架）：页面里问一次 GitHub 公共接口，
+   * 补上头像 / 名称 / 简介。渐进增强 —— 脚本没跑、接口限流或断网时，卡片仍是个能点的链接，
+   * 只是多留一行骨架信息。只对 `[data-github-login]` 的卡片发请求，普通外链卡片不发。
+   */
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+
+    const cards = Array.from(
+      host.querySelectorAll<HTMLElement>(".link-card[data-github-login]"),
+    );
+    if (cards.length === 0) return;
+
+    let cancelled = false;
+
+    const load = async (card: HTMLElement): Promise<void> => {
+      const login = card.dataset.githubLogin;
+      if (!login) return;
+      card.dataset.githubState = "loading";
+      try {
+        const response = await fetch(
+          `https://api.github.com/users/${encodeURIComponent(login)}`,
+          { headers: { Accept: "application/vnd.github+json" } },
+        );
+        if (!response.ok) throw new Error(`GitHub 返回 ${response.status}`);
+        const user = (await response.json()) as GitHubUser;
+        if (cancelled) return;
+        fillGitHubCard(card, user);
+        card.dataset.githubState = "ready";
+      } catch (error) {
+        if (cancelled) return;
+        card.dataset.githubState = "fallback";
+        console.warn("[link-card] GitHub 用户信息没取到：", login, errorText(error));
+      }
+    };
+
+    void Promise.all(cards.map((card) => load(card)));
+    return () => {
+      cancelled = true;
+    };
+  }, [html]);
 
   return (
     <div
