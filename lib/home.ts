@@ -148,7 +148,7 @@ const ZH: HomeText = {
     inventory: { title: "站内内容", kicker: "有几类东西" },
     reading: { title: "阅读改善", kicker: "为读中文做的调整" },
     themes: { title: "外观切换", kicker: "纸 / 亮 / 暗" },
-    fonts: { title: "字体设置", kicker: "宽度 / 字号 / 行距" },
+    fonts: { title: "字体设置", kicker: "字体 / 宽度 / 字号 / 行距" },
   },
   intro: {
     body: "这个网站是我的笔记本，我的数据库。这里大量使用文字，很少有图片与视频；文章以 Markdown 手写，全部由作者本人写。",
@@ -206,7 +206,7 @@ const ZH: HomeText = {
     featuresLabel: "这一项已经做到的",
     features: [
       "护眼纸质底色，纸 / 亮 / 暗三套外观（第 7 栏可试）",
-      "正文宽度 / 字号 / 行距各三档（第 8 栏可调）",
+      "正文字体四档（黑体 / 宋体 / 楷体 / 等宽，用的都是本地字体），宽度 / 字号 / 行距各三档（第 8 栏可调）",
       "代码高亮、KaTeX 公式（含 \\ce 化学式）、五类图表按需加载",
       "打印即排版好的 PDF（Ctrl+P 存一份）",
       "RSS 订阅、离线可用（Service Worker + 离线页）",
@@ -218,7 +218,7 @@ const ZH: HomeText = {
     demo: "只有一件事是不可或缺的：人必须达成自我满足，不管是通过诗歌还是艺术的方式；只有这样，人才值得一看。”然而，达成自我满足至多只是一个必要条件。世界上有许多人达成了自我满足，而且，也正因为如此，他们不值得一看。",
   },
   fonts: {
-    lead: "宽度 / 字号 / 行距写的是 --reading-* 三个令牌：正文与下面这段示范用的是同一套度量，所以改完立刻生效。",
+    lead: "字体 / 宽度 / 字号 / 行距写的是 --reading-* 四个令牌：正文与下面这段示范用的是同一套度量，所以改完立刻生效。字体那四档用的都是你设备上已有的字体，选哪一档都不下载字体文件。",
     sample: "阿尔伯特·爱因斯坦Albert Einstein， E = mc² 于1905年在狭义相对论框架下提出",
   },
 };
@@ -234,7 +234,7 @@ const EN: HomeText = {
     inventory: { title: "What is inside", kicker: "Content types" },
     reading: { title: "Reading comfort", kicker: "Tuned for Chinese" },
     themes: { title: "Appearance", kicker: "Paper / light / dark" },
-    fonts: { title: "Text settings", kicker: "Width / size / leading" },
+    fonts: { title: "Text settings", kicker: "Font / width / size / leading" },
   },
   intro: {
     body: "Edit here: two or three sentences about who this blog is for and what you write. Text only — no images, no video; every post is hand-written in Markdown.",
@@ -293,7 +293,7 @@ const EN: HomeText = {
     featuresLabel: "What is already in place",
     features: [
       "Eye-friendly paper background, three appearance token sets (try block 7)",
-      "Body width / size / leading, three steps each (block 8)",
+      "Body font (four presets, all pulled from fonts on your device) plus width / size / leading, three steps each (block 8)",
       "Code highlighting, KaTeX math (incl. \\ce chemistry), five chart types loaded on demand",
       "Print to a properly typeset PDF (Ctrl+P)",
       "RSS feed and offline support (Service Worker + offline page)",
@@ -305,7 +305,7 @@ const EN: HomeText = {
     demo: "Edit here: this sample text is here to judge contrast in all three appearances — replace it with your own sentence.",
   },
   fonts: {
-    lead: "Width / size / leading are the three --reading-* tokens: the body text and the sample below share the same metrics, so changes apply instantly.",
+    lead: "Font / width / size / leading are the four --reading-* tokens: the body text and the sample below share the same metrics, so changes apply instantly. Every font preset uses a typeface already on your device — nothing is downloaded.",
     sample: "Edit here: this sample re-typesets to your choice. 中文 English mixed, numbers 2024 — all visible at once.",
   },
 };

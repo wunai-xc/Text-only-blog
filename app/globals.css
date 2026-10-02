@@ -33,6 +33,19 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
+/* 自托管字体（第 8 项字体设置里「自定义」那一档）。字体族名固定叫 Text Local ——
+   lib/prefs.ts 的 READING_FONTS 里那一档写的正是这个名字，两处是一对，改要一起改。
+
+   `local()` 放在第一个：读者机器上真装了这个名字的字体就**直接用本地的**，一个字节都不下载；
+   没有才去取 public/fonts/custom.woff2。@font-face 本身不会产生请求 ——
+   浏览器只在真有文字用到这个族时才去取，所以没选这一档的读者、以及还没放文件的站，
+   完全不受影响（文件没放时这一档默认不出现，见 lib/prefs.ts 的 LOCAL_FONT_READY）。 */
+@font-face {
+  font-family: "Text Local";
+  src: local("Text Local"), url("/fonts/custom.woff2") format("woff2");
+  font-display: swap;
+}
+
 /* ============================================================
    2. 语义色令牌 → Tailwind 工具类
    用 `@theme inline`：工具类里生成的是 var(--c-*)，所以 data-theme 一换，
@@ -180,12 +193,16 @@
 }
 
 /* 三套外观共用：形状、蓝图网格尺寸、正文度量。
-   阅读度量（宽度 / 字号 / 行距）是令牌：**第 7 项的设置中心**会把读者选的档位
+   阅读度量（字体 / 宽度 / 字号 / 行距）是令牌：**第 7 项的设置中心**会把读者选的档位
    写成 <html> 上的行内变量（覆盖这里的初值，见 lib/prefs.ts），
-   第 12 项的文章页直接读它们排版。也就是说这三个值不要在任何地方写死。 */
+   第 12 项的文章页直接读它们排版。也就是说这四个值不要在任何地方写死。 */
 :root {
   --shape-radius: 8px;
   --shape-radius-lg: 12px;
+  /* 正文度量（第 8 项的阅读偏好改的就是这四个，全部只在这里定初值）：
+     宽 / 字号 / 行距是数值，字体是字体栈 —— 初值指向 --font-sans，
+     所以「没设置过」与「设置成黑体」看起来完全一样。 */
+  --reading-font: var(--font-sans);
   --reading-measure: 42rem;
   --reading-size: 1.0625rem;
   --reading-leading: 1.85;
@@ -274,7 +291,9 @@ html[data-reading="hidden"] {
   }
 
   body {
-    font-family: var(--font-sans);
+    /* 正文与全站文字都从这里拿字体：设置中心换「字体」就是换这个令牌
+       （代码块之类仍然各自写死 --font-mono，那是有意不让它跟着变） */
+    font-family: var(--reading-font);
     background-color: transparent;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;

@@ -31,6 +31,7 @@ import mdiWeatherNight from "@iconify/icons-mdi/weather-night";
 /* 设置中心 */
 import mdiCogOutline from "@iconify/icons-mdi/cog-outline";
 import mdiPaletteOutline from "@iconify/icons-mdi/palette-outline";
+import mdiFormatFont from "@iconify/icons-mdi/format-font";
 import mdiFormatSize from "@iconify/icons-mdi/format-size";
 import mdiArrowExpandHorizontal from "@iconify/icons-mdi/arrow-expand-horizontal";
 import mdiFormatLineSpacing from "@iconify/icons-mdi/format-line-spacing";
@@ -83,6 +84,7 @@ export const icons = {
   /* 设置 */
   "mdi:cog-outline": mdiCogOutline,
   "mdi:palette-outline": mdiPaletteOutline,
+  "mdi:format-font": mdiFormatFont,
   "mdi:format-size": mdiFormatSize,
   "mdi:arrow-expand-horizontal": mdiArrowExpandHorizontal,
   "mdi:format-line-spacing": mdiFormatLineSpacing,

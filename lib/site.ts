@@ -203,6 +203,7 @@ export interface SiteStrings {
   appearance: string;
   reading: string;
   readingHint: string;
+  readingFont: string;
   readingWidth: string;
   readingSize: string;
   readingLeading: string;
@@ -256,7 +257,8 @@ const I18N: Record<Lang, SiteStrings> = {
     appearance: "外观",
     reading: "阅读偏好",
     readingHint:
-      "调的是正文的宽度 / 字号 / 行距（第 6 项那三个 --reading-* 令牌），改完立刻生效，全站通用。",
+      "调的是正文的字体 / 宽度 / 字号 / 行距（第 6 项那四个 --reading-* 令牌），改完立刻生效，全站通用。字体那四档用的都是你设备上已有的字体，不下载任何字体文件。",
+    readingFont: "正文字体",
     readingWidth: "正文宽度",
     readingSize: "正文字号",
     readingLeading: "行距",
@@ -308,7 +310,8 @@ const I18N: Record<Lang, SiteStrings> = {
     appearance: "Appearance",
     reading: "Reading",
     readingHint:
-      "Changes the width / size / leading of the body text (the three --reading-* tokens from item 6). Takes effect immediately, site-wide.",
+      "Changes the font / width / size / leading of the body text (the four --reading-* tokens from item 6). Takes effect immediately, site-wide. All four font presets use fonts already installed on your device — nothing is downloaded.",
+    readingFont: "Font",
     readingWidth: "Width",
     readingSize: "Font size",
     readingLeading: "Line height",

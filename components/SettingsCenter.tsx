@@ -8,9 +8,9 @@ import { icons, type IconName } from "@/lib/icons";
 import { SITE, type Lang } from "@/lib/site";
 import {
   READING_DEFAULTS,
-  READING_GROUPS,
   READING_KEYS,
   READING_VARS,
+  readingOptions,
   readingValue,
   readReadingPrefs,
   resetReadingPrefs,
@@ -36,7 +36,7 @@ import {
  * 这些偏好与内容无关、也不上传：
  *   1. 外观：跟随系统 / 纸 / 亮 / 暗 —— 直接调 lib/theme.ts 的 setThemeChoice()，
  *      不在这里碰 localStorage 与 data-theme（约定第 7 条）；
- *   2. 阅读偏好：正文宽度 / 字号 / 行距 —— 写到 `--reading-*` 三个令牌上（lib/prefs.ts），
+ *   2. 阅读偏好：正文字体 / 宽度 / 字号 / 行距 —— 写到 `--reading-*` 四个令牌上（lib/prefs.ts），
  *      正文已经在读它们，所以改完立刻生效、不需要通知任何组件；
  *   3. 语言：中英切换（与页脚的导航栏共用 components/LangSwitcher.tsx）；
  *   4. 恢复默认：清掉偏好键 + 移除行内 CSS 变量。
@@ -48,10 +48,11 @@ import {
  * 第 13 项的 /[lang]/settings/ 页面直接把它放进一个 .page 里即可，样式是同一套。
  */
 
-type ReadingLabelKey = "readingWidth" | "readingSize" | "readingLeading";
+type ReadingLabelKey = "readingFont" | "readingWidth" | "readingSize" | "readingLeading";
 
-/** 三组的标签与图标：标签文案在 lib/site.ts 的 I18N 里，图标在这里 */
+/** 四组的标签与图标：标签文案在 lib/site.ts 的 I18N 里，图标在这里 */
 const GROUP_META: Record<ReadingKey, { label: ReadingLabelKey; icon: IconName }> = {
+  font: { label: "readingFont", icon: "mdi:format-font" },
   width: { label: "readingWidth", icon: "mdi:arrow-expand-horizontal" },
   size: { label: "readingSize", icon: "mdi:format-size" },
   leading: { label: "readingLeading", icon: "mdi:format-line-spacing" },
@@ -92,7 +93,7 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
     setChoice(DEFAULT_THEME_CHOICE);
   }
 
-  // 把当前三个令牌的**实际取值**显示出来：调完能立刻看到 rem / 倍率变成了多少
+  // 把当前四个令牌的**实际取值**显示出来：调完能立刻看到 rem / 倍率 / 字体栈变成了什么
   const tokenLine = READING_KEYS.map(
     (key) => `${READING_VARS[key]}: ${readingValue(key, activePrefs[key])}`,
   ).join(" · ");
@@ -155,7 +156,7 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
                 {t[meta.label]}
               </span>
               <div className="settings-row">
-                {READING_GROUPS[key].map((option) => (
+                {readingOptions(key).map((option) => (
                   <button
                     key={option.id}
                     type="button"
@@ -171,7 +172,11 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
                       height="1em"
                     />
                     <span>{option[lang]}</span>
-                    <span className="settings-opt-value">{option.value}</span>
+                    {/* 字体那一组不给数值角标：字体栈是一长串名字，而档位标签（黑体 / 宋体…）
+                        已经说清是哪一个；**整个页面就是它的预览** —— 点一下全站文字立刻换字体 */}
+                    {key === "font" ? null : (
+                      <span className="settings-opt-value">{option.value}</span>
+                    )}
                   </button>
                 ))}
               </div>

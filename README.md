@@ -235,6 +235,7 @@ public/                     sw.js、favicon.svg
 | `lib/site.ts` 的 `COMMENTS` | giscus 的 repo / repoId / category / categoryId（**留空则文章页显示「编辑此处」**，不加载任何第三方脚本） |
 | `lib/site.ts` 的 `LINKS` | 友链（**已填八个**，与 wunai-Blog 的 `lib/links.ts` 同一份名单；头像与一句话介绍取自各位自己的主页，`avatar` 留空则回退成名称首字） |
 | `lib/site.ts` 的 `HEADER_IMAGE` | 顶栏右上角那张图（**留空时是一格虚线空位，写着「图片位 · 编辑此处」**；尺寸与有图时一样，补图不会让顶栏跳一下） |
+| `lib/prefs.ts` 的 `LOCAL_FONT_READY` | 自托管字体（**默认 `false`，那一档不出现**）：把一份 woff2 放到 `public/fonts/custom.woff2`，再把它改成 `true`，设置中心的「字体」一行就多出「自定义」档。其余四档（黑体 / 宋体 / 楷体 / 等宽）用的都是读者设备上已有的字体，一个字体文件都不下载 |
 | `lib/home.ts` 的 `intro.body`、`themes.demo`、`fonts.sample` | 首页第 1 / 7 / 8 栏的示范文字 |
 | `content/zh/posts/` 与 `content/en/posts/` | 文章本体（这里没有测试文章，一条都没有） |
 

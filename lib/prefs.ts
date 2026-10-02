@@ -1,10 +1,13 @@
 /**
  * lib/prefs.ts —— 阅读偏好（第 7 项：设置中心）
  *
- * 三组选项：**正文宽度 / 字号 / 行距**。落点是第 6 项就准备好的三个令牌
- * （app/globals.css 的 `:root`）：`--reading-measure` / `--reading-size` / `--reading-leading`
- * —— 正文（.article-body）已经在读它们，所以设置中心不需要通知任何组件，
+ * 四组选项：**正文字体 / 宽度 / 字号 / 行距**。落点是第 6 项就准备好的四个令牌
+ * （app/globals.css 的 `:root`）：`--reading-font` / `--reading-measure` / `--reading-size` /
+ * `--reading-leading` —— 正文（.article-body）已经在读它们，所以设置中心不需要通知任何组件，
  * 改完 CSS 变量，页面上已经渲染的文字立刻跟着变。
+ *
+ * 「字体」那一组与另外三组有两处不一样，都写在 READING_FONTS 上头：换的是字体族不是数值，
+ * 而且第五档「自定义」默认藏着（要站长先放字体文件）。
  *
  * 三个设计决定：
  *   1. **存的是档位 id（narrow / normal / wide…），不是 rem 值。** 以后想把「宽」从
@@ -28,10 +31,10 @@ export interface ReadingOption {
   en: string;
 }
 
-export type ReadingKey = "width" | "size" | "leading";
+export type ReadingKey = "font" | "width" | "size" | "leading";
 
-/** 三组的顺序（设置中心里从上到下、脚本里遍历都用它） */
-export const READING_KEYS: ReadingKey[] = ["width", "size", "leading"];
+/** 四组的顺序（设置中心里从上到下、脚本里遍历都用它） */
+export const READING_KEYS: ReadingKey[] = ["font", "width", "size", "leading"];
 
 export const READING_WIDTHS: ReadingOption[] = [
   { id: "narrow", value: "34rem", zh: "窄", en: "Narrow" },
@@ -51,13 +54,80 @@ export const READING_LEADINGS: ReadingOption[] = [
   { id: "loose", value: "2.1", zh: "宽松", en: "Loose" },
 ];
 
+/**
+ * 「自定义」那一档要不要摆出来。**默认 false** —— 放字体文件是站长的活，
+ * 文件还没放就把这一档摆出来，读者选中它只会落回黑体，白高兴一场（还多一个 404）。
+ *
+ * 怎么打开：把一份 woff2 放到 `public/fonts/custom.woff2`，再把这里改成 true。
+ * 字体族名两边是**写死配对**的 —— 这一档的值是 `"Text Local", …`，
+ * 对应的 @font-face 在 app/globals.css 的「1. 字体」一节（它用 `local()` 打头：
+ * 读者机器上真装了这个名字的字体就直接用本地的，一个字节都不下载）。
+ */
+export const LOCAL_FONT_READY = false;
+
+/**
+ * 正文字体（第 8 项）。四档预设**全部是设备上已有的字体** —— 这一站到现在一个 webfont
+ * 都没有，字体切换不该开这个口子：选哪一档都发不出一个网络请求，离线与国内可用性不受影响。
+ *
+ * 每档写的是完整字体栈，中文名在前、西文名在后（正文里中文占多数，西文名跟在后面兜数字
+ * 与英文的观感）；栈尾**接回 @theme 里那三个 --font-* 令牌**，而不是把同一串名字再抄一遍 ——
+ * 3 套栈的兜底顺序只有 app/globals.css 一份事实来源。
+ */
+export const READING_FONTS: ReadingOption[] = [
+  {
+    id: "sans",
+    value: "var(--font-sans)",
+    zh: "黑体",
+    en: "Sans",
+  },
+  {
+    id: "song",
+    value: '"Songti SC", "SimSun", var(--font-serif)',
+    zh: "宋体",
+    en: "Song",
+  },
+  {
+    id: "kai",
+    value: '"Kaiti SC", "KaiTi", "STKaiti", var(--font-serif)',
+    zh: "楷体",
+    en: "Kai",
+  },
+  {
+    id: "mono",
+    value: '"Sarasa Mono SC", "Noto Sans Mono CJK SC", var(--font-mono)',
+    zh: "等宽",
+    en: "Mono",
+  },
+  {
+    id: "local",
+    value: '"Text Local", var(--font-sans)',
+    zh: "自定义",
+    en: "Custom",
+  },
+];
+
 export const READING_GROUPS: Record<ReadingKey, ReadingOption[]> = {
+  font: READING_FONTS,
   width: READING_WIDTHS,
   size: READING_SIZES,
   leading: READING_LEADINGS,
 };
 
+/**
+ * 给界面用的一档列表：与 READING_GROUPS 只差「还没准备好的档不摆出来」。
+ * 归一化（normalizeReadingId）读的仍是完整的表 —— 站长把 LOCAL_FONT_READY 关回去时，
+ * 读者存过的 "local" 不该变成一个坏 id，只是这一档不再出现在按钮里。
+ */
+export function readingOptions(key: ReadingKey): ReadingOption[] {
+  const options = READING_GROUPS[key];
+  return key === "font" && !LOCAL_FONT_READY
+    ? options.filter((option) => option.id !== "local")
+    : options;
+}
+
 export interface ReadingPrefs {
+  /** READING_FONTS 里的 id */
+  font: string;
   /** READING_WIDTHS 里的 id */
   width: string;
   /** READING_SIZES 里的 id */
@@ -66,20 +136,23 @@ export interface ReadingPrefs {
   leading: string;
 }
 
-/** 默认档：与 app/globals.css 的 `:root` 三个 --reading-* 初值一一对应 */
+/** 默认档：与 app/globals.css 的 `:root` 四个 --reading-* 初值一一对应 */
 export const READING_DEFAULTS: ReadingPrefs = {
+  font: "sans",
   width: "normal",
   size: "normal",
   leading: "normal",
 };
 
 export const READING_STORAGE_KEYS: Record<ReadingKey, string> = {
+  font: "tob:reading-font",
   width: "tob:reading-width",
   size: "tob:reading-size",
   leading: "tob:reading-leading",
 };
 
 export const READING_VARS: Record<ReadingKey, string> = {
+  font: "--reading-font",
   width: "--reading-measure",
   size: "--reading-size",
   leading: "--reading-leading",
@@ -126,7 +199,7 @@ export function readReadingPrefs(): ReadingPrefs {
     }
     return normalizeReadingId(key, raw);
   };
-  return { width: read("width"), size: read("size"), leading: read("leading") };
+  return { font: read("font"), width: read("width"), size: read("size"), leading: read("leading") };
 }
 
 function writeVars(prefs: ReadingPrefs, root: HTMLElement): void {
@@ -140,6 +213,7 @@ function writeVars(prefs: ReadingPrefs, root: HTMLElement): void {
 export function setReadingPrefs(patch: Partial<ReadingPrefs>): ReadingPrefs {
   const current = readReadingPrefs();
   const normalized: ReadingPrefs = {
+    font: normalizeReadingId("font", patch.font ?? current.font),
     width: normalizeReadingId("width", patch.width ?? current.width),
     size: normalizeReadingId("size", patch.size ?? current.size),
     leading: normalizeReadingId("leading", patch.leading ?? current.leading),
