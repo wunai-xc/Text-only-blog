@@ -29,14 +29,18 @@ import type { Lang } from "@/lib/site";
  *   - 进度环（回顶按钮里那一圈）与百分比牌子读的是同一个数字。
  * 没有用 IntersectionObserver 是因为这几件事本来就是「页面滚了多少」，与元素位置无关。
  *
- * **滑块**（第 12 项那一轮加的）：那条细线同时是 `role="slider"` 的轨道 ——
- *   1. 轨道**铺满视口高度**，所以「鼠标纵坐标 / 视口高」就是百分比，拖动是线性的、跟手的
- *      （视觉上仍是右边缘那 2px，命中区在 CSS 里放宽到 ~0.9rem，否则 2px 根本抓不住）；
- *   2. **先承认这是拖动、再动页面**：触屏上先把指针移动 `DRAG_THRESHOLD` 像素才生效 ——
- *      手机右边缘常被拿来滚页面，一按就跳会吓人（轨道上 `touch-action: none`，
- *      所以那一下不会同时滚页面）。鼠标不受这条限制：按一下轨道就跳过去，那是滚动条的手感；
- *   3. 拖动用 `setPointerCapture`：拖出轨道、拖出窗口都还继续跟手；
- *   4. **键盘也能走**（`PROGRESS_KEY_STEP`）：↑/↓ 或 ←/→ 一步、PageUp/PageDown 三步、
+ * **滑块**（第 12 项那一轮加的，这一轮补上触屏与鼠标两套手势）：那条细线同时是
+ * `role="slider"` 的轨道 ——
+ *   1. 轨道从顶 / 底**内缩一段**（让开粘性标题与回顶按钮，见 globals.css 的 --progress-inset-*），
+ *      「指针纵坐标落在轨道里多少」就是百分比（`ratioFromY` 量轨道自己的矩形），
+ *      视觉上仍是右边缘那 2px，命中区在 CSS 里放宽到 ~0.9rem；
+ *   2. **中间那颗圆钮（抓手）始终可见**，而且它自己 `touch-action: none` —— 触屏没有 hover，
+ *      藏起来或等悬停就等于没有滑块。抓住它，鼠标与指尖都是**一按下就进入拖动**（不必等阈值）；
+ *   3. 轨道本身是 `touch-action: pan-y`：在右边缘上下滑仍然是**滚页面**（浏览器接管，
+ *      拖到一半会收到 pointercancel），不会因为手指蹭到这条线就跳页。触屏若真的移动过阈值
+ *      （浏览器没接管），才承认是拖动；鼠标不受这条限制：按一下轨道就跳过去，那是滚动条的手感；
+ *   4. 拖动用 `setPointerCapture`（捕获在轨道上）：拖出轨道、拖出窗口都还继续跟手；
+ *   5. **键盘也能走**（`PROGRESS_KEY_STEP`）：↑/↓ 或 ←/→ 一步、PageUp/PageDown 三步、
  *      Home/End 到两头 —— 一个只有鼠标能用的控件不算做完了。
  *
  * **章节节点**（这一轮加的，对齐参考稿的 scroll-rail）：轨道上每一颗方块 = 正文的一个小节，
@@ -90,8 +94,12 @@ export default function ArticleProgress({ lang, toc }: { lang: Lang; toc: TocEnt
   /** 正在读的小节：与悬浮目录高亮的那一条是**同一个答案**（见 ./useActiveHeading.ts） */
   const active = useActiveHeading(toc);
 
+  /** 轨道元素（`.article-progress`）：指针映射与指针捕获都基于它自己的矩形 */
+  const railRef = useRef<HTMLDivElement | null>(null);
   /** 按住那一刻的纵坐标（null = 现在没按住） */
   const press = useRef<number | null>(null);
+  /** 按住的触点 id：捕获到轨道上之后，move / up 才回到轨道 */
+  const pressId = useRef<number | null>(null);
   /** 是否已越过阈值、进入「真的在拖」的状态（state 只用于 CSS，判断走 ref 免得慢一帧） */
   const draggingRef = useRef(false);
 
@@ -184,45 +192,74 @@ export default function ArticleProgress({ lang, toc }: { lang: Lang; toc: TocEnt
     return distance <= PROGRESS_NEAR_THRESHOLD ? id : null;
   }
 
-  /** 视觉上仍是「百分比高度」的填充与环 —— 分量都从这一个数来 */
-  function onPointerDown(event: React.PointerEvent<HTMLDivElement>): void {
+  /**
+   * 指针纵坐标 → 0~1：相对**轨道自己的矩形**。
+   * 轨道已从顶 / 底内缩（让开粘性标题与回顶按钮，见 globals.css 的 --progress-inset-*），
+   * 不再是整个视口高，所以这里不能再用 `clientY / innerHeight`。
+   */
+  function ratioFromY(clientY: number): number {
+    const rect = railRef.current?.getBoundingClientRect();
+    if (rect === undefined || rect.height <= 0) return 0;
+    return (clientY - rect.top) / rect.height;
+  }
+
+  /** 真正开始拖动：捕获指针（拖出轨道、拖出窗口都还跟手）+ 立刻滚到指针处 */
+  function startDrag(event: React.PointerEvent<HTMLElement>): void {
+    draggingRef.current = true;
+    setDragging(true);
+    // 捕获到**轨道**上：之后 move / up 都回到轨道的处理器，抓手那边不用再写一套
+    railRef.current?.setPointerCapture(event.pointerId);
+    const ratio = ratioFromY(event.clientY);
+    seekTo(ratio);
+    setNear(nearestMark(ratio));
+  }
+
+  /** 在轨道空白处按下 */
+  function onRailDown(event: React.PointerEvent<HTMLDivElement>): void {
     if (event.pointerType === "mouse" && event.button !== 0) return;
     press.current = event.clientY;
-    // 指针捕获：拖出轨道（甚至拖出窗口）之后仍然收得到 move 事件
-    event.currentTarget.setPointerCapture(event.pointerId);
-    if (event.pointerType === "mouse") {
-      // 鼠标：按一下轨道就跳过去（滚动条的手感），不必先移动
-      draggingRef.current = true;
-      setDragging(true);
-      const ratio = event.clientY / window.innerHeight;
-      seekTo(ratio);
-      setNear(nearestMark(ratio));
-    }
+    pressId.current = event.pointerId;
+    // 鼠标：点一下轨道就跳过去（滚动条的手感），不必先移动。
+    // 触屏：先按着、不捕获 —— 让浏览器照常滚页面；等移动够阈值（onMove）再承认这是拖动。
+    if (event.pointerType === "mouse") startDrag(event);
+  }
+
+  /** 在「抓手」（圆钮）上按下：不管是鼠标还是指尖，抓住了就是要拖，不必等阈值 */
+  function onThumbDown(event: React.PointerEvent<HTMLSpanElement>): void {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    // 别让轨道再把它当成一次「按轨道就跳」
+    event.stopPropagation();
+    press.current = event.clientY;
+    pressId.current = event.pointerId;
+    startDrag(event);
   }
 
   function onPointerMove(event: React.PointerEvent<HTMLDivElement>): void {
-    if (press.current === null) return;
+    if (press.current === null || event.pointerId !== pressId.current) return;
     if (!draggingRef.current) {
       // 触屏：先移动够阈值才承认这是拖动（否则「想滚页面却点到轨道」会当场跳走）
       if (Math.abs(event.clientY - press.current) < DRAG_THRESHOLD) return;
+      // 浏览器没把这一下当成滚动（否则会给 pointercancel）：现在接管，开始拖
+      railRef.current?.setPointerCapture(event.pointerId);
       draggingRef.current = true;
       setDragging(true);
     }
-    const ratio = event.clientY / window.innerHeight;
+    const ratio = ratioFromY(event.clientY);
     seekTo(ratio);
     setNear(nearestMark(ratio));
   }
 
   function endDrag(event: React.PointerEvent<HTMLDivElement>): void {
-    if (press.current === null) return;
+    if (press.current === null || event.pointerId !== pressId.current) return;
     press.current = null;
+    pressId.current = null;
     if (draggingRef.current) {
       draggingRef.current = false;
       setDragging(false);
     }
     setNear(null);
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
+    if (railRef.current?.hasPointerCapture(event.pointerId)) {
+      railRef.current.releasePointerCapture(event.pointerId);
     }
   }
 
@@ -274,11 +311,13 @@ export default function ArticleProgress({ lang, toc }: { lang: Lang; toc: TocEnt
   return (
     <>
       {/*
-        轨道 = 右边缘那条 2px 细线的命中区（CSS 里放宽、平时几乎看不见）。
-        它铺满视口高度，所以 `event.clientY / window.innerHeight` 就是百分比 —— 拖到哪就是哪。
+        轨道 = 右边缘那条 2px 细线的命中区（CSS 里放宽）。它从顶 / 底内缩一段
+        （让开粘性标题与回顶按钮），所以百分比是「指针纵坐标落在轨道里多少」（ratioFromY），
+        拖到哪就是哪。鼠标按一下轨道即跳；指尖抓住中间那颗圆钮拖动（触屏在轨道上滑仍是滚页面）。
       */}
       <div
         className="article-progress"
+        ref={railRef}
         role="slider"
         tabIndex={0}
         aria-label={t.progressLabel}
@@ -288,7 +327,7 @@ export default function ArticleProgress({ lang, toc }: { lang: Lang; toc: TocEnt
         aria-valuenow={progress}
         title={t.progressHint}
         data-dragging={dragging ? "true" : "false"}
-        onPointerDown={onPointerDown}
+        onPointerDown={onRailDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
@@ -300,10 +339,12 @@ export default function ArticleProgress({ lang, toc }: { lang: Lang; toc: TocEnt
           aria-hidden="true"
           style={{ height: `${progress}%` }}
         />
+        {/* 抓手（圆钮）：它自己收指针 —— 抓住它拖动，鼠标与指尖都是一按下就生效 */}
         <span
           className="article-progress-thumb"
           aria-hidden="true"
           style={{ top: `${progress}%` }}
+          onPointerDown={onThumbDown}
         />
       </div>
 

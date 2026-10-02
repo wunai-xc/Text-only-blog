@@ -2892,6 +2892,11 @@ html[data-reading="hidden"] {
        取值 = 章节方块命中区（0.75rem）的一半 —— 方块贴右缘摆，轴心就正好落在那条线上，
        于是「线、滑块圆心、方块心」三样都压在同一个 x 上，也不用把方块伸出视口。 */
     --progress-axis: 0.375rem;
+    /* 进度轨道从顶 / 底各内缩一段，别贴着顶栏那条粘性标题、也别贴着底部的回顶按钮与页脚：
+       - 上：让开顶栏 + 粘性标题横条（--chrome-top 是那条横条的停靠线，2.75rem 是它自身高度 + 空隙）；
+       - 下：让开右下角回顶按钮（2.6rem + 1.1rem）与页脚留白。 */
+    --progress-inset-top: calc(var(--chrome-top) + 2.75rem);
+    --progress-inset-bottom: 4.5rem;
   }
 
   /* 目录跳转时标题停在吸顶顶栏下面。这里读 --chrome-top（平时 = --header-h + 0.5rem 留白，
@@ -3260,21 +3265,24 @@ html[data-reading="hidden"] {
   }
 
   /* ---------- 阅读进度（右边缘 2px 细线 + **可拖动的滑块** + 百分比牌子） ----------
-     视觉上仍是那条 2px 的线，但它现在是个 `role="slider"`：命中区放宽到 0.9rem
-     （2px 的东西抓不住），轨道铺满视口高度 —— 所以「指针纵坐标 / 视口高」就是百分比，
-     拖到哪就是哪（算法在 ArticleProgress 里，只有一处）。 */
+     视觉上仍是那条 2px 的细线，但它是个 `role="slider"`：命中区放宽到 0.9rem
+     （2px 的东西抓不住），轨道从顶 / 底内缩一段（--progress-inset-*），
+     所以「指针纵坐标落在轨道里多少」就是百分比，拖到哪就是哪
+     （算法在 ArticleProgress 里，只有一处）。 */
 
   .article-progress {
     position: fixed;
-    top: 0;
+    /* 从顶 / 底内缩（见 .article-page 的 --progress-inset-*）：轨道不再顶着视口上下沿，
+       于是它自己就是「可以拖的那段行程」，子元素按 % 摆进来的位置也都落在这段里。 */
+    top: var(--progress-inset-top);
     right: 0;
-    bottom: 0;
+    bottom: var(--progress-inset-bottom);
     z-index: 19;
     width: 0.9rem;
     cursor: grab;
-    /* 按在轨道上就是「拖进度」，不该同时滚页面；手机右边缘常被拿来滚页面，
-       所以组件那边还要求先移动 6px 才算拖动（见 ArticleProgress 的文件头）。 */
-    touch-action: none;
+    /* 触屏：在右边缘上下滑，照旧是「滚页面」（由浏览器接管，拖到一半会收到 pointercancel）。
+       真正要拖动滑块时抓那颗圆钮（.article-progress-thumb 是 touch-action: none）。 */
+    touch-action: pan-y;
   }
 
   .article-progress[data-dragging="true"] {
@@ -3298,11 +3306,12 @@ html[data-reading="hidden"] {
     width: 2px;
   }
 
-  /* 平时不画轨道：不改「右边缘一条细线」的原样，悬停 / 聚焦 / 拖动时才看得见它 */
+  /* 轨道**始终淡淡地画着**：只画到悬停才出现的话，触屏读者（没有 hover）根本看不出
+     右边缘有一条可以拖的进度条。悬停 / 聚焦 / 拖动时再加重到不透明。 */
   .article-progress-rail {
     bottom: 0;
     background-color: var(--c-rule);
-    opacity: 0;
+    opacity: 0.55;
   }
 
   .article-progress-fill {
@@ -3312,39 +3321,54 @@ html[data-reading="hidden"] {
     opacity: 0.45;
   }
 
-  /* 拇指：那颗能抓的小圆点（同样只在悬停 / 聚焦 / 拖动时出现） */
+  /* 抓手：一颗能拖的圆钮。**始终可见**（触屏没有 hover，藏起来就等于没有滑块）。
+     圆形本体用 ::before 画；命中的是外面 1.4rem 的方框 —— 指尖也抓得住那颗小小的圆点。
+     它自己 `touch-action: none`：抓住圆钮时不许浏览器滚动，move 事件才连续跟手
+     （轨道本身是 pan-y，空白处照旧滚页面）。 */
   .article-progress-thumb {
     position: absolute;
-    /* 贴右缘退半格：0.6rem 的圆心正好落在轴线上（与那 2px 的线同心） */
-    right: calc(var(--progress-axis) - 0.3rem);
-    width: 0.6rem;
-    height: 0.6rem;
-    margin-top: -0.3rem; /* 圆心落在百分比位置上 */
+    /* 1.4rem 的框居中在轴线上 → 圆心正好压住那条 2px 的线 */
+    right: calc(var(--progress-axis) - 0.7rem);
+    display: grid;
+    place-items: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    margin-top: -0.7rem; /* 圆心落在百分比位置上 */
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .article-progress-thumb::before {
+    content: "";
+    width: 0.62rem;
+    height: 0.62rem;
     border: 1px solid var(--c-accent);
     border-radius: 999px;
     background-color: var(--c-canvas);
-    opacity: 0;
-    transform: scale(0.7);
+    /* 一圈画布色把圆钮从那条细线上「垫」起来，线不会从圆点中间穿过去 */
+    box-shadow: 0 0 0 2px var(--c-canvas);
+    transform: scale(0.85);
   }
 
   .article-progress:hover .article-progress-rail,
   .article-progress:focus-visible .article-progress-rail,
-  .article-progress[data-dragging="true"] .article-progress-rail,
-  .article-progress:hover .article-progress-thumb,
-  .article-progress:focus-visible .article-progress-thumb,
-  .article-progress[data-dragging="true"] .article-progress-thumb {
+  .article-progress[data-dragging="true"] .article-progress-rail {
     opacity: 1;
   }
 
-  .article-progress:hover .article-progress-thumb,
-  .article-progress:focus-visible .article-progress-thumb,
   .article-progress[data-dragging="true"] .article-progress-thumb {
+    cursor: grabbing;
+  }
+
+  .article-progress:hover .article-progress-thumb::before,
+  .article-progress:focus-visible .article-progress-thumb::before,
+  .article-progress[data-dragging="true"] .article-progress-thumb::before {
     transform: none;
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    .article-progress-thumb {
-      transition: opacity 0.15s ease, transform 0.15s ease;
+    .article-progress-thumb::before {
+      transition: transform 0.15s ease;
     }
   }
 
@@ -3390,9 +3414,11 @@ html[data-reading="hidden"] {
   .article-progress-marks {
     position: fixed;
     z-index: 19;
-    top: 0;
+    /* 与那条可拖的轨道同一段行程（同样内缩，见 .article-page 的 --progress-inset-*）——
+       这样「方块压在哪」与「滑块拖到哪」才共用一把尺子 */
+    top: var(--progress-inset-top);
     right: 0;
-    bottom: 0;
+    bottom: var(--progress-inset-bottom);
     width: 0.75rem;
     pointer-events: none;
   }
@@ -3554,15 +3580,16 @@ html[data-reading="hidden"] {
   }
 
   /* 进度环：与右边缘那条线读同一个百分比（`stroke-dashoffset` 由组件写）。
-     SVG 是 36×36 的 viewBox、半径 16.5（周长见组件的 `RING_CIRCUMFERENCE`），
-     这里的尺寸与按钮对上：0.13rem × 2 + 2.34rem = 2.6rem。
-     `rotate(-90deg)` 把起点挪到 12 点方向（否则环从左边的 9 点开始长）。 */
+     SVG 是 36×36 的 viewBox、半径 16.5（周长见组件的 `RING_CIRCUMFERENCE`）。
+     **铺满按钮的内框（`inset: 0`）**：圆心 = 内框正中 = 里层读数（flex 居中）的正中，
+     两样才同心（之前固定 0.13rem / 2.34rem 的写法是拿按钮外框推的，遇上 border-box
+     会各差 1px，就是「两个圆心不在一块」）。`rotate(-90deg)` 把起点挪到 12 点方向
+     （否则环从左边的 9 点开始长）。 */
   .article-top-ring {
     position: absolute;
-    left: 0.13rem;
-    top: 0.13rem;
-    width: 2.34rem;
-    height: 2.34rem;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     transform: rotate(-90deg);
   }
 
