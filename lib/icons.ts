@@ -14,8 +14,6 @@
  *   - 加图标时顺手按用途分组、写一行注释说明用在哪。
  */
 
-import type { IconifyIcon } from "@iconify/react/offline";
-
 /* 导航（顶栏的品牌小字行与页脚那一排入口都用其中的一部分） */
 import mdiHomeOutline from "@iconify/icons-mdi/home-outline";
 import mdiPostOutline from "@iconify/icons-mdi/post-outline";
@@ -66,8 +64,6 @@ import mdiArrowUp from "@iconify/icons-mdi/arrow-up";
 import mdiArrowLeft from "@iconify/icons-mdi/arrow-left";
 import mdiArrowRight from "@iconify/icons-mdi/arrow-right";
 import mdiCommentTextOutline from "@iconify/icons-mdi/comment-text-outline";
-/** 目录开关的箭头（展开时指左 = 收起来，收起时转 180° 指右 = 打开，转法在 CSS 里） */
-import mdiChevronLeft from "@iconify/icons-mdi/chevron-left";
 
 export const icons = {
   /* 导航 */
@@ -120,11 +116,6 @@ export const icons = {
   "mdi:arrow-left": mdiArrowLeft,
   "mdi:arrow-right": mdiArrowRight,
   "mdi:comment-text-outline": mdiCommentTextOutline,
-  "mdi:chevron-left": mdiChevronLeft,
 } as const;
 
 export type IconName = keyof typeof icons;
-
-export function getIcon(name: IconName): IconifyIcon {
-  return icons[name];
-}

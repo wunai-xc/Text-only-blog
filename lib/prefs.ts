@@ -105,12 +105,6 @@ export function normalizeReadingId(key: ReadingKey, id: unknown): string {
   return option ? option.id : READING_DEFAULTS[key];
 }
 
-/** 档位 id → 显示用的档位名（中 / 英） */
-export function readingLabel(key: ReadingKey, id: string, lang: "zh" | "en"): string {
-  const option = findOption(key, id);
-  return option ? option[lang] : "";
-}
-
 function storage(): Storage | null {
   if (typeof window === "undefined") return null;
   try {
@@ -140,15 +134,6 @@ function writeVars(prefs: ReadingPrefs, root: HTMLElement): void {
     const value = readingValue(key, prefs[key]);
     if (value) root.style.setProperty(READING_VARS[key], value);
   }
-}
-
-/** 把偏好写到 `<html>` 的行内样式上（设置中心与首帧脚本都走这条） */
-export function applyReadingPrefs(
-  prefs: ReadingPrefs = readReadingPrefs(),
-  root?: HTMLElement,
-): void {
-  if (typeof document === "undefined") return;
-  writeVars(prefs, root ?? document.documentElement);
 }
 
 /** 设置中心用：存下改动（可只给一项）+ 立即生效 + 派发事件；返回归一化后的完整偏好 */

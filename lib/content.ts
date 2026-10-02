@@ -633,11 +633,6 @@ function loadLang(lang: Lang): LangCache {
   return entry;
 }
 
-/** 清掉缓存（dev 热更新或第 5 项生成构建产物时可调用） */
-export function clearContentCache(): void {
-  cache.clear();
-}
-
 /* ------------------------------ 排序与过滤 ------------------------------ */
 
 export function sortByDateDesc(a: PostMeta, b: PostMeta): number {
@@ -703,14 +698,6 @@ export function getHomePosts(lang: Lang, options?: ListOptions): PostMeta[] {
   return [...pinned, ...rest];
 }
 
-export function getPinnedPosts(lang: Lang, options?: ListOptions): PostMeta[] {
-  return getPosts(lang, options).filter((post) => post.pinned);
-}
-
-export function getAiPosts(lang: Lang, options?: ListOptions): PostMeta[] {
-  return getPosts(lang, options).filter((post) => post.isAI);
-}
-
 /** 标签 / 分类汇总，按出现次数倒序 */
 export function getTaxonomy(
   lang: Lang,
@@ -736,19 +723,6 @@ export function getTaxonomy(
   return [...map.values()].sort(
     (a, b) => b.count - a.count || a.name.localeCompare(b.name, "zh-Hans-CN"),
   );
-}
-
-export function getPostsByTaxonomy(
-  lang: Lang,
-  kind: TaxonomyKind,
-  name: string,
-  options?: ListOptions,
-): PostMeta[] {
-  const key = name.trim().toLowerCase();
-  return getPosts(lang, options).filter((post) => {
-    const names = kind === "tags" ? post.tags : post.categories;
-    return names.some((item) => item.toLowerCase() === key);
-  });
 }
 
 export function slugifyTaxonomy(name: string): string {

@@ -224,8 +224,3 @@ function slice(result: ChangelogResult, limit: number): ChangelogResult {
   if (limit <= 0) return { source: result.source, entries: [] };
   return { source: result.source, entries: result.entries.slice(0, limit) };
 }
-
-/** 清缓存（dev 热更新时用；提交历史在 dev 期间一般不会变） */
-export function clearChangelogCache(): void {
-  cache.clear();
-}
