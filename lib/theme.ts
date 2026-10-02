@@ -29,9 +29,7 @@ export type Theme = "paper" | "light" | "dark";
 /** 读者的选择：三套外观 + 「跟随系统」 */
 export type ThemeChoice = Theme | "system";
 
-/** 外观清单（顺序即设置中心里的显示顺序：默认的纸在最前） */
-export const THEMES: Theme[] = ["paper", "light", "dark"];
-
+/** 读者的选择清单（顺序即设置中心里的显示顺序：默认的「跟随系统」在最前） */
 export const THEME_CHOICES: ThemeChoice[] = ["system", "paper", "light", "dark"];
 
 /** 没存过选择时的默认值：跟随系统（浅色系统 → 纸，深色系统 → 暗） */

@@ -39,8 +39,7 @@
     "remark-parse": "^11",
     "remark-rehype": "^11",
     "smiles-drawer": "^2",
-    "unified": "^11",
-    "unist-util-visit": "^5"
+    "unified": "^11"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
