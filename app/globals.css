@@ -2988,6 +2988,41 @@ html[data-reading="hidden"] {
     color: var(--c-accent);
   }
 
+  /* ---------- 导出（下载 .md / 打印存 PDF，第 12 项） ----------
+     两个真按钮（要做的事在浏览器里），排版与卡片上的同名件同一档小字号、方角药丸。
+     打印时整行不印（见文件末尾的 @media print）：纸上没有「点按钮」这回事。 */
+  .article-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0.15rem 0 0;
+  }
+
+  .article-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.32rem;
+    padding: 0.22rem 0.62rem;
+    border: 1px solid var(--c-rule);
+    border-radius: var(--shape-radius);
+    background: none;
+    color: var(--c-ink-muted);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    line-height: 1.5;
+    cursor: pointer;
+  }
+
+  .article-action:hover {
+    border-color: var(--c-accent);
+    color: var(--c-accent);
+  }
+
+  .article-action:focus-visible {
+    outline: 2px solid var(--c-accent);
+    outline-offset: 2px;
+  }
+
   /* ---------- 粘性标题（大标题滚出视野后，顶栏下面挂一条同名的紧凑标题） ----------
      容器是**零高**的 sticky（`height: 0`）并且贴在 `<article>` 里面：
        - 零高 → 不占版面，正文第一行不会被推下去；
@@ -3953,6 +3988,37 @@ html[data-reading="hidden"] {
    故意留在 layer 外面：它要盖住 components 与工具类。
    ============================================================ */
 @media print {
+  /* ---------- 先把「颜色」这件事钉死 ----------
+     读者可以选「暗」外观，那一套令牌的 --c-ink 是**浅色**（#e4ebe9）——直接印到白纸上
+     等于看不见（正文、标题、表格线全废）。所以打印时不问当前是纸 / 亮 / 暗，一律压回
+     一套黑白墨色。选择器带上三套主题名、权重与它们各自那条规则相同，本段在文件最末 →
+     后写的那条生效。这也是「界面整体换成打印配色」的单一落点，其余规则只改版式。 */
+  :root,
+  [data-theme="paper"],
+  [data-theme="light"],
+  [data-theme="dark"] {
+    color-scheme: light;
+    --c-canvas: #fff;
+    --c-surface: #fff;
+    --c-surface-2: #f2f2f2;
+    --c-ink: #000;
+    --c-ink-muted: #333;
+    --c-ink-subtle: #555;
+    --c-rule: #bbb;
+    --c-rule-strong: #808080;
+    --c-accent: #333;
+    --c-accent-soft: #eee;
+    --c-accent-ink: #fff;
+    --c-danger: #333;
+    --c-mark: #eee;
+    --shape-shadow: none;
+  }
+
+  /* 页边距：浏览器默认留白对文档来说偏宽，给纸一个稳定、好读的边 */
+  @page {
+    margin: 16mm 14mm;
+  }
+
   /* 几何实体层（第 15 项）：纸上没有「背景里的几何实体」这回事，半透明色块与草稿线
      印出来只会是脏色 —— 整层不印。 */
   .figure {
@@ -4037,7 +4103,8 @@ html[data-reading="hidden"] {
   .article-progress-marks,
   .article-progress-value,
   .article-top,
-  .article-comments {
+  .article-comments,
+  .article-actions {
     display: none;
   }
 
@@ -4070,5 +4137,54 @@ html[data-reading="hidden"] {
   .article-body pre,
   .article-body pre * {
     color: #1a1a1a !important;
+  }
+
+  /* ---------- 分页与溢出：纸不会滚动，长内容得自己让开 ---------- */
+
+  /* 屏幕上代码块 / 公式 / 图表靠横向滚动，纸上滚不动 —— 一律改成可见 + 自动换行，
+     长行（一整行日志、一条很长的 URL）才不会被右边裁掉。 */
+  .article-body pre,
+  .article-body .katex-display,
+  .chart-canvas {
+    overflow: visible;
+  }
+
+  .article-body pre,
+  .article-body pre code {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  /* 标题别孤零零留在页脚、段落别只剩一行被推到下一页（孤行 / 寡行） */
+  .article-head,
+  .article-body :is(h1, h2, h3, h4, h5, h6) {
+    break-after: avoid;
+  }
+
+  .article-body :is(p, li) {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* 这些块被分页切开就读不成：整块挪到下一页 */
+  .article-body :is(pre, blockquote, table, figure, img, .katex-display),
+  .chart-block,
+  .references,
+  .article-pager {
+    break-inside: avoid;
+  }
+
+  /* 纸上没有屏幕上的强调色（墨色已压成黑），链接补一条下划线才认得出来；
+     外链再把地址印进括号 —— 读纸的人点不了，只能照着敲。 */
+  .article-body a {
+    text-decoration: underline;
+  }
+
+  .article-body a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    color: #555;
+    font-family: var(--font-mono);
+    font-size: 0.82em;
+    overflow-wrap: anywhere;
   }
 }

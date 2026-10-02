@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import ArticleBody from "@/components/ArticleBody";
+import ArticleExport from "@/components/article/ArticleExport";
 import ArticlePager from "@/components/article/ArticlePager";
 import ArticleProgress from "@/components/article/ArticleProgress";
 import ArticleStickyTitle from "@/components/article/ArticleStickyTitle";
@@ -19,6 +20,7 @@ import {
   getCardGroup,
   getCardGroupRoutes,
   getPost,
+  getPostSource,
   getPostWithBody,
   getPosts,
   type CardGroupMeta,
@@ -217,6 +219,11 @@ export default async function LangPost({
   const posts = getPosts(lang).map(toListPost);
   const { older, newer } = articleNeighbors(posts, meta.slug);
 
+  // 「下载 .md」给的是源文件原文（含 frontmatter，见 getPostSource）；取不到就退回渲染用的正文。
+  // 文件名取 slug 的末段 —— slug 已被 assertUrlSafeSlug 约束为 ASCII，做文件名是安全的。
+  const source = getPostSource(lang, meta.slug) ?? body;
+  const downloadName = `${meta.slug.split("/").pop() ?? meta.slug}.md`;
+
   /** frontmatter 的 `comments`（缺省 true）：某一篇不想开评论就写 comments: false */
   const commentsEnabled = asBoolean(meta.frontmatter.comments ?? meta.frontmatter.comment, true);
   const date = meta.date.slice(0, 10);
@@ -288,6 +295,9 @@ export default async function LangPost({
               ))}
             </p>
           ) : null}
+
+          {/* 导出（下载 .md / 打印存 PDF）：客户端组件，两个按钮都在浏览器里做事 */}
+          <ArticleExport lang={lang} markdown={source} filename={downloadName} />
         </header>
 
         <ArticleBody html={rendered.html} />

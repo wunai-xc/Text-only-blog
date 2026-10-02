@@ -493,6 +493,8 @@ interface BuiltPost {
   meta: PostMeta;
   /** 正文 Markdown（未渲染） */
   body: string;
+  /** 源文件原文（含 frontmatter），供「下载 .md」原样给出 */
+  source: string;
 }
 
 function buildPost(
@@ -501,7 +503,8 @@ function buildPost(
   groups: Map<string, CardGroupMeta>,
 ): BuiltPost {
   const absolutePath = postsAbsolutePath(lang, rel);
-  const document = parseDocumentFor(absolutePath, readUtf8(absolutePath));
+  const source = readUtf8(absolutePath);
+  const document = parseDocumentFor(absolutePath, source);
   const fm = document.data;
   const body = document.body;
 
@@ -577,7 +580,7 @@ function buildPost(
   // description 取了 excerpt 的话，别让 excerpt 是空串
   if (meta.description === "" && plainText !== "") meta.description = excerpt;
 
-  return { meta, body };
+  return { meta, body, source };
 }
 
 /* ------------------------------ 分语言缓存 ------------------------------ */
@@ -586,6 +589,8 @@ interface LangCache {
   posts: PostMeta[];
   groups: CardGroupMeta[];
   bodies: Map<string, string>;
+  /** slug → 源文件原文（含 frontmatter），「下载 .md」用 */
+  sources: Map<string, string>;
 }
 
 const cache = new Map<Lang, LangCache>();
@@ -602,6 +607,7 @@ function loadLang(lang: Lang): LangCache {
   const groups = buildGroups(lang, scan);
   const posts: PostMeta[] = [];
   const bodies = new Map<string, string>();
+  const sources = new Map<string, string>();
   const seen = new Map<string, string>();
 
   for (const rel of scan.files) {
@@ -621,6 +627,7 @@ function loadLang(lang: Lang): LangCache {
 
     posts.push(built.meta);
     bodies.set(built.meta.slug, built.body);
+    sources.set(built.meta.slug, built.source);
   }
 
   for (const group of groups.values()) {
@@ -628,7 +635,7 @@ function loadLang(lang: Lang): LangCache {
     group.count = group.posts.length;
   }
 
-  const entry: LangCache = { posts, groups: sortGroups([...groups.values()]), bodies };
+  const entry: LangCache = { posts, groups: sortGroups([...groups.values()]), bodies, sources };
   cache.set(lang, entry);
   return entry;
 }
@@ -688,6 +695,18 @@ export function getPostWithBody(
   if (!meta) return null;
   const body = loadLang(lang).bodies.get(slug) ?? "";
   return { meta, body };
+}
+
+/**
+ * 取单篇的**源文件原文**（含 frontmatter，逐字节），供文章页的「下载 .md」。
+ *
+ * 给的是原文而不是渲染后的 HTML、也不是剥掉 frontmatter 的 body：读者拿到手就是
+ * 仓库里那一份，可以原样丢回 content/ 或喂给别的工具。取不到（草稿在生产的页面上、
+ * slug 不存在）返回 null，调用方退回 body。
+ */
+export function getPostSource(lang: Lang, slug: string, options?: ListOptions): string | null {
+  if (!getPost(lang, slug, options)) return null;
+  return loadLang(lang).sources.get(slug) ?? null;
 }
 
 /** 首页列表：置顶在前，排除 hiddenInHomeList 与 about */

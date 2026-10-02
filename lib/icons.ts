@@ -68,6 +68,9 @@ import mdiArrowUp from "@iconify/icons-mdi/arrow-up";
 import mdiArrowLeft from "@iconify/icons-mdi/arrow-left";
 import mdiArrowRight from "@iconify/icons-mdi/arrow-right";
 import mdiCommentTextOutline from "@iconify/icons-mdi/comment-text-outline";
+/* 文章页的「导出」：下载 Markdown 源文件 / 打印存 PDF（第 12 项） */
+import mdiDownload from "@iconify/icons-mdi/download";
+import mdiPrinter from "@iconify/icons-mdi/printer";
 
 export const icons = {
   /* 导航 */
@@ -123,6 +126,8 @@ export const icons = {
   "mdi:arrow-left": mdiArrowLeft,
   "mdi:arrow-right": mdiArrowRight,
   "mdi:comment-text-outline": mdiCommentTextOutline,
+  "mdi:download": mdiDownload,
+  "mdi:printer": mdiPrinter,
 } as const;
 
 export type IconName = keyof typeof icons;

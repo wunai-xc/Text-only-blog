@@ -238,6 +238,12 @@ export interface ArticleText {
   /** 卡组走到头时那一头换成的出口：回列表页看全部文章 */
   allPosts: string;
 
+  /** 文章页的「导出」两个按钮与它们的 title（悬停说明） */
+  downloadMd: string;
+  downloadHint: string;
+  printArticle: string;
+  printHint: string;
+
   commentsTitle: string;
   commentsNote: string;
   commentsSetup: string;
@@ -271,6 +277,11 @@ const ZH: ArticleText = {
   older: "上一篇",
   newer: "下一篇",
   allPosts: "全部文章",
+
+  downloadMd: "下载 .md",
+  downloadHint: "把这一篇的 Markdown 源文件（含 frontmatter）存到本机",
+  printArticle: "打印 / 存 PDF",
+  printHint: "调用浏览器打印；版面已经为纸张调过，可直接存成 PDF",
 
   commentsTitle: "评论",
   commentsNote:
@@ -307,6 +318,11 @@ const EN: ArticleText = {
   older: "Previous",
   newer: "Next",
   allPosts: "All posts",
+
+  downloadMd: "Download .md",
+  downloadHint: "Save this post's Markdown source (frontmatter included) to your device",
+  printArticle: "Print / PDF",
+  printHint: "Open the browser's print dialog; the layout is tuned for paper, ready to save as PDF",
 
   commentsTitle: "Comments",
   commentsNote:
