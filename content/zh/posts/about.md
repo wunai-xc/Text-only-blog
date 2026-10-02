@@ -11,6 +11,8 @@ about = true
 
 [github](https://github.com/wunai-xc)
 
+[bilibili](https://b23.tv/DncdDSv)
+
 这是我目前在用的头像：
 
 ![wunai](/wunai_xc.png)
