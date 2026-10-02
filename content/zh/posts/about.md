@@ -1,8 +1,8 @@
 +++
-title: About
-slug: about
-date: 2026-10-02
-about: true
+title = "About"
+slug = "about"
+date = 2026-10-02
+about = true
 +++
 
 ## 关于**wunai**
