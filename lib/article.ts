@@ -61,14 +61,6 @@ export const BACK_TO_TOP_AFTER = 600;
 /** 判定「当前读到哪一个小节」的那条线：视口顶部往下这么多像素（= 吸顶顶栏的下沿） */
 export const TOC_ACTIVE_OFFSET = 120;
 
-/**
- * 目录面板的「宽屏」断点：**宽于它就是默认展开**。
- * 与 globals.css「6e. 文章页」里那条 `@media (min-width: 78rem)` 同值（改一处就要改两处）。
- * 组件读它只为了把 `aria-expanded` 说准 ——「宽屏默认展开、窄屏默认收起」这件事本身写在 CSS 里
- * （`data-open` 不写 = 交给 CSS 的默认值），这样**没有 JS 的宽屏读者照旧看得到目录**。
- */
-export const TOC_WIDE_QUERY = "(min-width: 78rem)";
-
 /** 拖动进度条时一次方向键跳多少个百分点（滑块必须能只用键盘走：↑/↓ 一步、PageUp/PageDown 三步、Home/End 两头） */
 export const PROGRESS_KEY_STEP = 5;
 
@@ -190,7 +182,7 @@ export interface ArticleText {
   tocLabel: string;
   tocNote: string;
   tocEmpty: string;
-  /** 目录开关的两句 aria-label（面板的宽/窄默认状态见 TOC_WIDE_QUERY） */
+  /** 目录开关（左上角那颗挂件）的两句 aria-label / title */
   tocExpand: string;
   tocCollapse: string;
 

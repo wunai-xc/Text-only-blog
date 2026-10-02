@@ -203,6 +203,12 @@
    * 窄屏的两档值（48rem / 30rem 各一条媒体查询）就在本节末尾，别把它们搬到别处去。
    */
   --header-h: 5.5rem;
+  /* 「阅读时浮动件距视口顶部的距离」：平时 = 顶栏高度（贴顶栏下沿），
+     阅读文章时顶栏会收起（components/article/ReadingHeader 往 <html> 写
+     data-reading="hidden"），这一条被归零 → 目录挂件 / 粘性标题顺势上移补位。
+     它是**由 --header-h 推出来的第二个事实来源**（顶栏高度仍然只写上面那一处）：
+     读它的是文章页的浮动件，不要拿它当 --header-h 的别名用在别处。 */
+  --chrome-top: var(--header-h);
   /* 页面骨架（顶栏 / 页脚 / .page）共用的内容宽度。
      注意：顶栏改版后**不再**用它 —— 参考稿的顶栏是通栏（品牌在左、图片位贴右），
      只有页脚与 .page 还用它。 */
@@ -232,6 +238,25 @@
   }
 }
 
+/* 把 --chrome-top 注册成 <length>：顶栏收起时它从 --header-h 变成 0，
+   注册之后这个变化才能被 transition **平滑插值**，浮动件是滑上去的而不是「跳」一下。
+   ⚠️ `@property` 必须写在顶层（不能进 @layer）：它管的是自定义属性本身的类型注册，
+   与层叠无关；放进 layer 会被当成普通声明。 */
+@property --chrome-top {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+/* 阅读文章时顶栏收起（components/article/ReadingHeader 往 <html> 写 data-reading="hidden"），
+   浮动件基准线随之归零 → 目录挂件 / 粘性标题顺着顶栏让出的位置滑上去。
+   ⚠️ 这一条**必须留在未分层处**（与上面那三块令牌同一个道理）：写进 @layer components 会被
+   上面未分层的 `:root { --chrome-top: var(--header-h) }` 压过（未分层的普通声明优先于所有 layer），
+   表现是「顶栏明明收了，挂件却留在原地」。这里靠 `html[data-reading]` 的更高特异性胜出。 */
+html[data-reading="hidden"] {
+  --chrome-top: 0px;
+}
+
 /* ============================================================
    4. 基础层
    底色放在 <html> 上、body 保持透明：这样蓝图背景层（z-index: -1）
@@ -255,10 +280,12 @@
     text-rendering: optimizeLegibility;
   }
 
-  /* 切换外观时给底色/文字一点过渡；用 prefers-reduced-motion 的人不参与 */
+  /* 切换外观时给底色/文字一点过渡；用 prefers-reduced-motion 的人不参与。
+     一并带上 --chrome-top：顶栏在阅读时收起（data-reading="hidden"）那一刻，
+     浮动件的偏移要跟着顶栏一起滑，不能「跳」（时长/缓动与 .site-header 的 transform 一致）。 */
   @media (prefers-reduced-motion: no-preference) {
     html {
-      transition: background-color 0.18s ease, color 0.18s ease;
+      transition: background-color 0.18s ease, color 0.18s ease, --chrome-top 0.35s ease-out;
     }
   }
 
@@ -627,6 +654,35 @@
     background-color: var(--c-canvas);
     background-color: color-mix(in srgb, var(--c-canvas) 88%, transparent);
     backdrop-filter: blur(8px);
+    /* 阅读文章时顶栏上下滑动（文章页的 ReadingHeader 切到 data-reading="hidden"）。
+       时长与缓动要和下面 <html> 的 --chrome-top 过渡一致，浮动件才跟得同步。 */
+    transition: transform 0.35s ease-out;
+  }
+
+  /* 阅读时顶栏收起：上移自身高度。
+     用 transform 而不是 height —— 改高度会让 sticky 元素每帧重排整篇文档，长文会卡。
+     只在滚离顶部之后才收起（见 ReadingHeader 的 TOP_ZONE）：sticky 元素的占位仍在文档最顶上，
+     若在 scrollY = 0 就上移，页面顶部会露出一条与顶栏等高的空白带。
+     同时把浮动件偏移 --chrome-top 归零，目录挂件 / 粘性标题顺势上移补位，不留空白带。 */
+  html[data-reading="hidden"] .site-header {
+    transform: translateY(-100%);
+    /* 收起后不再接收点击，避免隔空拦住下方内容 */
+    pointer-events: none;
+  }
+
+  /* ⚠️ `--chrome-top` 归零那条**不写在这里**：它必须留在上面未分层的令牌区
+     （未分层声明压过任何 @layer 里的同名声明，所以写进这一层会被 `:root` 的
+     `--chrome-top: var(--header-h)` 整个盖住，表现是「顶栏收了、挂件却不上移」）。
+
+     `--chrome-top` 的平滑过渡写在「4. 基础层」那条 html 的 transition 里
+     （必须在**声明它**的元素 html 上写，子元素只是继承计算结果，在其上写无效）；
+     也不在这里再写一条 `html { transition }`，那会整条盖掉基础层那条，
+     把换外观时的 background-color / color 过渡一起弄没。 */
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-header {
+      transition: none;
+    }
   }
 
   /* 通栏（参考稿如此）：品牌在左、图片位贴右，不再受 --frame-width 约束 */
@@ -2765,10 +2821,10 @@
     max-width: calc(var(--reading-measure) + 3rem);
   }
 
-  /* 目录跳转时标题停在吸顶顶栏下面。顶栏高度只有一个事实来源：
-     --home-head-room（由 --header-h 推出来，顶栏改版后不再折行变高）。 */
+  /* 目录跳转时标题停在吸顶顶栏下面。这里读 --chrome-top（平时 = --header-h + 0.5rem 留白，
+     与 --home-head-room 同值）；阅读时顶栏收起、它归零，跳转就贴着视口顶，不留一道空带。 */
   .article-page .article-body :is(h1, h2, h3, h4, h5, h6) {
-    scroll-margin-top: var(--home-head-room);
+    scroll-margin-top: calc(var(--chrome-top) + 0.5rem);
   }
 
   /* 这一页也有锚点跳转（悬浮目录），跟随首页那条：只给允许动效的人平滑滚动 */
@@ -2868,8 +2924,9 @@
 
   .article-sticky {
     position: sticky;
-    /* 停在吸顶顶栏下面：顶栏高度只有一个事实来源（令牌 --header-h） */
-    top: var(--header-h);
+    /* 停在浮动件该在的线上：平时 = 顶栏下沿（--chrome-top = --header-h），
+       阅读时顶栏收起它就归零，这条粘性标题顺势贴到视口顶（与目录挂件同一条线）。 */
+    top: var(--chrome-top);
     /* 层序 17：高于正文，低于悬浮目录（18）、进度与回顶（19）、吸顶顶栏（20）。
        窗口很窄、正文又调得很宽时目录面板可能压到它 —— 那时让目录在上面（读者正在点目录）。 */
     z-index: 17;
@@ -2926,120 +2983,105 @@
     text-overflow: ellipsis;
   }
 
-  /* ---------- 悬浮目录（一件可以收起来的面板） ----------
-     面板的第一行就是开关（`.article-toc-toggle`）：收起时只剩它自己一个小挂件。
-     **默认状态由 CSS 决定**（组件只在读者点过之后才写 `data-open`）：
-       - 宽屏（≥78rem）：默认展开，贴在左侧顶栏下面（与第 12 项落地时一样）；
-       - 窄屏：默认收起，挂件在**左下角**（左上角被吸顶顶栏占着、右下角是回顶按钮，
-         左下角才是空的 —— 它正好叠在设置齿轮上面），点开才从那里弹出浮层。
-     这么分的好处：**没有 JS 的宽屏读者照旧看得到目录**，而窄屏也不会默认弹一块浮层挡住正文。 */
+  /* 窄屏：正文列已经贴到视口左边，左上角那颗目录挂件会压住这条横条的开头
+     （挂件在视口 0.85rem 处、2.125rem 宽）。给横条让出挂件那一格再留点空气，
+     宽屏不用 —— 那时正文列居中，横条根本够不到左上角（参考稿也是这么处理的）。 */
+  @media (max-width: 52rem) {
+    .article-sticky-bar {
+      padding-left: 3.75rem;
+    }
+  }
+
+  /* ---------- 悬浮目录（左上角一颗挂件 + 从它下面弹出的面板） ----------
+     位置与形态对齐 wunai-blog 参考稿：贴在**视口左上角、浮动件基准线**（--chrome-top）下沿，
+     一颗方形小挂件；点开才在它下面弹出面板（面板自己滚）。宽屏窄屏是同一套 ——
+     不再分「宽屏默认展开 / 窄屏收进左下角」。
+
+     顶栏在阅读时会收起（见 components/article/ReadingHeader）：那时 --chrome-top 归零，
+     挂件与面板一起上移贴到视口顶，正好补上顶栏让出的位置。
+
+     没有 JS 时挂件在、但面板打不开（`data-open` 由组件写）—— 这是为对齐参考稿而接受的取舍。 */
 
   .article-toc {
     position: fixed;
     z-index: 18;
     left: 0.85rem;
-    /* 齿轮（left/bottom 0.85rem + 2.4rem）上面留 0.65rem：两者在左下角站成一列 */
-    bottom: 3.9rem;
+    /* 平时贴顶栏下沿；顶栏收起时 --chrome-top 归零 → 挂件顺势上移（与粘性标题同一条线）。
+       +1px 与 wunai-blog 参考稿一致（那边 `.toc-fab { top: calc(var(--chrome-top) + 1px) }`）：
+       挂件紧贴顶栏底边。**不要加大这个偏移** —— 它会一路往下顶到页头第一行：
+       挂件底边 = --chrome-top + 1px + 2.125rem，而 .article-head 第一行（kicker）在
+       --chrome-top + 2.5rem 处，只有这里贴着顶栏才留得出那几像素的空隙。
+       （窄屏也量过：正文列贴到视口左边时，kicker 只在水平方向与挂件同侧，
+       靠 top 让开它最省事，不必再给页头加内边距。） */
+    top: calc(var(--chrome-top) + 1px);
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+    /* 收起时就是挂件本身那么大；展开时被下面的面板撑开 */
+    width: max-content;
+  }
+
+  /* 挂件（开关）：收起时它就是目录的全部；展开时它是面板上方那颗方形按钮 */
+  .article-toc-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.125rem;
+    height: 2.125rem;
+    padding: 0;
+    border: 1px solid var(--c-rule-strong);
+    border-radius: var(--shape-radius);
+    background-color: var(--c-surface);
+    color: var(--c-ink-muted);
+    font-size: 1.1rem;
+    box-shadow: var(--shape-shadow);
+    cursor: pointer;
+  }
+
+  .article-toc-toggle:hover {
+    border-color: var(--c-accent);
+    color: var(--c-accent);
+  }
+
+  /* 展开时挂件点亮：读者一眼能看出面板是它弹出来的 */
+  .article-toc[data-open="true"] .article-toc-toggle {
+    border-color: var(--c-accent);
+    color: var(--c-accent);
+  }
+
+  /* 弹出面板：默认收起，点开才出现。内容区自己滚（别顶到视口底）。 */
+  .article-toc-body {
+    display: none;
+    flex-direction: column;
+    gap: 0.45rem;
     width: min(17rem, calc(100vw - 1.7rem));
-    /* 弹出时自己滚：别顶到顶栏，也别顶到视口底 */
-    max-height: min(60vh, 24rem);
+    /* 上下各让出「浮动件基准线 + 一点」，太长时内部滚动 */
+    max-height: calc(100vh - var(--chrome-top) - 5.5rem);
     overflow-y: auto;
-    padding: 0.25rem 0.35rem 0.5rem;
+    padding: 0.5rem 0.6rem 0.65rem;
     border: 1px solid var(--c-rule);
     border-radius: var(--shape-radius-lg);
     background-color: var(--c-surface);
     box-shadow: var(--shape-shadow);
   }
 
-  /* 收起时只剩那一行开关：宽度跟着内容走、内边距收紧 —— 看上去是个挂件，不是一块空面板 */
-  .article-toc[data-open="false"] {
-    width: max-content;
-    max-height: none;
-    padding: 0.1rem 0.15rem;
-  }
-
-  /* 内容区默认收起（`data-open` 不写 + 窄屏 = 收起） */
-  .article-toc-body {
-    display: none;
-    flex-direction: column;
-    gap: 0.45rem;
-    padding: 0 0.35rem;
-  }
-
   .article-toc[data-open="true"] .article-toc-body {
     display: flex;
   }
 
-  /* 78rem 是「正文列两侧还放得下 12rem 目录」的最小宽度：
-     (78 - 页面列宽 45) / 2 ≈ 16.5rem，够目录（12rem）+ 边距。
-     断点的同一个值也写在 lib/article.ts 的 `TOC_WIDE_QUERY` 里（组件读它把 `aria-expanded`
-     说准、决定「点一条要不要收起」）—— **改这里就要改那里**。 */
-  @media (min-width: 78rem) {
-    .article-toc {
-      left: 1.1rem;
-      bottom: auto;
-      /* 停在吸顶顶栏下面：顶栏高度只有一个事实来源（令牌 --header-h），
-         所以它变高变矮时这里自动跟着走，不手写 rem。下边留 1rem 呼吸。 */
-      top: calc(var(--header-h) + 1rem);
-      width: 12rem;
-      /* 上下各让出「顶栏 + 1rem」，再留 4.5rem 给视口底部 —— 目录太长时内部滚动 */
-      max-height: calc(100vh - var(--header-h) - 5.5rem);
-      padding: 0.4rem 0.45rem 0.6rem;
-    }
-
-    /* 宽屏默认**展开**（没有 JS 的读者也看得到目录）；读者点过之后才可能出现 `false` */
-    .article-toc-body {
-      display: flex;
-    }
-
-    .article-toc[data-open="false"] .article-toc-body {
-      display: none;
-    }
-  }
-
-  /* 面板第一行的开关：展开时它是面板的标题行，收起时它就是整个挂件 */
-  .article-toc-toggle {
-    display: inline-flex;
+  /* 面板的标题行（对应参考稿的 .toc-panel-head）：与正文小字同一种排版 */
+  .article-toc-head {
+    display: flex;
     align-items: center;
     gap: 0.35rem;
-    width: 100%;
-    padding: 0.3rem 0.4rem;
-    border: 0;
-    border-radius: var(--shape-radius);
-    background-color: transparent;
+    margin: 0;
+    padding: 0 0.35rem 0.4rem;
+    border-bottom: 1px solid var(--c-rule);
     color: var(--c-ink-subtle);
     font-family: var(--font-mono);
     font-size: 0.7rem;
     letter-spacing: 0.04em;
-    cursor: pointer;
-  }
-
-  .article-toc-toggle:hover {
-    background-color: var(--c-canvas);
-    color: var(--c-ink);
-  }
-
-  .article-toc-toggle-label {
-    flex: 1 1 auto;
-    text-align: left;
-  }
-
-  .article-toc-chevron {
-    display: inline-flex;
-    flex: none;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .article-toc-chevron {
-      transition: transform 0.18s ease;
-    }
-  }
-
-  /* 收起时箭头翻过来指右（面板在左边 → 指右 = 打开） */
-  .article-toc[data-open="false"] .article-toc-chevron {
-    transform: rotate(180deg);
   }
 
   .article-toc-list {

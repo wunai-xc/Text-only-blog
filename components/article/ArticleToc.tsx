@@ -4,13 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "@iconify/react/offline";
 
 import ArticlePager from "./ArticlePager";
-import {
-  ARTICLE_TEXT,
-  TOC_ACTIVE_OFFSET,
-  TOC_MAX_DEPTH,
-  TOC_WIDE_QUERY,
-  tocIndent,
-} from "@/lib/article";
+import { ARTICLE_TEXT, TOC_ACTIVE_OFFSET, TOC_MAX_DEPTH, tocIndent } from "@/lib/article";
 import { icons } from "@/lib/icons";
 import type { ListPost } from "@/lib/list";
 import type { TocEntry } from "@/lib/markdown";
@@ -18,6 +12,9 @@ import type { Lang } from "@/lib/site";
 
 /**
  * 悬浮目录（第 12 项）
+ *
+ * 位置与形态对齐 wunai-blog 参考稿：**视口左上角、浮动件基准线（--chrome-top）下沿的一颗方形挂件**，
+ * 点开才在它下面弹出面板。宽屏窄屏是同一套 —— 不再分「宽屏默认展开 / 窄屏收进左下角」。
  *
  * 五个设计决定：
  *   1. **它就是一组真锚点**（`<a href="#heading-id">`）：没有 JS 也能跳（只是不会高亮），
@@ -27,15 +24,10 @@ import type { Lang } from "@/lib/site";
  *      （不清空），否则小节之间会闪；这一条与首页侧边指示器（HomeIndex）是同一个做法；
  *   3. 层级只用于缩进，不折叠：纯文字博客的目录通常十几条，折叠反而要多点一次；
  *      深于 `TOC_MAX_DEPTH` 的标题不列（缩进到第 3 档就没法再区分了）；
- *   4. 上下篇挂在目录底部（**窄屏时目录默认收起，所以文章末尾还有一份** `full` 档的
- *      上下篇 —— 两个位置共用同一个组件，不是两份实现）；
- *   5. **整块面板可以收起来**（面板第一行就是那个开关）：
- *      - 宽屏（≥78rem，断点是 `TOC_WIDE_QUERY`）默认展开，位置与以前一样贴在左侧顶栏下面；
- *      - 窄屏默认收起 —— 收起后只剩一个「目录」小挂件，在**左下角**（左上角被吸顶顶栏占着、
- *        右下角是回顶按钮，左下角才是空的；它叠在设置齿轮上方）；点开才从那里弹出面板，
- *        弹层本身自己滚（`max-height`），点一条目录就顺势收起（挡住正文就没意义了）。
- *      「默认状态」写在 CSS 里（`data-open` **不写**就是这个默认值），组件只在读者点过之后
- *      才写死 `true` / `false` —— 这样**没有 JS 的宽屏读者照旧看得到目录**（与第 12 项落地时一样）。
+ *   4. 上下篇挂在面板底部（面板默认收起，所以文章末尾还有一份 `full` 档的上下篇
+ *      —— 两个位置共用同一个组件，不是两份实现）；点一条目录就顺势收起（挡住正文就没意义了）；
+ *   5. **面板可以收起来**：`data-open` 由这里写，收起时只剩那颗挂件。顶栏在阅读时会收起
+ *      （components/article/ReadingHeader），届时 `--chrome-top` 归零，挂件与面板一起上移贴到视口顶。
  *
  * `toc` 是**嵌套**结构（`TocEntry` 自己套自己），页面把 `renderMarkdown` 的返回原样传进来。
  * 这里刻意**不**从 lib/markdown.ts 值导入 `flattenToc()`：那个文件里是整条 unified 管线，
@@ -61,10 +53,8 @@ export default function ArticleToc({
 }) {
   const t = ARTICLE_TEXT[lang];
   const [active, setActive] = useState<string | null>(null);
-  /** `null` = 读者还没点过，默认状态交给 CSS；点过之后就是他的选择（本次浏览内记住） */
-  const [open, setOpen] = useState<boolean | null>(null);
-  /** 是不是宽屏（≥78rem）：只用来把 `aria-expanded` 与「点一条要不要收起」说准 */
-  const [wide, setWide] = useState(false);
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLElement | null>(null);
   const visible = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -103,31 +93,27 @@ export default function ArticleToc({
     };
   }, [toc]);
 
-  /**
-   * 宽屏 / 窄屏只用来把 `aria-expanded` 与「点一条要不要收起」说准 ——
-   * **默认状态本身写在 CSS 里**（`data-open` 不写 = 宽屏展开、窄屏收起），
-   * 所以没有 JS 的宽屏读者照旧看得到目录，而窄屏那个浮层也不会默认弹出来挡正文。
-   * 没有 `matchMedia` 的老浏览器当宽屏算（那样说法与 CSS 的默认一致）。
-   */
+  /** 面板是浮层：点面板外面、或按 Esc，都要收起来（与设置抽屉同一种做法） */
   useEffect(() => {
-    const media = window.matchMedia?.(TOC_WIDE_QUERY);
-    if (!media) {
-      setWide(true);
-      return;
-    }
-    const sync = (): void => setWide(media.matches);
-    sync();
-    media.addEventListener("change", sync);
-    return () => media.removeEventListener("change", sync);
-  }, []);
+    if (!open) return;
 
-  /** 读者点过之后按他的选择，没点过就按断点（= CSS 里那套默认值） */
-  const expanded = open ?? wide;
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    const onPointerDown = (event: MouseEvent): void => {
+      if (root.current && !root.current.contains(event.target as Node)) setOpen(false);
+    };
 
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("mousedown", onPointerDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("mousedown", onPointerDown);
+    };
+  }, [open]);
+
+  /** 点一条目录就顺势收起：面板是从左上角弹出来的浮层，留着只会挡住正文 */
   function onFollowAnchor(event: React.MouseEvent<HTMLElement>): void {
-    // 窄屏：面板是从左下角弹出来的浮层，点完一条它还挡着正文就没意义了 —— 顺势收起。
-    // 宽屏不收：读者多半会连着点几条，每点一条都要重新点开很难受。
-    if (wide) return;
     const target = event.target;
     if (target instanceof Element && target.closest("a") !== null) setOpen(false);
   }
@@ -160,33 +146,35 @@ export default function ArticleToc({
 
   return (
     <nav
+      ref={root}
       className="article-toc"
       aria-label={t.tocLabel}
-      /* 不写 `data-open` 就是「按 CSS 的默认」：宽屏展开、窄屏收起（见文件头的决定 5） */
-      data-open={open === null ? undefined : open ? "true" : "false"}
+      data-open={open ? "true" : "false"}
       onClick={onFollowAnchor}
     >
-      {/* 面板的第一行就是这个开关：收起时只剩它自己（一个挂件），展开时它是面板的标题行 */}
+      {/* 开关：收起时它就是整个挂件，展开时它是面板上方那颗方形按钮 */}
       <button
         type="button"
         className="article-toc-toggle"
-        aria-expanded={expanded}
+        aria-expanded={open}
         aria-controls={TOC_BODY_ID}
-        aria-label={expanded ? t.tocCollapse : t.tocExpand}
-        title={expanded ? t.tocCollapse : t.tocExpand}
-        onClick={() => setOpen(!expanded)}
+        aria-label={open ? t.tocCollapse : t.tocExpand}
+        title={open ? t.tocCollapse : t.tocExpand}
+        onClick={() => setOpen((value) => !value)}
       >
-        <Icon icon={icons["mdi:format-list-bulleted"]} width="1em" height="1em" />
-        <span className="article-toc-toggle-label">{t.tocLabel}</span>
         <Icon
-          className="article-toc-chevron"
-          icon={icons["mdi:chevron-left"]}
+          icon={open ? icons["mdi:close"] : icons["mdi:format-list-bulleted"]}
           width="1em"
           height="1em"
         />
       </button>
 
       <div className="article-toc-body" id={TOC_BODY_ID}>
+        {/* 面板的标题行：对应参考稿的 .toc-panel-head */}
+        <p className="article-toc-head">
+          <Icon icon={icons["mdi:format-list-bulleted"]} width="1em" height="1em" />
+          <span>{t.tocLabel}</span>
+        </p>
         {hasHeadings ? renderList(toc) : <p className="article-toc-empty">{t.tocEmpty}</p>}
         {hasHeadings ? <p className="article-toc-note">{t.tocNote}</p> : null}
         <ArticlePager lang={lang} older={older} newer={newer} variant="compact" />
