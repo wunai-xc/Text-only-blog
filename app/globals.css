@@ -3456,6 +3456,18 @@ html[data-reading="hidden"] {
     stroke-linecap: round;
   }
 
+  /* 圆心读数：没读到底时这里写「42%」，读到底才换成箭头（组件二选一）。
+     等宽 + 表格数字，位数变化时百分比不会左右抖；颜色跟按钮走（悬停时一起变强调色）。
+     环是 SVG、绝对定位，会盖在静态内容之上；这里把它抬到同一层，读数才不会被环压住。 */
+  .article-top-value {
+    position: relative;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
   /* ---------- 上下篇（文章末尾 full / 悬浮目录里 compact，共用一份组件） ---------- */
 
   .article-pager {

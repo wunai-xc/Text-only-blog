@@ -53,7 +53,9 @@ import type { Lang } from "@/lib/site";
  *      aria-hidden 的装饰）。所以节点层自己铺满视口、`pointer-events: none`，只有方块收指针 ——
  *      空白处的按压照旧漏给下面那条可拖动的轨道。
  *
- * 回顶按钮：**进度环 + 箭头**，环与右边那条线读同一个 `progress`（`stroke-dashoffset`）。
+ * 回顶按钮：**进度环 + 圆心读数**，环与右边那条线读同一个 `progress`（`stroke-dashoffset`）。
+ * 圆心读的东西跟着进度走：没到底时显示当前百分比，读到 100% 才换成「回到顶部」的箭头
+ * （那时按钮的用意才明确 —— 上面已经没有可滚的了）。
  * `prefers-reduced-motion: reduce` 的读者用瞬时跳转（不做平滑滚动）；
  * 不可见时 `aria-hidden` + `tabIndex={-1}`，键盘不会 Tab 到一个看不见的按钮上。
  * 右下角本来印着图纸图签（装饰），文章页把它让给这颗按钮 —— 见 globals.css。
@@ -266,6 +268,9 @@ export default function ArticleProgress({ lang, toc }: { lang: Lang; toc: TocEnt
     window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
   }
 
+  /** 读到底了吗：决定圆心那点位置显示百分比还是箭头 */
+  const done = progress >= 100;
+
   return (
     <>
       {/*
@@ -361,7 +366,8 @@ export default function ArticleProgress({ lang, toc }: { lang: Lang; toc: TocEnt
         data-visible={showTop ? "true" : "false"}
         aria-hidden={!showTop}
         tabIndex={showTop ? 0 : -1}
-        aria-label={t.backToTop}
+        /* 圆心显示百分比时，可见文字要进无障碍名（Label in Name）；读到底只剩箭头，名字就是「回到顶部」 */
+        aria-label={done ? t.backToTop : `${t.backToTop} ${progress}%`}
         title={t.backToTop}
         onClick={toTop}
       >
@@ -377,7 +383,12 @@ export default function ArticleProgress({ lang, toc }: { lang: Lang; toc: TocEnt
             strokeDashoffset={RING_CIRCUMFERENCE * (1 - progress / 100)}
           />
         </svg>
-        <Icon icon={icons["mdi:arrow-up"]} width="1.1em" height="1.1em" />
+        {/* 圆心：没读到底报百分比，读到底（100%）才亮出「回到顶部」的箭头 */}
+        {done ? (
+          <Icon icon={icons["mdi:arrow-up"]} width="1.1em" height="1.1em" />
+        ) : (
+          <span className="article-top-value">{progress}%</span>
+        )}
       </button>
     </>
   );
