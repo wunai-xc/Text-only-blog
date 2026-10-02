@@ -14,7 +14,6 @@ import {
   readingValue,
   setReadingPrefs,
   subscribeReadingPrefs,
-  type ReadingKey,
   type ReadingPrefs,
 } from "@/lib/prefs";
 import { SITE, type Lang } from "@/lib/site";
@@ -22,16 +21,22 @@ import { SITE, type Lang } from "@/lib/site";
 /**
  * 第 8 栏：字体设置展示（第 9 项）
  *
- * 四组选项（字体 / 宽度 / 字号 / 行距）直接取 lib/prefs.ts 的选项表与写入 API ——
- * 与设置中心是同一套东西，变量落点还是那四个 --reading-* 令牌（约定第 8 条：
- * 阅读偏好只写令牌，不在组件里改字号）。这里额外做的只有一件事：
- * 当场放一段示范文字（.home-demo 读同样四个令牌），让读者不用等文章页就能看见效果。
- * 「字体」那一组的预览是**整页文字**：选一下，这一栏乃至全站立刻换字体。
+ * 选项组直接取 lib/prefs.ts 的选项表与写入 API —— 与设置中心是同一套东西，
+ * 变量落点还是那几个 --reading-* 令牌（约定第 8 条：阅读偏好只写令牌，不在组件里改字号）。
+ * 这里额外做的只有一件事：当场放一段示范文字（.home-demo 读同样几个令牌），
+ * 让读者不用等文章页就能看见效果。「字体」那一组的预览是**整页文字**：选一下，
+ * 这一栏乃至全站立刻换字体。
  *
- * 四组的名字复用 lib/site.ts 的 readingFont / readingWidth / readingSize / readingLeading
+ * **不摆全部组**：这一栏是「字体设置」的现场演示，下面这几组就够了；
+ * 「首行缩进」是个开关、且只在正文（.article-body 的段落）上看得出效果，
+ * 示范句只有一句、看不出段落之间的差别，所以留在设置中心里，不在这儿摆。
+ * 组的名字复用 lib/site.ts 的 readingFont / readingWidth / readingSize / readingLeading
  * （不另写一份），图标名走 lib/icons.ts（本地打包，运行时不发请求）。
  */
-const GROUP_ICON: Record<ReadingKey, IconName> = {
+/** 首页这一栏摆的几组（比设置中心少一组「首行缩进」） */
+type HomeReadingKey = "font" | "width" | "size" | "leading";
+
+const GROUP_ICON: Record<HomeReadingKey, IconName> = {
   font: "mdi:format-font",
   width: "mdi:arrow-expand-horizontal",
   size: "mdi:format-size",
@@ -50,14 +55,14 @@ export default function HomeFonts({ lang }: { lang: Lang }) {
 
   const active = prefs ?? READING_DEFAULTS;
 
-  const groups: { key: ReadingKey; label: string }[] = [
+  const groups: { key: HomeReadingKey; label: string }[] = [
     { key: "font", label: site.readingFont },
     { key: "width", label: site.readingWidth },
     { key: "size", label: site.readingSize },
     { key: "leading", label: site.readingLeading },
   ];
 
-  // 当前四个令牌的实际取值（rem / 倍率 / 字体栈）—— 调完能当场看到数字变化
+  // 当前这几个令牌的实际取值（rem / 倍率 / 字体栈）—— 调完能当场看到数字变化
   const tokenLine = groups
     .map((group) => `${READING_VARS[group.key]}: ${readingValue(group.key, active[group.key])}`)
     .join(" · ");

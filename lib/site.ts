@@ -207,6 +207,7 @@ export interface SiteStrings {
   readingWidth: string;
   readingSize: string;
   readingLeading: string;
+  readingIndent: string;
   readingCurrent: string;
   language: string;
   languageHint: string;
@@ -267,11 +268,12 @@ const I18N: Record<Lang, SiteStrings> = {
     appearance: "外观",
     reading: "阅读偏好",
     readingHint:
-      "调的是正文的字体 / 宽度 / 字号 / 行距（第 6 项那四个 --reading-* 令牌），改完立刻生效，全站通用。字体四档（黑体 / 宋体 / 楷体 / 等宽）用的都是你设备上已有的字体，不下载任何字体文件；「自定义」那一档用的则是你自己上传的字体文件，只存在你的浏览器里。",
+      "调的是正文的字体 / 宽度 / 字号 / 行距 / 首行缩进（第 6 项那几个 --reading-* 令牌），改完立刻生效，全站通用。字体四档（黑体 / 宋体 / 楷体 / 等宽）用的都是你设备上已有的字体，不下载任何字体文件；「自定义」那一档用的则是你自己上传的字体文件，只存在你的浏览器里。",
     readingFont: "正文字体",
     readingWidth: "正文宽度",
     readingSize: "正文字号",
     readingLeading: "行距",
+    readingIndent: "首行缩进",
     readingCurrent: "当前取值",
     language: "语言",
     languageHint: "中英文各有一份内容，切换语言不会丢掉这里的设置。",
@@ -330,11 +332,12 @@ const I18N: Record<Lang, SiteStrings> = {
     appearance: "Appearance",
     reading: "Reading",
     readingHint:
-      "Changes the font / width / size / leading of the body text (the four --reading-* tokens from item 6). Takes effect immediately, site-wide. The four font presets use fonts already installed on your device — nothing is downloaded. The Custom preset uses a font file you upload yourself, kept in your browser only.",
+      "Changes the font / width / size / leading / first-line indent of the body text (the --reading-* tokens from item 6). Takes effect immediately, site-wide. The four font presets use fonts already installed on your device — nothing is downloaded. The Custom preset uses a font file you upload yourself, kept in your browser only.",
     readingFont: "Font",
     readingWidth: "Width",
     readingSize: "Font size",
     readingLeading: "Line height",
+    readingIndent: "Paragraph indent",
     readingCurrent: "Current values",
     language: "Language",
     languageHint: "Each language has its own content; switching keeps your settings here.",

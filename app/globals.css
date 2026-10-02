@@ -185,19 +185,22 @@
 }
 
 /* 三套外观共用：形状、蓝图网格尺寸、正文度量。
-   阅读度量（字体 / 宽度 / 字号 / 行距）是令牌：**第 7 项的设置中心**会把读者选的档位
+   阅读度量（字体 / 宽度 / 字号 / 行距 / 首行缩进）是令牌：**第 7 项的设置中心**会把读者选的档位
    写成 <html> 上的行内变量（覆盖这里的初值，见 lib/prefs.ts），
-   第 12 项的文章页直接读它们排版。也就是说这四个值不要在任何地方写死。 */
+   第 12 项的文章页直接读它们排版。也就是说这几个值不要在任何地方写死。 */
 :root {
   --shape-radius: 8px;
   --shape-radius-lg: 12px;
-  /* 正文度量（第 8 项的阅读偏好改的就是这四个，全部只在这里定初值）：
+  /* 正文度量（第 8 项的阅读偏好改的就是这几个，全部只在这里定初值）：
      宽 / 字号 / 行距是数值，字体是字体栈 —— 初值指向 --font-sans，
-     所以「没设置过」与「设置成黑体」看起来完全一样。 */
+     所以「没设置过」与「设置成黑体」看起来完全一样。
+     --reading-indent 是正文段落的**首行缩进**，默认「两格」（2em 跟着字号走，
+     中文下一个字约一个 em）；不缩进写 0。读它的是 .article-body > p。 */
   --reading-font: var(--font-sans);
   --reading-measure: 42rem;
   --reading-size: 1.0625rem;
   --reading-leading: 1.85;
+  --reading-indent: 2em;
   /* 换页动效的两个时长（第 15 项）。**组件里的毫秒数必须与它们一致**：
      lib/decor.ts 的 FIGURE_SHIFT_MS / PAGE_FADE_MS
      —— 配对关系写在 components/FigureLayer.tsx 与 components/PageIntro.tsx 的文件头。 */
@@ -3820,6 +3823,21 @@ html[data-reading="hidden"] {
   .article-body table,
   .article-body figure {
     margin: 0.9rem 0;
+  }
+
+  /* 正文段落的首行缩进（第 8 项那个开关，两格 = 2em，跟着字号走）。
+     只给**顶层段落**缩进：
+       - 列表项里的段落（紧凑列表被 markdown 摊开成 <li><p>）本来就带项目符号与左内边距，
+         再缩两格会像层级错乱；
+       - 引用块、图表说明、表格单元格里的段落同理，它们各有各的排版（引文块有左边框、
+         说明文字本来就短），缩进去只是噪音。
+     整段只有一张图的段落也排除：缩进会把图往右推、与上下文的居中对齐对不上。 */
+  .article-body > p {
+    text-indent: var(--reading-indent);
+  }
+
+  .article-body > p:has(> img:only-child) {
+    text-indent: 0;
   }
 
   .article-body ul,

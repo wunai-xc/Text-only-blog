@@ -35,6 +35,7 @@ import mdiFormatFont from "@iconify/icons-mdi/format-font";
 import mdiFormatSize from "@iconify/icons-mdi/format-size";
 import mdiArrowExpandHorizontal from "@iconify/icons-mdi/arrow-expand-horizontal";
 import mdiFormatLineSpacing from "@iconify/icons-mdi/format-line-spacing";
+import mdiFormatIndentIncrease from "@iconify/icons-mdi/format-indent-increase";
 import mdiTranslate from "@iconify/icons-mdi/translate";
 import mdiCheck from "@iconify/icons-mdi/check";
 import mdiRestore from "@iconify/icons-mdi/restore";
@@ -94,6 +95,7 @@ export const icons = {
   "mdi:format-size": mdiFormatSize,
   "mdi:arrow-expand-horizontal": mdiArrowExpandHorizontal,
   "mdi:format-line-spacing": mdiFormatLineSpacing,
+  "mdi:format-indent-increase": mdiFormatIndentIncrease,
   "mdi:translate": mdiTranslate,
   "mdi:check": mdiCheck,
   "mdi:restore": mdiRestore,

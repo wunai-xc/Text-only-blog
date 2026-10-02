@@ -1,12 +1,16 @@
 /**
  * lib/prefs.ts —— 阅读偏好（第 7 项：设置中心）
  *
- * 四组选项：**正文字体 / 宽度 / 字号 / 行距**。落点是第 6 项就准备好的四个令牌
- * （app/globals.css 的 `:root`）：`--reading-font` / `--reading-measure` / `--reading-size` /
- * `--reading-leading` —— 正文（.article-body）已经在读它们，所以设置中心不需要通知任何组件，
- * 改完 CSS 变量，页面上已经渲染的文字立刻跟着变。
+ * 五组选项：**正文字体 / 宽度 / 字号 / 行距 / 首行缩进**。落点是第 6 项就准备好的
+ * 五个令牌（app/globals.css 的 `:root`）：`--reading-font` / `--reading-measure` /
+ * `--reading-size` / `--reading-leading` / `--reading-indent` —— 正文（.article-body）
+ * 已经在读它们，所以设置中心不需要通知任何组件，改完 CSS 变量，页面上已经渲染的
+ * 文字立刻跟着变。
  *
- * 「字体」那一组与另外三组有两处不一样，都写在 READING_FONTS 上头：换的是字体族不是数值，
+ * 「首行缩进」是唯一一个**开关**（其余四组都是三档）：只有「关 / 开」两个选项，
+ * 所以它看起来和别的组不一样 —— 这是有意的，缩进本就是一件「要或不要」的事。
+ *
+ * 「字体」那一组与另外几组有两处不一样，都写在 READING_FONTS 上头：换的是字体族不是数值，
  * 而且第五档「自定义」默认藏着（要站长先放字体文件）。
  *
  * 三个设计决定：
@@ -31,10 +35,10 @@ export interface ReadingOption {
   en: string;
 }
 
-export type ReadingKey = "font" | "width" | "size" | "leading";
+export type ReadingKey = "font" | "width" | "size" | "leading" | "indent";
 
-/** 四组的顺序（设置中心里从上到下、脚本里遍历都用它） */
-export const READING_KEYS: ReadingKey[] = ["font", "width", "size", "leading"];
+/** 五组的顺序（设置中心里从上到下、脚本里遍历都用它） */
+export const READING_KEYS: ReadingKey[] = ["font", "width", "size", "leading", "indent"];
 
 export const READING_WIDTHS: ReadingOption[] = [
   { id: "narrow", value: "34rem", zh: "窄", en: "Narrow" },
@@ -52,6 +56,19 @@ export const READING_LEADINGS: ReadingOption[] = [
   { id: "tight", value: "1.6", zh: "紧凑", en: "Tight" },
   { id: "normal", value: "1.85", zh: "适中", en: "Normal" },
   { id: "loose", value: "2.1", zh: "宽松", en: "Loose" },
+];
+
+/**
+ * 正文段落的首行缩进（开关）。中文排版的惯例是每段首行空两格，
+ * 但英文正文、或者满篇链接 / 代码的短段落缩进反而难读，所以做成读者自己说了算的一档。
+ *
+ * 值就是 `text-indent` 本身：**2em** 跟着正文字号走，中文下一个字约等于一个 em，
+ * 所以「2em」正好是两格 —— 读者把字号调大，缩进跟着变大，比例不变（写 2rem 就死了）。
+ * 关掉是 `0`，不是一个只把规则关掉的 class：与另外四组一样，落点只有一个 CSS 变量。
+ */
+export const READING_INDENTS: ReadingOption[] = [
+  { id: "off", value: "0", zh: "关闭", en: "Off" },
+  { id: "on", value: "2em", zh: "两格", en: "2 em" },
 ];
 
 /**
@@ -116,6 +133,7 @@ export const READING_GROUPS: Record<ReadingKey, ReadingOption[]> = {
   width: READING_WIDTHS,
   size: READING_SIZES,
   leading: READING_LEADINGS,
+  indent: READING_INDENTS,
 };
 
 /**
@@ -139,14 +157,18 @@ export interface ReadingPrefs {
   size: string;
   /** READING_LEADINGS 里的 id */
   leading: string;
+  /** READING_INDENTS 里的 id（正文首行缩进开关） */
+  indent: string;
 }
 
-/** 默认档：与 app/globals.css 的 `:root` 四个 --reading-* 初值一一对应 */
+/** 默认档：与 app/globals.css 的 `:root` 五个 --reading-* 初值一一对应 */
 export const READING_DEFAULTS: ReadingPrefs = {
   font: "sans",
   width: "normal",
   size: "normal",
   leading: "normal",
+  // 默认**开着**：中文博客的正文缩进是惯例，不想缩进的读者自己关掉
+  indent: "on",
 };
 
 export const READING_STORAGE_KEYS: Record<ReadingKey, string> = {
@@ -154,6 +176,7 @@ export const READING_STORAGE_KEYS: Record<ReadingKey, string> = {
   width: "tob:reading-width",
   size: "tob:reading-size",
   leading: "tob:reading-leading",
+  indent: "tob:reading-indent",
 };
 
 export const READING_VARS: Record<ReadingKey, string> = {
@@ -161,6 +184,7 @@ export const READING_VARS: Record<ReadingKey, string> = {
   width: "--reading-measure",
   size: "--reading-size",
   leading: "--reading-leading",
+  indent: "--reading-indent",
 };
 
 /** 偏好变了才派发（供第 12 项的文章页 / 阅读进度之类需要响应的东西订阅） */
@@ -192,7 +216,7 @@ function storage(): Storage | null {
   }
 }
 
-/** 读读者存下来的三档偏好；没存过 / 存坏了都是默认档 */
+/** 读读者存下来的各档偏好；没存过 / 存坏了都是默认档 */
 export function readReadingPrefs(): ReadingPrefs {
   const store = storage();
   const read = (key: ReadingKey): string => {
@@ -204,7 +228,13 @@ export function readReadingPrefs(): ReadingPrefs {
     }
     return normalizeReadingId(key, raw);
   };
-  return { font: read("font"), width: read("width"), size: read("size"), leading: read("leading") };
+  return {
+    font: read("font"),
+    width: read("width"),
+    size: read("size"),
+    leading: read("leading"),
+    indent: read("indent"),
+  };
 }
 
 function writeVars(prefs: ReadingPrefs, root: HTMLElement): void {
@@ -222,6 +252,7 @@ export function setReadingPrefs(patch: Partial<ReadingPrefs>): ReadingPrefs {
     width: normalizeReadingId("width", patch.width ?? current.width),
     size: normalizeReadingId("size", patch.size ?? current.size),
     leading: normalizeReadingId("leading", patch.leading ?? current.leading),
+    indent: normalizeReadingId("indent", patch.indent ?? current.indent),
   };
 
   const store = storage();
