@@ -9,6 +9,8 @@ about = true
 
 **wunai-xc**是我完整的网名，我的网名有**wunai-xc**,**xiaochen**,**xiaochen520**,**xiaochen521**,**xc**,**芜萘**
 
+[github](https://github.com/wunai-xc)
+
 这是我目前在用的头像：
 
 ![wunai](/wunai_xc.png)
