@@ -442,7 +442,7 @@ export interface FriendLink {
  */
 export const LINKS: FriendLink[] = [
   {
-    name: "哈康",
+    name: "hconzlvra",
     url: "https://hconzlvra.top/",
     avatar: "https://avatars.githubusercontent.com/u/273501356?v=4&s=96",
     note: {
@@ -451,7 +451,7 @@ export const LINKS: FriendLink[] = [
     },
   },
   {
-    name: "摩尔",
+    name: "molforte",
     url: "https://molforte.github.io/Molforte.pages/",
     avatar: "https://avatars.githubusercontent.com/u/176408050?v=4&s=96",
     note: {
@@ -460,17 +460,17 @@ export const LINKS: FriendLink[] = [
     },
   },
   {
-    name: "阿卡迪亚",
+    name: "arcadia",
     url: "https://www.arcadia.moe/",
     avatar: "https://avatars.githubusercontent.com/u/97033226?v=4&s=96",
     note: {
       // 本人要求只写「开发者」这类中性说法，不要具体身份描述
-      zh: "神秘开发者",
+      zh: "开发者",
       en: "Developer",
     },
   },
   {
-    name: "并非懒得喷",
+    name: "bfladderbean",
     url: "https://www.bfladderbean.me/",
     avatar: "https://avatars.githubusercontent.com/u/139599235?v=4&s=96",
     note: {
@@ -502,7 +502,7 @@ export const LINKS: FriendLink[] = [
     },
   },
   {
-    name: "戈登",
+    name: "RSEGordon Blog",
     // 对方「友链」页公布的地址（首页）
     url: "https://clawblog.rseg.club/",
     // GitHub 官方头像端点：github.com/<用户名>.png 会 302 到 avatars.githubusercontent.com
@@ -522,6 +522,15 @@ export const LINKS: FriendLink[] = [
       en: "Programming · Minecraft · Making: dev logs, ideas and technical Minecraft research",
     },
   },
+  {
+  name: "Linvin",
+  url: "https://blog.linvin.net/",
+  avatar: "https://github.com/Linvin-1233",
+  note: {
+    zh: "一位 MC 玩家，对储电稍有研究。对全栈、Web 开发也稍有钻研。",
+    en: "A MC player, who has a little research on power storage. I also have a little research on full stack and Web development.",
+  },
+},
 ];
 
 /** 取当前语言的介绍；缺当前语言时退回中文；都没有则返回空串（调用方回退显示域名） */
