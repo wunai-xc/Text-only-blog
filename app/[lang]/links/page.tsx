@@ -10,7 +10,7 @@ import { feedAlternatesTypes } from "@/lib/site";
 /**
  * 友链页（第 13 项）：`/zh/links/` 与 `/en/links/`
  *
- * 数据只有一处来源：`lib/site.ts` 的 `LINKS`（八个，与 wunai-Blog 的 `my-app/lib/links.ts`
+ * 数据只有一处来源：`lib/links.ts` 的 `LINKS`（八个，与 wunai-Blog 的 `my-app/lib/links.ts`
  * 同一份名单）。空数组时**不渲染空清单**，而是显示「编辑此处」+ 怎么填（约定第 2 条）——
  * 一个空列表比一段说明更难懂。
  *

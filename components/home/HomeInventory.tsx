@@ -11,7 +11,7 @@ import { LANGS, type Lang } from "@/lib/lang";
  *   - 文章：content/<lang>/posts/ 下的 .md（不含 README.md 与 _index.md）；
  *   - 专题（笔记）：带 _index.md 的卡组目录（stats.groups）；
  *   - 标签 / 题材：文章 frontmatter 里 tags / categories 的去重总数；
- *   - 语言：lib/site.ts 的 LANGS（加语言只改那一处）。
+ *   - 语言：lib/lang.ts 的 LANGS（加语言只改那一处）。
  * 「笔记」为什么映射到专题：管线里目前只有文章这一种内容类型 ——
  * 这一点在栏内的说明里写明了，免得读者以为漏了一栏。
  */

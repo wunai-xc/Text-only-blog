@@ -81,7 +81,7 @@ type ReadingLabelKey =
   | "readingLeading"
   | "readingIndent";
 
-/** 各组的标签与图标：标签文案在 lib/site.ts 的 I18N 里，图标在这里。
+/** 各组的标签与图标：标签文案在 lib/site-strings.ts 的 I18N 里，图标在这里。
     「首行缩进」是唯一的两档开关（关 / 两格），宽度 / 字号 / 行距是滑块。 */
 const GROUP_META: Record<ReadingKey, { label: ReadingLabelKey; icon: IconName }> = {
   font: { label: "readingFont", icon: "mdi:format-font" },

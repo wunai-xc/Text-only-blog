@@ -16,11 +16,11 @@
  * 首页的最后「一屏」是页脚（`scroll-snap-align: end`）：不长不短的一条尾巴，
  * 少了它 mandatory 吸附会把页脚吸回去、永远读不到。以上都在 globals.css 的「6c. 首页」。
  *
- * 为什么首页文案不放在 lib/site.ts 的 I18N 里（约定第 3 条要求 UI 文案集中在那里）：
- * 八栏 × 中英两语 ×（标题 + 一句说明 + 空状态 + 示范段落），塞进去会把 site.ts 变成
+ * 为什么首页文案不放在 lib/site-strings.ts 的 I18N 里（约定第 3 条要求 UI 文案集中在那里）：
+ * 八栏 × 中英两语 ×（标题 + 一句说明 + 空状态 + 示范段落），塞进去会把 site-strings.ts 变成
  * 站点文案仓库；这里的文案**跟着版面走**（改一版首页只动这一个文件），与第 6/7 项
  * 「选项文案跟着选项走」（THEME_LABELS / READING_*）是同一个取舍。其余页面骨架的文案
- * 照旧在 lib/site.ts —— 约定第 3 条据此补一句说明（见 PROJECTS.md 第 5 节）。
+ * 照旧在 lib/site-strings.ts —— 约定第 3 条据此补一句说明（见 PROJECTS.md 第 5 节）。
  *
  * 需要作者动笔的地方一律标「编辑此处」（约定第 2 条）：第 1 栏的自述、第 7/8 栏的示范句子、
  * 第 3 栏的访问统计接法，以及文章本身。
@@ -154,7 +154,7 @@ const ZH: HomeText = {
     body: "这个网站是我的笔记本，我的数据库。这里大量使用文字，很少有图片与视频；文章以 Markdown 手写，全部由作者本人写。",
     entries: "从这里开始",
     rss: "订阅 RSS",
-    note: "站内链接的可用性只有一个事实来源（lib/site.ts 的 ROUTES）：还没做的页面渲染成不可点，不留会 404 的死链。",
+    note: "站内链接的可用性只有一个事实来源（lib/routes.ts 的 ROUTES）：还没做的页面渲染成不可点，不留会 404 的死链。",
   },
   posts: {
     count: (n) => `按时间倒序、置顶优先，本栏显示 ${n} 篇`,
@@ -239,10 +239,10 @@ const EN: HomeText = {
     fonts: { title: "Text settings", kicker: "Font / width / size / leading" },
   },
   intro: {
-    body: "Edit here: two or three sentences about who this blog is for and what you write. Text only — no images, no video; every post is hand-written in Markdown.",
+    body: "This site is my notebook, my database. It is mostly text, with very few images or videos; the posts are hand-written in Markdown, every one by the author.",
     entries: "Start here",
     rss: "RSS feed",
-    note: "Link availability has a single source of truth (ROUTES in lib/site.ts): pages that do not exist yet render as non-clickable, so there are no dead links.",
+    note: "Link availability has a single source of truth (ROUTES in lib/routes.ts): pages that do not exist yet render as non-clickable, so there are no dead links.",
   },
   posts: {
     count: (n) => `Newest first, pinned on top — ${n} shown in this block`,
@@ -304,11 +304,11 @@ const EN: HomeText = {
   },
   themes: {
     lead: "Colour has exactly one source of truth: the three token sets in app/globals.css. “Paper” is the default and what you get without JS; one click applies site-wide.",
-    demo: "Edit here: this sample text is here to judge contrast in all three appearances — replace it with your own sentence.",
+    demo: "Only one thing is indispensable: a man must attain self-fulfilment — whether through poetry or through art — only then is a man worth looking at. Yet self-fulfilment is at most a necessary condition. There are many people in the world who have attained self-fulfilment, and for that very reason they are not worth looking at.",
   },
   fonts: {
     lead: "Font / width / size / leading are the four --reading-* tokens: the body text and the sample below share the same metrics, so changes apply instantly. The four presets use fonts already on your device; the fifth, Custom, uses a font file you upload yourself — either way, nothing is downloaded.",
-    sample: "Edit here: this sample re-typesets to your choice. 中文 English mixed, numbers 2024 — all visible at once.",
+    sample: "Albert Einstein — E = mc², proposed in 1905 within the framework of special relativity",
     custom:
       "The Custom preset needs a font file from you first: pick one (woff2 / woff / ttf / otf) in the settings panel at the bottom-left. It is read and stored inside your browser only — never uploaded.",
   },

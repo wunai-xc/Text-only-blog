@@ -11,6 +11,9 @@
 **开发进度台账在 [PROJECTS.md](./PROJECTS.md)** —— 那里面记录了每一项为什么这样做、
 踩过哪些坑、哪些东西还没在真机 / 真浏览器上验证过。写代码之前先看它。
 
+**日常维护看 [维护指南.md](./维护指南.md)** —— 想改友链、改文案、加文章、换图、部署，
+该动哪个文件、跑哪条命令，一页速查。
+
 ---
 
 ## 1. 它是什么
@@ -60,7 +63,7 @@ npm run deploy       # 部署到 Cloudflare Workers 静态资源
 
 ```bash
 node -v              # 需要 v20.9.0 起
-npm install          # 仓库里暂时**没有锁文件**，所以用 install；npm ci 会直接失败
+npm ci               # 仓库里有 package-lock.json，用 ci 精确安装（装不上再退 npm install）
 npm run typecheck    # 只查类型；出问题先在这里解决，比 build 快
 npm run build        # 静态导出到 out/
 ```
@@ -233,11 +236,11 @@ public/                     sw.js、favicon.svg
 | `lib/site.ts` 的 `SITE.description` | 站点描述（SEO 与 RSS 用） |
 | `lib/site.ts` 的 `CONTACT` | 邮箱 / GitHub / 本站源码地址（**留空则页脚显示「编辑此处」且不可点**） |
 | `lib/site.ts` 的 `COMMENTS` | giscus 的 repo / repoId / category / categoryId（**留空则文章页显示「编辑此处」**，不加载任何第三方脚本） |
-| `lib/site.ts` 的 `LINKS` | 友链（**已填八个**，与 wunai-Blog 的 `lib/links.ts` 同一份名单；头像与一句话介绍取自各位自己的主页，`avatar` 留空则回退成名称首字） |
+| `lib/links.ts` 的 `LINKS` | 友链（**已填八个**；头像与一句话介绍取自各位自己的主页，`avatar` 留空则回退成名称首字） |
 | `lib/site.ts` 的 `HEADER_IMAGE` | 顶栏右上角那张图（**留空时是一格虚线空位，写着「图片位 · 编辑此处」**；尺寸与有图时一样，补图不会让顶栏跳一下） |
 | `lib/prefs.ts` 的 `CUSTOM_FONT_ENABLED` | 「自定义」字体那一档要不要摆出来（**默认 `true`**）。这一档是**读者自己上传字体文件**：设置中心里选一份设备上的 woff2 / woff / ttf / otf，浏览器读成 FontFace、存进 IndexedDB（localStorage 装不下），**不上传服务器**，换设备不跟着走。改成 `false` 就把这一档藏起来。前四档（黑体 / 宋体 / 楷体 / 等宽）用的都是读者设备上已有的字体，一个字体文件都不下载；改这一档也**不用你准备任何文件** |
 | `lib/home.ts` 的 `intro.body`、`themes.demo`、`fonts.sample` | 首页第 1 / 7 / 8 栏的示范文字 |
-| `content/zh/posts/` 与 `content/en/posts/` | 文章本体（这里没有测试文章，一条都没有） |
+| `content/zh/posts/` 与 `content/en/posts/` | 文章本体（中英各一份；现有几篇笔记与 about 页都是你亲笔写的，新文章照 `content/README.md` 的格式加） |
 
 另外两处**不是文案、是资源**，目前没有：
 
