@@ -463,6 +463,94 @@ function remarkCitations(options: CitationOptions) {
   };
 }
 
+/* -------------------------- 插件：代码块工具头 -------------------------- */
+
+/**
+ * 给每个代码块套一层 `.code-block`，并在顶部工具条里印出语言名 —— 回答「这段是什么语法」。
+ *
+ * 为什么套一层、而不是只给 `<pre>` 加个属性：工具条与代码块要共用同一个圆角与底色，
+ * 得有一个共同的父元素兜住；它同时也给客户端的复制按钮留了个现成的落点
+ * （components/ArticleBody.tsx 往 `.code-head` 里补按钮）。
+ *
+ * 为什么语言名在**构建期**印（复制按钮却在浏览器里补）：语言名是内容的一部分，
+ * 禁用 JS、爬虫、离线首屏都该看得到（约定第 4 条）；剪贴板只有浏览器里有，
+ * 复制按钮才必须等脚本。
+ *
+ * 只认 rehype-highlight 产出的结构（`<pre><code class="hljs language-java">`），
+ * 所以必须排在它**之后**。两种 `<pre>` 不动：
+ *   - 图表源码 `<pre class="chart-source" hidden>`（lib/charts.ts 的占位结构，不是给人读的）；
+ *   - 不是「正好一个 `<code>`」的裸 `<pre>`（正文里的内联 HTML 可能自己写）。
+ * 没写语言名的代码块（``` 后面空着）没有 `language-` 类，工具条就只留复制按钮，不硬安一个名字。
+ *
+ * 结构（改这个结构要同步改 globals.css 的 6e 与 components/ArticleBody.tsx）：
+ *   <div class="code-block">
+ *     <div class="code-head"><span class="code-lang">java</span></div>
+ *     <pre><code class="hljs language-java">…</code></pre>
+ *   </div>
+ */
+function rehypeCodeBlocks() {
+  return (tree: HastNode): void => {
+    /** 需要父节点才能换掉孩子，所以这里自己递归（walkHast 不给父节点） */
+    const visit = (parent: HastNode): void => {
+      const children = parent.children;
+      if (!children) return;
+      for (let index = 0; index < children.length; index += 1) {
+        const child = children[index];
+        if (child.type === "element" && child.tagName === "pre") {
+          const wrapped = wrapCodeBlock(child);
+          if (wrapped) {
+            children[index] = wrapped;
+            continue;
+          }
+        }
+        visit(child);
+      }
+    };
+    visit(tree);
+  };
+}
+
+/** 语言名：rehype-highlight 在 `<code>` 上写着 `language-java`；没写就是空串 */
+function codeLanguage(code: HastNode): string {
+  for (const name of classList(code.properties)) {
+    if (name.startsWith("language-")) return name.slice("language-".length);
+  }
+  return "";
+}
+
+/** 把 `<pre><code>` 包成 `.code-block`；不是这个形状（或图表源码）就返回 null 不动它 */
+function wrapCodeBlock(pre: HastNode): HastNode | null {
+  if (classList(pre.properties).includes("chart-source")) return null;
+
+  const children = pre.children ?? [];
+  const code = children.find((child) => child.type === "element" && child.tagName === "code");
+  if (children.length !== 1 || !code) return null;
+
+  const language = codeLanguage(code);
+  const head: HastNode = {
+    type: "element",
+    tagName: "div",
+    properties: { className: ["code-head"] },
+    children: language
+      ? [
+          {
+            type: "element",
+            tagName: "span",
+            properties: { className: ["code-lang"] },
+            children: [{ type: "text", value: language }],
+          },
+        ]
+      : [],
+  };
+
+  return {
+    type: "element",
+    tagName: "div",
+    properties: { className: ["code-block"] },
+    children: [head, pre],
+  };
+}
+
 /* ---------------------------- 插件：目录 ---------------------------- */
 
 export interface HeadingRecord {

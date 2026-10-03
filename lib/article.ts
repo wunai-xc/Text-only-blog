@@ -247,6 +247,13 @@ export interface ArticleText {
   printArticle: string;
   printHint: string;
 
+  /** 代码块工具头上那颗复制按钮的三态文案（语言名是构建期印的，不在这里） */
+  codeCopy: string;
+  codeCopied: string;
+  codeCopyFailed: string;
+  /** 复制按钮的无障碍名（悬停说明与 aria-label 共用） */
+  codeCopyHint: string;
+
   commentsTitle: string;
   commentsNote: string;
   commentsSetup: string;
@@ -285,6 +292,11 @@ const ZH: ArticleText = {
   downloadHint: "把这一篇的 Markdown 源文件（含 frontmatter）存到本机",
   printArticle: "打印 / 存 PDF",
   printHint: "调用浏览器打印；版面已经为纸张调过，可直接存成 PDF",
+
+  codeCopy: "复制",
+  codeCopied: "已复制",
+  codeCopyFailed: "复制失败",
+  codeCopyHint: "复制这段代码",
 
   commentsTitle: "评论",
   commentsNote:
@@ -326,6 +338,11 @@ const EN: ArticleText = {
   downloadHint: "Save this post's Markdown source (frontmatter included) to your device",
   printArticle: "Print / PDF",
   printHint: "Open the browser's print dialog; the layout is tuned for paper, ready to save as PDF",
+
+  codeCopy: "Copy",
+  codeCopied: "Copied",
+  codeCopyFailed: "Copy failed",
+  codeCopyHint: "Copy this code",
 
   commentsTitle: "Comments",
   commentsNote:
