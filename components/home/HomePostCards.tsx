@@ -3,7 +3,7 @@ import PostCard from "@/components/list/PostCard";
 import type { PostMeta } from "@/lib/content";
 import { HOME_TEXT } from "@/lib/home";
 import { toListPost } from "@/lib/list";
-import type { Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
 
 /**
  * 第 2 栏：文章卡片（第 9 项建立，第 11 项换成共用的三档卡片）

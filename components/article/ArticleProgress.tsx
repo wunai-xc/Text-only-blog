@@ -14,7 +14,7 @@ import {
 import { icons } from "@/lib/icons";
 import { READING_EVENT } from "@/lib/prefs";
 import type { TocEntry } from "@/lib/markdown";
-import type { Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
 
 /**
  * 阅读进度（**可拖动的滑块**）+ 轨道上的**章节节点** + 回到顶部（**带进度环**）（第 12 项）

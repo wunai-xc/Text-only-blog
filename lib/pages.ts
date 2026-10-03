@@ -18,7 +18,7 @@
  */
 
 import { facetHref } from "./list";
-import type { Lang } from "./site";
+import type { Lang } from "./lang";
 
 /* ------------------------------ 纯函数 ------------------------------ */
 

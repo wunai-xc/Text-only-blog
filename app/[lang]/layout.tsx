@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import HtmlLang from "@/components/HtmlLang";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
-import { isLang, LANGS } from "@/lib/site";
+import { isLang, LANGS } from "@/lib/lang";
 
 export function generateStaticParams() {
   return LANGS.map((lang) => ({ lang }));

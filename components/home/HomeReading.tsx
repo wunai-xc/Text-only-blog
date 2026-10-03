@@ -1,6 +1,6 @@
 import HomeBlockHead from "./HomeBlockHead";
 import { HOME_TEXT } from "@/lib/home";
-import type { Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
 import { transformCjkText } from "@/lib/typography";
 
 /**

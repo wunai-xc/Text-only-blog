@@ -6,7 +6,8 @@ import { getCardGroups, getPosts, getTaxonomy } from "@/lib/content";
 import { decorate } from "@/lib/decor";
 import { LIST_TEXT, toListGroup, toListPost, yearsOf, type ListFacets } from "@/lib/list";
 import { SEARCH_INDEX_VERSION } from "@/lib/search-index";
-import { feedAlternatesTypes, feedHref, isLang } from "@/lib/site";
+import { isLang } from "@/lib/lang";
+import { feedAlternatesTypes, feedHref } from "@/lib/site";
 
 /**
  * 文章列表页（第 10 项）：/zh/posts/ 与 /en/posts/

@@ -1,7 +1,8 @@
 import RouteLink from "../RouteLink";
 import HomeBlockHead from "./HomeBlockHead";
 import { HOME_TEXT } from "@/lib/home";
-import { feedHref, SITE, type Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
+import { feedHref, SITE } from "@/lib/site";
 
 /**
  * 第 1 栏：本站介绍（第 9 项）

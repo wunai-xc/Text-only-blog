@@ -28,7 +28,7 @@
  * 零依赖（只 import 类型），服务端与浏览器都能用。
  */
 
-import type { Lang } from "./site";
+import type { Lang } from "./lang";
 import type { TypographyCounts } from "./typography";
 
 /* ------------------------------- 版面 ------------------------------- */

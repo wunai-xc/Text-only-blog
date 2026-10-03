@@ -19,7 +19,7 @@
 
 import type { CardGroupMeta, PostMeta } from "./content";
 import type { SearchDoc } from "./search-index";
-import type { Lang } from "./site";
+import type { Lang } from "./lang";
 
 /* ------------------------------ 数据结构 ------------------------------ */
 

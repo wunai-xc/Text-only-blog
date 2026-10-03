@@ -24,7 +24,8 @@ import {
   type ReadingPrefs,
   type ReadingSliderKey,
 } from "@/lib/prefs";
-import { SITE, type Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
+import { SITE } from "@/lib/site";
 
 /**
  * 第 8 栏：字体设置展示（第 9 项）

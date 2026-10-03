@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 
 import FacetIndex from "@/components/pages/FacetIndex";
 import { PAGES_TEXT } from "@/lib/pages";
-import { feedAlternatesTypes, isLang } from "@/lib/site";
+import { isLang } from "@/lib/lang";
+import { feedAlternatesTypes } from "@/lib/site";
 
 /**
  * 标签页（第 13 项）：`/zh/tags/` 与 `/en/tags/`

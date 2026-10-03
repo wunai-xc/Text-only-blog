@@ -4,7 +4,8 @@ import HeaderIntro from "./HeaderIntro";
 import RouteLink from "./RouteLink";
 import ThemeSwitcher from "./ThemeSwitcher";
 import { icons } from "@/lib/icons";
-import { HEADER_IMAGE, SITE, type Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
+import { HEADER_IMAGE, SITE } from "@/lib/site";
 
 /**
  * 顶栏（第 7 项建立；顶栏改版时按 wunai-blog 参考稿重写成现在的三段）

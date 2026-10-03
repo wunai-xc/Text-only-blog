@@ -8,7 +8,7 @@ import { useActiveHeading } from "./useActiveHeading";
 import { ARTICLE_TEXT, TOC_MAX_DEPTH, tocIndent, type PagerTarget } from "@/lib/article";
 import { icons } from "@/lib/icons";
 import type { TocEntry } from "@/lib/markdown";
-import type { Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
 
 /**
  * 悬浮目录（第 12 项）

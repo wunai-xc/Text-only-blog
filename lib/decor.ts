@@ -17,7 +17,9 @@
  * 约定：装饰层 `aria-hidden` + `pointer-events: none`，不得影响正文可读性、不引图片资源。
  */
 
-import { isLang, isRouteId, SITE, type Lang, type RouteId } from "./site";
+import { isLang, type Lang } from "./lang";
+import { isRouteId, type RouteId } from "./routes";
+import { SITE } from "./site";
 
 /** 一张「图纸」是哪一页 —— RouteId 之外还有文章正文 / 离线页 / 认不出来的路径 */
 export type DecorSection = RouteId | "article" | "offline" | "unknown";

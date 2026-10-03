@@ -7,7 +7,7 @@
  */
 
 import { buildRssFeed } from "@/lib/feeds";
-import { isLang, LANGS } from "@/lib/site";
+import { isLang, LANGS } from "@/lib/lang";
 
 export const dynamic = "force-static";
 export const dynamicParams = false;

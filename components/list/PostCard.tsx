@@ -2,7 +2,8 @@ import { Icon } from "@iconify/react/offline";
 
 import { icons } from "@/lib/icons";
 import { LIST_TEXT, type Density, type ListPost } from "@/lib/list";
-import { ARTICLE_ROUTE, type Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
+import { ARTICLE_ROUTE } from "@/lib/routes";
 
 /**
  * 文章卡片（第 11 项：紧凑 / 适中 / 内容 三档密度）

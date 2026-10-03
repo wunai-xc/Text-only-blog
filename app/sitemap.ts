@@ -2,7 +2,8 @@ import type { MetadataRoute } from "next";
 
 import { getCardGroupRoutes, getPosts } from "@/lib/content";
 import { groupHref } from "@/lib/list";
-import { LANGS, SITE, type Lang } from "@/lib/site";
+import { LANGS, type Lang } from "@/lib/lang";
+import { SITE } from "@/lib/site";
 
 /**
  * sitemap.xml（第 5 项：构建产物）

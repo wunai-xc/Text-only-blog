@@ -1,7 +1,7 @@
 import HomeBlockHead from "./HomeBlockHead";
 import type { ContentStats } from "@/lib/content";
 import { HOME_TEXT } from "@/lib/home";
-import { LANGS, type Lang } from "@/lib/site";
+import { LANGS, type Lang } from "@/lib/lang";
 
 /**
  * 第 5 栏：站内内容（第 9 项）

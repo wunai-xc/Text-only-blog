@@ -2,7 +2,7 @@ import { Icon } from "@iconify/react/offline";
 
 import { ARTICLE_TEXT, type PagerTarget } from "@/lib/article";
 import { icons } from "@/lib/icons";
-import type { Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
 
 /**
  * 上下篇（第 12 项）

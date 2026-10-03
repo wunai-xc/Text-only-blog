@@ -7,7 +7,8 @@ import { decorate } from "@/lib/decor";
 import { toListGroup, toListPost, yearsOf, type ListFacets } from "@/lib/list";
 import { PAGES_TEXT } from "@/lib/pages";
 import { SEARCH_INDEX_VERSION } from "@/lib/search-index";
-import { feedAlternatesTypes, isLang } from "@/lib/site";
+import { isLang } from "@/lib/lang";
+import { feedAlternatesTypes } from "@/lib/site";
 
 /**
  * 搜索页（第 13 项）：`/zh/search/` 与 `/en/search/`

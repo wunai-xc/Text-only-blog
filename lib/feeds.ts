@@ -13,7 +13,8 @@
  */
 
 import { getPosts, type PostMeta } from "./content";
-import { SITE, type Lang } from "./site";
+import type { Lang } from "./lang";
+import { SITE } from "./site";
 
 /** RSS 里最多放多少条 */
 export const FEED_LIMIT = 30;

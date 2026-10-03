@@ -6,7 +6,8 @@ import { Icon } from "@iconify/react/offline";
 
 import SettingsCenter from "./SettingsCenter";
 import { icons } from "@/lib/icons";
-import { SITE, type Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
+import { SITE } from "@/lib/site";
 
 /**
  * 左下角的设置入口 + 设置抽屉（第 7 项）

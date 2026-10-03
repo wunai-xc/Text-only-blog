@@ -5,7 +5,8 @@ import { getArchive } from "@/lib/content";
 import { decorate } from "@/lib/decor";
 import { LIST_TEXT } from "@/lib/list";
 import { PAGES_TEXT, archiveYearHref, monthName } from "@/lib/pages";
-import { feedAlternatesTypes, isLang } from "@/lib/site";
+import { isLang } from "@/lib/lang";
+import { feedAlternatesTypes } from "@/lib/site";
 
 /**
  * 归档页（第 13 项）：`/zh/archives/` 与 `/en/archives/`

@@ -6,7 +6,7 @@ import { Icon } from "@iconify/react/offline";
 import HomeBlockHead from "./HomeBlockHead";
 import { icons } from "@/lib/icons";
 import { HOME_TEXT } from "@/lib/home";
-import type { Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
 import {
   DEFAULT_THEME_CHOICE,
   THEME_CHIP_DOTS,

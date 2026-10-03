@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { Icon } from "@iconify/react/offline";
 
 import { icons, type IconName } from "@/lib/icons";
-import { SITE, type Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
+import { SITE } from "@/lib/site";
 import {
   DEFAULT_THEME_CHOICE,
   THEME_CHOICES,

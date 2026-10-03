@@ -11,7 +11,8 @@ import {
   commentsTerm,
 } from "@/lib/article";
 import { icons } from "@/lib/icons";
-import { COMMENTS, commentsReady, type Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
+import { COMMENTS, commentsReady } from "@/lib/site";
 import { currentTheme, subscribeTheme, type Theme } from "@/lib/theme";
 
 /**

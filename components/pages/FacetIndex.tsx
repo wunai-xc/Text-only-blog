@@ -1,7 +1,7 @@
 import { getTaxonomy, type TaxonomyKind } from "@/lib/content";
 import { decorate } from "@/lib/decor";
 import { PAGES_TEXT, categoryHref, facetWeight, tagHref } from "@/lib/pages";
-import type { Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
 
 /**
  * 标签页 / 分类页的**同一份实现**（第 13 项）

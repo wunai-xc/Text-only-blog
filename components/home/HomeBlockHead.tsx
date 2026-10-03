@@ -1,5 +1,5 @@
 import { HOME_TEXT, homeNumber, type HomeBlockId } from "@/lib/home";
-import type { Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
 
 /**
  * 栏头（第 9 项）：栏号 + 一句小字 + 栏名。

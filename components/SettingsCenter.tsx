@@ -6,7 +6,8 @@ import { Icon } from "@iconify/react/offline";
 import LangSwitcher from "./LangSwitcher";
 import ReadingSlider from "./ReadingSlider";
 import { icons, type IconName } from "@/lib/icons";
-import { SITE, type Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
+import { SITE } from "@/lib/site";
 import {
   CUSTOM_FONT_ENABLED,
   READING_DEFAULTS,

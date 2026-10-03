@@ -1,7 +1,7 @@
 import HomeBlockHead from "./HomeBlockHead";
 import type { ChangelogEntry } from "@/lib/changelog";
 import { HOME_TEXT } from "@/lib/home";
-import type { Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
 
 /**
  * 第 4 栏：更新日志（第 9 项）

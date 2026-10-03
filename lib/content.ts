@@ -27,7 +27,7 @@ import {
   type ParsedDocument,
   type ReferenceEntry,
 } from "./frontmatter";
-import { LANGS, type Lang } from "./site";
+import { LANGS, type Lang } from "./lang";
 
 export type { FrontmatterFormat, ReferenceEntry };
 

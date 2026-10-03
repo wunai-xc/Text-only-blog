@@ -3,7 +3,8 @@ import { Icon } from "@iconify/react/offline";
 import LangSwitcher from "./LangSwitcher";
 import SettingsDock from "./SettingsDock";
 import { getContentStats } from "@/lib/content";
-import { CONTACT, SITE, feedHref, type Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
+import { CONTACT, SITE, feedHref } from "@/lib/site";
 import { icons, type IconName } from "@/lib/icons";
 
 interface ContactEntry {

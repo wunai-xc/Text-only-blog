@@ -31,7 +31,7 @@ import {
   type ListPost,
   type ListSort,
 } from "@/lib/list";
-import type { Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
 import type { SearchIndex } from "@/lib/search-index";
 
 /**

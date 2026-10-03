@@ -29,7 +29,8 @@ import { decorate } from "@/lib/decor";
 import { asBoolean } from "@/lib/frontmatter";
 import { LIST_TEXT, facetHref, groupHref, groupTitle, toListPost } from "@/lib/list";
 import { renderMarkdown } from "@/lib/markdown";
-import { feedAlternatesTypes, isLang, LANGS, SITE, type Lang } from "@/lib/site";
+import { isLang, LANGS, type Lang } from "@/lib/lang";
+import { feedAlternatesTypes, SITE } from "@/lib/site";
 
 /**
  * 文章页（第 12 项）+ **卡组页**：`/zh/posts/<slug>/`（slug 可能带目录，见 content/README.md 第 1 节）

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { ARTICLE_TEXT, STICKY_TITLE_OFFSET } from "@/lib/article";
-import type { Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
 
 /**
  * 粘性标题（第 12 项）

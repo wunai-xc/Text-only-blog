@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import SettingsCenter from "@/components/SettingsCenter";
 import { decorate } from "@/lib/decor";
 import { PAGES_TEXT } from "@/lib/pages";
-import { feedAlternatesTypes, isLang } from "@/lib/site";
+import { isLang } from "@/lib/lang";
+import { feedAlternatesTypes } from "@/lib/site";
 
 /**
  * 设置页（第 13 项）：`/zh/settings/` 与 `/en/settings/`

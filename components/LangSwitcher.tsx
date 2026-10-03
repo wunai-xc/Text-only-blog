@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { Icon } from "@iconify/react/offline";
 
 import { icons } from "@/lib/icons";
-import { SITE, otherLang, type Lang } from "@/lib/site";
+import { otherLang, type Lang } from "@/lib/lang";
+import { SITE } from "@/lib/site";
 
 /**
  * 语言切换（第 7 项）

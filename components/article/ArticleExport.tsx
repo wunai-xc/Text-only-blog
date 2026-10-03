@@ -4,7 +4,7 @@ import { Icon } from "@iconify/react/offline";
 
 import { ARTICLE_TEXT } from "@/lib/article";
 import { icons } from "@/lib/icons";
-import type { Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
 
 /**
  * 文章页的「导出」两个按钮（第 12 项）：下载 .md / 打印存 PDF

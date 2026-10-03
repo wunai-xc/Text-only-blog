@@ -18,7 +18,7 @@
 
 import type { ListPost } from "./list";
 import type { TocEntry } from "./markdown";
-import type { Lang } from "./site";
+import type { Lang } from "./lang";
 import type { Theme } from "./theme";
 import type { TypographyOptions } from "./typography";
 

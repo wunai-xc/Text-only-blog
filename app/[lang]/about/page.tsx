@@ -7,7 +7,8 @@ import { getAboutPost, getPostWithBody } from "@/lib/content";
 import type { RenderedMarkdown } from "@/lib/markdown";
 import { renderMarkdown } from "@/lib/markdown";
 import { PAGES_TEXT } from "@/lib/pages";
-import { feedAlternatesTypes, isLang } from "@/lib/site";
+import { isLang } from "@/lib/lang";
+import { feedAlternatesTypes } from "@/lib/site";
 
 /**
  * 关于页（第 13 项）：`/zh/about/` 与 `/en/about/`

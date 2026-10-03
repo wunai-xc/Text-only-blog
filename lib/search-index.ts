@@ -14,7 +14,7 @@
  */
 
 import { getPostWithBody, getPosts, stripMarkdown } from "./content";
-import { LANGS, type Lang } from "./site";
+import { LANGS, type Lang } from "./lang";
 
 /** 索引结构版本；改动 SearchDoc 字段时 +1 */
 export const SEARCH_INDEX_VERSION = 1;

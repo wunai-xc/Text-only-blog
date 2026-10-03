@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { HOME_ORDER, HOME_TEXT, homeNumber, type HomeBlockId } from "@/lib/home";
-import type { Lang } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
 
 /**
  * 侧边指示器（第 9 项）：固定在右侧的一列锚点，当前所在的那一栏会亮起来。

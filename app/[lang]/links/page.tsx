@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 
 import { decorate } from "@/lib/decor";
 import { PAGES_TEXT } from "@/lib/pages";
-import { feedAlternatesTypes, friendHost, friendNote, isLang, LINKS } from "@/lib/site";
+import { isLang } from "@/lib/lang";
+import { LINKS, friendHost, friendNote } from "@/lib/links";
+import { feedAlternatesTypes } from "@/lib/site";
 
 /**
  * 友链页（第 13 项）：`/zh/links/` 与 `/en/links/`

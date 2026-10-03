@@ -14,7 +14,8 @@ import HomeThemes from "@/components/home/HomeThemes";
 import { getChangelog } from "@/lib/changelog";
 import { getContentStats, getHomePosts } from "@/lib/content";
 import { HOME_ORDER, HOME_TEXT, type HomeBlockId } from "@/lib/home";
-import { isLang, SITE, type Lang } from "@/lib/site";
+import { isLang, type Lang } from "@/lib/lang";
+import { SITE } from "@/lib/site";
 
 /** 首页显示几篇文章卡片 / 几条更新日志 —— 改这两个数字就够了。
     文章那一栏是一屏一栏，卡片多了这一栏就会高过一屏（手机上尤其明显），

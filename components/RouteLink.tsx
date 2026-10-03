@@ -1,7 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { ROUTES, SITE, routeHref, type Lang, type RouteId } from "@/lib/site";
+import type { Lang } from "@/lib/lang";
+import { ROUTES, routeHref, type RouteId } from "@/lib/routes";
+import { SITE } from "@/lib/site";
 
 /**
  * 「按落地状态渲染」的站内链接（第 7 项）
