@@ -249,8 +249,9 @@ export default async function LangPost({
           <span className="print-head-title">{meta.title}</span>
         </header>
 
-        {/* 粘性标题（第 12 项）：零高、贴在 <article> 里，标题滚出视野后在顶栏下面挂一条 */}
-        <ArticleStickyTitle lang={lang} title={meta.title} />
+        {/* 粘性标题（第 12 项）：零高、贴在 <article> 里，标题滚出视野后在顶栏下面挂一条 ——
+            左边篇名、右边正在读的那一小节（小节名与目录高亮、进度条方块同一份判定） */}
+        <ArticleStickyTitle lang={lang} title={meta.title} toc={rendered.toc} />
 
         <header className="article-head">
           <p className="article-kicker">
@@ -313,7 +314,7 @@ export default async function LangPost({
           </div>
         </header>
 
-        <ArticleBody html={rendered.html} />
+        <ArticleBody html={rendered.html} lang={lang} />
 
         {/* 文末参考列表（第 3 项）：与正文同一套度量，所以套同一个 .article-body */}
         {rendered.referencesHtml ? (

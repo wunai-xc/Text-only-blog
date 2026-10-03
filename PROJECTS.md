@@ -259,7 +259,7 @@
 │  │  └─ smiles.ts           化学结构式（SmilesDrawer）
 │  ├─ article/
 │  │  ├─ ArticleToc.tsx      悬浮目录（第 12 项，客户端：面板可收起 —— 宽屏默认展开在左上、窄屏默认收起成左下角一个挂件；底部挂着 compact 档上下篇）
-│  │  ├─ ArticleStickyTitle.tsx 粘性标题（第 12 项，客户端：零高、贴在 <article> 里，大标题滚出视野后在顶栏下面挂一条同名标题）
+│  │  ├─ ArticleStickyTitle.tsx 粘性标题（第 12 项，客户端：零高、贴在 <article> 里，大标题滚出视野后在顶栏下面挂一条 —— 左边篇名、右边**正在读的那一小节**，小节名与目录高亮 / 进度条方块同源）
 │  │  ├─ ArticleProgress.tsx 阅读进度 + 圆形回顶（第 12 项，客户端：一次 scroll 监听 + rAF 节流；细线是可拖的滑块、回顶按钮套一圈进度环）
 │  │  ├─ ArticlePager.tsx    上下篇（第 12 项；无 hook，服务端也能用，full/compact 两档共用）
 │  │  └─ GiscusComments.tsx  giscus 评论（第 12 项，客户端：滚到附近才加载、换外观走 postMessage）
@@ -439,6 +439,11 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
   重画）；**传 `throwOnError` 反而会类型报错**（该字段被 `Omit` 掉了），见「构建修复」一节。
   `trust: false`：不允许 `\href` 之类发请求。
 - 代码高亮：highlight.js + monokai（主题在 `app/globals.css` 里 `@import`），未知语言不报错。
+  每个代码块由 `rehypeCodeBlocks`（必须排在 highlight **之后** —— 它读的是 highlight 写在 `<code>`
+  上的 `language-xxx` 类）套一层 `.code-block`，顶上工具头印出**语言名**（构建期，禁用 JS 也看得到「这
+  是什么语法」）；那颗**复制**按钮由 `components/ArticleBody.tsx` 补（剪贴板只在浏览器里有）。
+  ⚠️ 代码块自带 monokai 的深底（三套外观下都一样），所以 `pre` 的字色**写死成浅色** ——
+  没写语言名的代码块没有 `hljs` 类，字色会退回主题墨色，浅色外观下就是「深底压深字」。
 - 五类图表：`lib/charts.ts` 是语言名登记表，构建期把 ```` ```mermaid ```` 之类的代码块换成占位 `<figure>`
   （`data-chart` + 隐藏的源码 `<pre class="chart-source">`），客户端 `components/ArticleBody.tsx` 见到才
   **动态 import** 对应渲染器（`components/charts/*.ts`）：mermaid / echarts / graphviz(wasm) / abcjs / smiles-drawer。

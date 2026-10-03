@@ -9,6 +9,8 @@ import {
   type ChartKind,
   type ChartModule,
 } from "@/lib/charts";
+import { ARTICLE_TEXT } from "@/lib/article";
+import type { Lang } from "@/lib/lang";
 import {
   currentTheme,
   isDarkTheme,
@@ -89,6 +91,8 @@ function fillGitHubCard(card: HTMLElement, user: GitHubUser): void {
 export interface ArticleBodyProps {
   /** lib/markdown.ts 渲染出来的正文 HTML */
   html: string;
+  /** 当前语言：代码块复制按钮的文案（复制 / 已复制 / 复制失败）跟着它走 */
+  lang: Lang;
   className?: string;
 }
 
@@ -104,9 +108,10 @@ export interface ArticleBodyProps {
  *   2. subscribeTheme() 订阅外观变化（设置中心切换、系统深浅色变化），变了就重绘。
  *      重绘 = 清理旧图 → 再跑一遍渲染器，代价只在真的有图表的文章里付。
  */
-export default function ArticleBody({ html, className }: ArticleBodyProps) {
+export default function ArticleBody({ html, lang, className }: ArticleBodyProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [theme, setTheme] = useState<Theme>(() => currentTheme());
+  const t = ARTICLE_TEXT[lang];
 
   useEffect(() => subscribeTheme((detail) => setTheme(detail.theme)), []);
 
@@ -316,6 +321,79 @@ export default function ArticleBody({ html, className }: ArticleBodyProps) {
       for (const cleanup of cleanups) cleanup();
     };
   }, [html]);
+
+  /**
+   * 代码块工具头上的「复制」按钮。
+   *
+   * 工具头与语言名是**构建期就有的**（lib/markdown.ts 的 rehypeCodeBlocks ——
+   * 禁用 JS、爬虫、离线首屏都看得到「这是什么语法」）；复制只能在浏览器里做
+   * （剪贴板 API 在这儿），所以按钮在这里补：脚本没跑时工具头照样在，只是少一颗按钮。
+   *
+   * 只找构建期套出来的 `.code-block`，不在页面里到处逮 `<pre>` ——
+   * 图表源码（`<pre class="chart-source">`）不是给人复制的代码，不该长按钮。
+   */
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+
+    const blocks = Array.from(host.querySelectorAll<HTMLElement>(".code-block"));
+    if (blocks.length === 0) return;
+
+    const cleanups: Array<() => void> = [];
+
+    for (const block of blocks) {
+      const head = block.querySelector<HTMLElement>(".code-head");
+      const code = block.querySelector<HTMLElement>("pre code");
+      // 已经有了就不再补（effect 重跑但正文没换时，DOM 还是那一份）
+      if (!head || !code || head.querySelector(".code-copy")) continue;
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "code-copy";
+      button.textContent = t.codeCopy;
+      button.title = t.codeCopyHint;
+      button.setAttribute("aria-label", t.codeCopyHint);
+
+      let timer: number | undefined;
+      /** 切到「已复制 / 失败」并在 1.6s 后自己退回「复制」——不必让读者去点第二下 */
+      const showState = (state: "copied" | "failed"): void => {
+        button.dataset.state = state;
+        button.textContent = state === "copied" ? t.codeCopied : t.codeCopyFailed;
+        if (timer !== undefined) window.clearTimeout(timer);
+        timer = window.setTimeout(() => {
+          delete button.dataset.state;
+          button.textContent = t.codeCopy;
+        }, 1600);
+      };
+
+      const onClick = (): void => {
+        const clipboard = navigator.clipboard;
+        if (!clipboard) {
+          // 非安全上下文（http、部分内嵌视图）没有剪贴板 API —— 说清楚，别静默失败
+          showState("failed");
+          return;
+        }
+        // 复制整段源码：`code` 的 textContent 就是高亮前的那份文本，不含行号与工具头
+        void clipboard.writeText(code.textContent ?? "").then(
+          () => showState("copied"),
+          () => showState("failed"),
+        );
+      };
+
+      button.addEventListener("click", onClick);
+      head.appendChild(button);
+
+      cleanups.push(() => {
+        if (timer !== undefined) window.clearTimeout(timer);
+        button.removeEventListener("click", onClick);
+        button.remove();
+      });
+    }
+
+    return () => {
+      for (const cleanup of cleanups) cleanup();
+    };
+  }, [html, t]);
 
   return (
     <div

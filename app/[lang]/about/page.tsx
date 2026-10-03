@@ -95,7 +95,7 @@ export default async function LangAbout({ params }: { params: Promise<{ lang: st
             </p>
           </header>
 
-          <ArticleBody html={rendered.html} />
+          <ArticleBody html={rendered.html} lang={lang} />
 
           {rendered.referencesHtml ? (
             <div

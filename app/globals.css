@@ -3308,6 +3308,31 @@ html[data-reading="hidden"] {
     text-overflow: ellipsis;
   }
 
+  /* 正在读的那一小节：跟着 `useActiveHeading` 换（与目录高亮、进度条方块同一份判定），
+     排在篇名右边、字号略小、颜色退一档 —— 它是「读到哪了」，不是又一个标题。
+     没读进任何小节时是空串，整段（连分隔符）一起收掉。 */
+  .article-sticky-section {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    max-width: 55%;
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--c-ink-muted);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .article-sticky-section:not(:empty)::before {
+    content: "›";
+    margin-right: 0.4rem;
+    color: var(--c-ink-subtle);
+  }
+
+  .article-sticky-section:empty {
+    display: none;
+  }
+
   /* 窄屏：正文列已经贴到视口左边，左上角那颗目录挂件会压住这条横条的开头
      （挂件在视口 0.85rem 处、2.125rem 宽）。给横条让出挂件那一格再留点空气，
      宽屏不用 —— 那时正文列居中，横条根本够不到左上角（参考稿也是这么处理的）。 */
@@ -4175,11 +4200,17 @@ html[data-reading="hidden"] {
     height: auto;
   }
 
-  /* 代码：monokai 主题自带深色底（三套外观下都一样，不做反向主题 —— 换了反而要重挑配色） */
+  /* 代码：monokai 主题自带深色底（三套外观下都一样，不做反向主题 —— 换了反而要重挑配色）。
+     ⚠️ `color` 必须跟着一起写死：#272822 是**永远的深底**，字色就得永远是浅的。
+     monokai 只给**高亮成功的**代码块（`<code class="hljs …">`）上了色，没写语言的代码块
+     没有 `hljs` 类，字色会退回 `.article-body` 的 `--c-ink` —— 浅色外观下那是近黑的墨，
+     压在 #272822 上就看不见了；深色外观的墨本来就是浅色，所以「只有浅色下高亮像坏了」。
+     这一行是给那些没有 `hljs` 的代码块兜底；有 `hljs` 的由 monokai 自己的 token 色覆盖。 */
   .article-body pre {
     padding: 0.85rem 1rem;
     border-radius: var(--shape-radius);
     background: #272822;
+    color: #f8f8f2;
     overflow-x: auto;
     font-size: 0.9rem;
     line-height: 1.6;
@@ -4190,6 +4221,74 @@ html[data-reading="hidden"] {
     background: transparent;
     font-family: var(--font-mono);
     font-size: inherit;
+  }
+
+  /* ---------- 代码块的工具头（语言名 + 复制按钮） ----------
+     构建期（lib/markdown.ts 的 rehypeCodeBlocks）给每个「<pre> 里正好一个 <code>」的
+     代码块套一层 `.code-block`，顶上印**这是什么语法**（禁用 JS 也看得到）；
+     复制按钮只能等浏览器，由 components/ArticleBody.tsx 补进这条工具头。
+     工具头与代码块同属 monokai 那一套深色，只压一条分隔线，看着是一整块。 */
+  .article-body .code-block {
+    margin: 0.9rem 0;
+    /* 圆角落在容器上：里面的 pre 与工具头切成方的，四角由这里裁出来 */
+    border-radius: var(--shape-radius);
+    overflow: hidden;
+  }
+
+  .article-body .code-block pre {
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .code-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.8rem;
+    border-bottom: 1px solid rgba(248, 248, 242, 0.12);
+    background: #2f312b;
+    color: rgba(248, 248, 242, 0.62);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.6;
+  }
+
+  /* 语言名原样小写印出（```java → java）；没写语言的代码块没有这一段 */
+  .code-lang {
+    letter-spacing: 0.02em;
+  }
+
+  /* 复制按钮：脚本补进来的，脚本没跑时工具头只剩语言名（渐进增强）。
+     三态靠 data-state 切：默认 / copied / failed。
+     `margin-left: auto` 把它压在右边 —— 没写语言名时工具头里就它一个，
+     靠 space-between 会把它甩到左边去。 */
+  .code-copy {
+    flex: none;
+    margin-left: auto;
+    padding: 0.1rem 0.5rem;
+    border: 1px solid rgba(248, 248, 242, 0.22);
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    cursor: pointer;
+  }
+
+  .code-copy:hover {
+    background: rgba(248, 248, 242, 0.1);
+    color: #f8f8f2;
+  }
+
+  .code-copy[data-state="copied"] {
+    border-color: rgba(166, 226, 46, 0.45);
+    color: #a6e22e;
+  }
+
+  .code-copy[data-state="failed"] {
+    border-color: rgba(249, 38, 114, 0.45);
+    color: #f92672;
   }
 
   .article-body :not(pre) > code {
@@ -4535,6 +4634,38 @@ html[data-reading="hidden"] {
     color: #1a1a1a !important;
   }
 
+  /* 代码块工具头（语言名 + 复制按钮）：它在 `<pre>` 外面，上面那两条压不到它，
+     不补的话深底浅字落在白纸上就是一排白字。复制按钮纸上点不了，不印。
+     同时放开圆角与裁切 —— 纸不会滚动，`.code-block` 的 `overflow: hidden` 会裁掉长行。 */
+  .article-body .code-block {
+    border: 1px solid #ccc;
+    border-radius: 0;
+    overflow: visible;
+  }
+
+  .article-body .code-block pre {
+    border: 0;
+  }
+
+  .code-head {
+    border-bottom-color: #ccc;
+  }
+
+  .code-head,
+  .code-head * {
+    background: #f6f6f6;
+    color: #1a1a1a !important;
+  }
+
+  .code-copy {
+    display: none;
+  }
+
+  /* 没写语言名的代码块，工具头里只剩那颗不印的复制按钮 —— 整条收掉，别在纸上留一条空栏 */
+  .code-head:not(:has(.code-lang)) {
+    display: none;
+  }
+
   /* ---------- 分页与溢出：纸不会滚动，长内容得自己让开 ---------- */
 
   /* 屏幕上代码块 / 公式 / 图表靠横向滚动，纸上滚不动 —— 一律改成可见 + 自动换行，
@@ -4562,8 +4693,9 @@ html[data-reading="hidden"] {
     widows: 3;
   }
 
-  /* 这些块被分页切开就读不成：整块挪到下一页 */
+  /* 这些块被分页切开就读不成：整块挪到下一页（代码块连工具头一起，所以列的是外层容器） */
   .article-body :is(pre, blockquote, table, figure, img, .katex-display),
+  .article-body .code-block,
   .chart-block,
   .references,
   .article-pager {

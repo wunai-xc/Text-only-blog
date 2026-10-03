@@ -20,6 +20,7 @@
  *   rehype-autolink-headings 标题末尾加 # 锚点
  *   rehype-katex             KaTeX（含 mhchem、自定义宏）
  *   rehype-highlight         highlight.js（monokai 主题在 globals.css 里）
+ *   rehypeCodeBlocks         代码块套上工具头、印出语言名（上面那段）
  *   rehype-stringify         hast → HTML 字符串
  *
  * 图表为什么不在构建期渲染：mermaid / echarts / graphviz / abcjs / smiles-drawer
@@ -733,6 +734,8 @@ export async function renderMarkdown(
     .use(rehypeAutolinkHeadings, AUTOLINK_HEADING_OPTIONS)
     .use(rehypeKatex, KATEX_OPTIONS)
     .use(rehypeHighlight, { detect: false, ignoreMissing: true })
+    // 排在 highlight 之后：语言名读的是它写在 <code> 上的 `language-xxx` 类
+    .use(rehypeCodeBlocks)
     .use(rehypeStringify, { allowDangerousHtml: true });
 
   const file = await processor.process(markdown);
