@@ -14,9 +14,10 @@ import { THEME_CHROME } from "@/lib/theme";
  * manifest 是构建期产物、拿不到运行时选择的主题，所以只能写一个：
  * 挑默认的「纸」—— 也就是「没有 JS 时读者看到的那一套」。
  *
- * 图标只有一个 SVG（`sizes: "any"`）：本仓库不能凭空生成 PNG 二进制文件。
- * 想装到手机上更稳，就把 192 / 512 的 PNG 放进 public/ 并在这里补两条 ——
- * 细节见 PROJECTS.md 第 4 节「第 5 项：构建产物 / PWA」里标了「编辑此处」的那一条。
+ * 图标用 `public/wunai_logo.png`（站点 logo，1500×1500）。
+ * `sizes` 写真实尺寸而不是 "any"：PNG 不是矢量，浏览器与「加到主屏幕」都按 ≥144px
+ * 判这个图标能不能用，1500 满足，因此不必再维护一份缩放副本。
+ * ⚠️ 换了 logo（换了尺寸）记得改这里的 `sizes`。
  *
  * `dynamic = "force-static"` 是静态导出的硬要求，和 app/feed.xml/route.ts 同理：
  * 不写这一行，`next build` 会在「Collecting page data」阶段直接失败
@@ -41,9 +42,9 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ["blog"],
     icons: [
       {
-        src: "/favicon.svg",
-        sizes: "any",
-        type: "image/svg+xml",
+        src: "/wunai_logo.png",
+        sizes: "1500x1500",
+        type: "image/png",
         purpose: "any",
       },
     ],

@@ -19,7 +19,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   applicationName: SITE.title,
   manifest: "/manifest.webmanifest",
-  icons: { icon: "/favicon.svg" },
+  // 站点图标：public/wunai_logo.png（同一份兼作浏览器页签图标与 iOS 主屏图标）
+  icons: { icon: "/wunai_logo.png", apple: "/wunai_logo.png" },
   // 阅读器/浏览器靠这个自己发现订阅源（/feed.xml 是默认语言的别名）。
   // 地址表在 lib/site.ts：页面自己写 alternates 时要用同一份（metadata 是浅合并）。
   alternates: { types: feedAlternatesTypes() },

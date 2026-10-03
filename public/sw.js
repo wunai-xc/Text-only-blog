@@ -7,7 +7,7 @@
  *
  * 策略（刻意保守，纯文字博客的第一诉求是「读过的东西离线还能再看一眼」）：
  *
- *   install  预缓存「外壳」：根页、两个语言的首页、两个语言的文章列表页、离线兜底页、manifest、favicon。
+ *   install  预缓存「外壳」：根页、两个语言的首页、两个语言的文章列表页、离线兜底页、manifest、站点图标。
  *            用逐个 add + try/catch，任何一个失败都不会让整个 install 挂掉。
  *   activate 删掉旧版本缓存，然后立刻接管页面（clients.claim）。
  *
@@ -23,7 +23,7 @@
  * 改了缓存策略或外壳清单，就把 CACHE_VERSION 往上加一位 —— 否则老客户端会一直用旧缓存。
  */
 
-const CACHE_VERSION = "2";
+const CACHE_VERSION = "3";
 const CACHE_NAME = `text-only-blog-v${CACHE_VERSION}`;
 
 /**
@@ -43,7 +43,7 @@ const SHELL = [
   "/en/posts/",
   "/offline/",
   "/manifest.webmanifest",
-  "/favicon.svg",
+  "/wunai_logo.png",
 ];
 
 /** 离线兜底页（导航失败时给这个） */
