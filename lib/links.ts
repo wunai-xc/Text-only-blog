@@ -44,7 +44,7 @@ export const LINKS: FriendLink[] = [
   url: "https://dmcc.wunai.top",
   avatar: "",
   note: {
-    zh: "这是我的另一个网站：DeepMinecraftCode深度解析mc代码",
+    zh: "这是我的另一个网站：DeepMinecraftCode深度解析mc代码，纯book hugo",
     en: "This is another website of mine: DeepMinecraftCode deeply analyzes mc code.",
     },
   },
