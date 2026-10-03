@@ -220,7 +220,7 @@ app/
 components/                 界面（article / home / list / pages / charts / 框架件）
 content/                    你写的东西（README.md 是写作规范）
 lib/                        逻辑与文案（site / theme / prefs / home / list / article / pages …）
-public/                     sw.js、favicon.svg
+public/                     sw.js、wunai_logo.png
 ```
 
 每一个 lib 文件都是**它那一块的事实来源**（首页版面在 `lib/home.ts`、列表与卡片在 `lib/list.ts`、
@@ -242,11 +242,12 @@ public/                     sw.js、favicon.svg
 | `lib/home.ts` 的 `intro.body`、`themes.demo`、`fonts.sample` | 首页第 1 / 7 / 8 栏的示范文字 |
 | `content/zh/posts/` 与 `content/en/posts/` | 文章本体（中英各一份；现有几篇笔记与 about 页都是你亲笔写的，新文章照 `content/README.md` 的格式加） |
 
-另外两处**不是文案、是资源**，目前没有：
+另外两处**不是文案、是资源**：
 
-- **PNG 图标（192 / 512）**：本站只提供 `public/favicon.svg`（内联了亮 / 暗两套颜色）。
-  想要更好的「加到主屏幕」体验，把 PNG 放进 `public/`，再到 `app/manifest.ts` 的 `icons` 里补两条；
-  不打算做就这样留着（SVG 图标在 Chrome / Safari 上够用，只是 iOS 主屏幕图标偶有毛边）。
+- **站点图标**：已有 `public/wunai_logo.png`（1500×1500）—— `app/layout.tsx` 的 `metadata.icons`
+  与 `app/manifest.ts` 的 `icons` 都指向它，`public/sw.js` 也把它列进预缓存。换图就覆盖同名文件，
+  **尺寸变了要改 `app/manifest.ts` 里的 `sizes`**。想「加到主屏幕」更精细，可另做 192 / 512 的
+  PNG 放进 `public/`，再到 `manifest.ts` 的 `icons` 里补两条。
 - **文章缩略图**：列表页支持 `thumbnail` 字段与 `public/thumbnails/`，但**纯文字站默认不用图**，
   卡片上没有图片位。
 

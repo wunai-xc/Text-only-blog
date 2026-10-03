@@ -391,7 +391,7 @@ app/robots.ts                   /robots.txt
 app/manifest.ts                 /manifest.webmanifest
 app/offline/page.tsx            /offline/          离线兜底页（被 sw.js 预缓存）
 public/sw.js                    /sw.js             Service Worker
-public/favicon.svg              /favicon.svg       站点图标（favicon + manifest 图标）
+public/wunai_logo.png           /wunai_logo.png    站点图标（favicon + manifest 图标）
 ```
 
 规划中（尚未创建）的目录：
@@ -592,7 +592,7 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
     （「纸」的底色 `#f1ece0`，与 `globals.css` 的 `--c-canvas` 同值 —— 第 6 项把原先写死的
     `#f4f1e8` 换成了令牌；manifest 是构建期产物，只能挑一套，挑的就是「没有 JS 时的默认」）。
   - `public/sw.js`（**不打包**，浏览器直接跑，所以是普通 JS、不能 import）：
-    install 预缓存外壳（`/`、`/zh/`、`/en/`、`/offline/`、manifest、favicon，逐条 try/catch，
+    install 预缓存外壳（`/`、`/zh/`、`/en/`、`/offline/`、manifest、站点图标，逐条 try/catch，
     单条失败不影响整体）；**第 10 项把 `/zh/posts/` 与 `/en/posts/` 也加进了这份清单**
     （列表页是「翻目录」的入口，第一次访问就带走，之后离线也能挑文章），
     `CACHE_VERSION` 随之从 1 加到 **2**；而 `/search-index.json` **故意不进清单** ——
@@ -606,10 +606,10 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
     `metadata.robots = noindex`，同时被 robots.txt 排除（双保险）。
   - `components/ServiceWorkerRegistrar.tsx`：挂在根布局，**只在生产构建注册**；
     `next dev` 下反向注销已有的 SW（否则热更新会被旧缓存糊住，是这类站点的经典坑）。
-  - `public/favicon.svg`：「设计图纸」风格（图框 + 三行字），内联 `prefers-color-scheme`
-    让亮/暗主题各一套颜色；它同时是 favicon 与 manifest 的图标。
-  - **编辑此处**：PNG 图标（192 / 512）还没做 —— 本仓库生成不了二进制图片。
-    想「加到主屏幕」更稳，就把 PNG 放进 `public/`，再到 `app/manifest.ts` 的 `icons` 里补两条。
+  - `public/wunai_logo.png`（1500×1500）：站点图标。`app/layout.tsx` 的 `metadata.icons`
+    （`icon` + `apple`）、`app/manifest.ts` 的 `icons` 与 `public/sw.js` 的外壳清单都指向它。
+  - PNG 图标（192 / 512）仍未单独生成：`manifest.ts` 里 `sizes` 写真实尺寸（≥144px，
+    浏览器与「加到主屏幕」都认）。想更精细就另做两份 PNG，并在 `manifest.ts` 的 `icons` 里补两条。
 - 订阅源自动发现：`app/layout.tsx` 的 `metadata.alternates.types` 里登记了两个语言的 RSS，
   浏览器 / 阅读器不用手输地址。**注意**：Next 的 metadata 是浅合并 ——
   文章页（第 12 项）如果自己写了 `alternates`，这条 `types` 会被整体覆盖掉，要在文章页里补回来。
