@@ -41,13 +41,20 @@ import {
   type LocalFontMeta,
 } from "@/lib/local-font";
 import {
+  DEFAULT_CUSTOM_THEME,
   DEFAULT_THEME_CHOICE,
+  PRESET_THEMES,
   THEME_CHIP_DOTS,
   THEME_CHOICES,
   THEME_LABELS,
   currentThemeChoice,
+  customThemeFromPreset,
+  readCustomTheme,
+  setCustomTheme,
   setThemeChoice,
   subscribeTheme,
+  type CustomTheme,
+  type FixedTheme,
   type ThemeChoice,
 } from "@/lib/theme";
 
@@ -56,7 +63,8 @@ import {
  *
  * 四块内容，全部只影响**读者自己的浏览器**（localStorage），站点是纯静态的，
  * 这些偏好与内容无关、也不上传：
- *   1. 外观：跟随系统 / 纸 / 亮 / 暗 —— 直接调 lib/theme.ts 的 setThemeChoice()，
+ *   1. 外观：跟随系统 + 七套预设 + 一套自定义配色 —— 预设直接调 lib/theme.ts 的
+ *      setThemeChoice()，自定义配色调 setCustomTheme()（存盘 + 写种子变量），
  *      不在这里碰 localStorage 与 data-theme（约定第 7 条）；
  *   2. 阅读偏好：正文字体 / 宽度 / 字号 / 行距 / 首行缩进 —— 写到 `--reading-*` 令牌上
  *      （lib/prefs.ts），正文已经在读它们，所以改完立刻生效、不需要通知任何组件。
@@ -93,9 +101,23 @@ const GROUP_META: Record<ReadingKey, { label: ReadingLabelKey; icon: IconName }>
 
 /* 外观预览色块的格数共用 lib/theme.ts 的 THEME_CHIP_DOTS（第 9 项起首页也用这一份） */
 
+/** 自定义配色里可调的四个色盘（顺序即界面上从左到右）；文案在 lib/site-strings.ts 的 I18N 里 */
+type CustomColorKey = "canvas" | "ink" | "accent" | "danger";
+const CUSTOM_COLOR_FIELDS: Array<{
+  key: CustomColorKey;
+  label: "customCanvas" | "customInk" | "customAccent" | "customDanger";
+}> = [
+  { key: "canvas", label: "customCanvas" },
+  { key: "ink", label: "customInk" },
+  { key: "accent", label: "customAccent" },
+  { key: "danger", label: "customDanger" },
+];
+
 export default function SettingsCenter({ lang }: { lang: Lang }) {
   const t = SITE.i18n[lang];
   const [choice, setChoice] = useState<ThemeChoice | null>(null);
+  // 自定义配色（外观选到「custom」时展开的那一块）；挂在 <html> 上的种子变量是它的运行时落点
+  const [custom, setCustom] = useState<CustomTheme | null>(null);
   const [prefs, setPrefs] = useState<ReadingPrefs | null>(null);
   // 滑块的当前数值（= 令牌实际生效的值）：读者拖过就是他的，没拖过就是按屏幕算出来的
   const [numbers, setNumbers] = useState<Record<ReadingSliderKey, number> | null>(null);
@@ -108,6 +130,7 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
 
   useEffect(() => {
     setChoice(currentThemeChoice());
+    setCustom(readCustomTheme());
     // 偏好、滑块数值、默认点一起刷新：滑块与默认点的源都是令牌本身，所以三者永远一致
     const sync = () => {
       setPrefs(readReadingPrefs());
@@ -137,6 +160,7 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
   }, []);
 
   const activeChoice = choice ?? DEFAULT_THEME_CHOICE;
+  const activeCustom = custom ?? DEFAULT_CUSTOM_THEME;
   const activePrefs = prefs ?? READING_DEFAULTS;
   /** 滑块位置：挂载前用首帧兜底值（服务端不知道屏幕多大），挂载后是真令牌里的数 */
   const sliderNumber = (key: ReadingSliderKey): number =>
@@ -148,6 +172,25 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
   function pickTheme(value: ThemeChoice) {
     setThemeChoice(value);
     setChoice(value);
+  }
+
+  /** 自定义配色：换起点（四个色一起带过来） */
+  function pickCustomBase(base: FixedTheme) {
+    const next = customThemeFromPreset(base);
+    setCustomTheme(next);
+    setCustom(next);
+  }
+
+  /** 自定义配色：改某一个色盘（重点色变了，accentInk 由 setCustomTheme 自动重算） */
+  function pickCustomColor(key: CustomColorKey, value: string) {
+    const patch: Partial<CustomTheme> = {};
+    patch[key] = value;
+    setCustom(setCustomTheme(patch));
+  }
+
+  /** 自定义配色：亮底 / 暗底（决定 color-scheme 与派生令牌用哪一块） */
+  function toggleCustomDark() {
+    setCustom(setCustomTheme({ dark: !activeCustom.dark }));
   }
 
   function pickReading(key: ReadingOptionKey, id: string) {
@@ -262,6 +305,78 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
           })}
         </div>
         <p className="settings-hint">{THEME_LABELS[activeChoice].hint[lang]}</p>
+
+        {/* 「自定义」配色：只有外观选到它时才展开（别的预设没有可调的东西）。
+            色值经 setCustomTheme 落到 <html> 的行内变量上，已经渲染的页面立刻跟着变 */}
+        {activeChoice === "custom" ? (
+          <div className="settings-custom">
+            <p className="settings-field-label">
+              <Icon icon={icons["mdi:palette-swatch-outline"]} width="1em" height="1em" />
+              {t.customColors}
+            </p>
+            <p className="settings-hint">{t.customColorsHint}</p>
+
+            {/* 起点：挑一套预设，把四个色一次带过来 */}
+            <div className="settings-field">
+              <span className="settings-field-label">{t.customBase}</span>
+              <div className="settings-row">
+                {PRESET_THEMES.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    className="settings-opt"
+                    aria-pressed={activeCustom.base === preset}
+                    onClick={() => pickCustomBase(preset)}
+                    title={THEME_LABELS[preset].hint[lang]}
+                  >
+                    <Icon
+                      icon={icons["mdi:check"]}
+                      className="opt-check"
+                      width="1em"
+                      height="1em"
+                    />
+                    <span className="theme-chip" data-chip={preset} aria-hidden="true">
+                      {Array.from({ length: THEME_CHIP_DOTS[preset] }, (_, index) => (
+                        <span key={index} />
+                      ))}
+                    </span>
+                    <span>{THEME_LABELS[preset][lang]}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 四个色盘 + 亮底 / 暗底 */}
+            <div className="settings-field">
+              <div className="settings-row settings-colors">
+                {CUSTOM_COLOR_FIELDS.map((field) => (
+                  <label className="settings-color" key={field.key}>
+                    <input
+                      type="color"
+                      value={activeCustom[field.key]}
+                      onChange={(event) => pickCustomColor(field.key, event.target.value)}
+                    />
+                    <span>{t[field.label]}</span>
+                  </label>
+                ))}
+                <button
+                  type="button"
+                  className="settings-opt"
+                  aria-pressed={activeCustom.dark}
+                  onClick={toggleCustomDark}
+                >
+                  <Icon
+                    icon={icons["mdi:check"]}
+                    className="opt-check"
+                    width="1em"
+                    height="1em"
+                  />
+                  <span>{t.customDark}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       {/* ② 阅读偏好 */}

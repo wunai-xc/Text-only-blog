@@ -123,9 +123,13 @@ export const READING_INDENTS: ReadingOption[] = [
 export const CUSTOM_FONT_ENABLED = true;
 
 /**
- * 正文字体（第 8 项）。前四档**全是设备上已有的字体** —— 这一站一个 webfont 都不发：
- * 选哪一档都发不出一个网络请求，离线与国内可用性不受影响。第五档「自定义」用的是
- * **读者自己上传的字体文件**（lib/local-font.ts，存在浏览器里），同样不走网络。
+ * 正文字体（第 8 项）。除最后一档「自定义」外**全是设备上已有的字体** —— 这一站一个
+ * webfont 都不发：选哪一档都发不出一个网络请求，离线与国内可用性不受影响。
+ * 「自定义」用的是**读者自己上传的字体文件**（lib/local-font.ts，存在浏览器里），同样不走网络。
+ *
+ * 中文档位尽量覆盖三大平台常见的系统字体（同一档里 mac / Windows 的名字都列上，命中哪个用哪个；
+ * 都没有就掉到栈尾的 --font-serif / --font-sans 兜底）。都是「有则用、没有则退」，
+ * 所以多列几档不会引入任何依赖或体积。
  *
  * 每档写的是完整字体栈，中文名在前、西文名在后（正文里中文占多数，西文名跟在后面兜数字
  * 与英文的观感）；栈尾**接回 @theme 里那三个 --font-* 令牌**，而不是把同一串名字再抄一遍 ——
@@ -154,6 +158,30 @@ export const READING_FONTS: ReadingOption[] = [
     value: '"Kaiti SC", "KaiTi", "STKaiti", var(--font-serif)',
     zh: "楷体",
     en: "Kai",
+  },
+  {
+    id: "fangsong",
+    value: '"Fangsong SC", "STFangsong", "FangSong", var(--font-serif)',
+    zh: "仿宋",
+    en: "FangSong",
+  },
+  {
+    id: "yuanti",
+    value: '"Yuanti SC", "YouYuan", var(--font-sans)',
+    zh: "圆体",
+    en: "Yuanti",
+  },
+  {
+    id: "lishu",
+    value: '"LiSu", "STLiti", "Libian SC", var(--font-serif)',
+    zh: "隶书",
+    en: "LiShu",
+  },
+  {
+    id: "xingkai",
+    value: '"Xingkai SC", "STXingkai", var(--font-serif)',
+    zh: "行楷",
+    en: "XingKai",
   },
   {
     id: "mono",

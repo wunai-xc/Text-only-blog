@@ -19,7 +19,7 @@
 import type { ListPost } from "./list";
 import type { TocEntry } from "./markdown";
 import type { Lang } from "./lang";
-import type { Theme } from "./theme";
+import { isDarkTheme, type FixedTheme, type Theme } from "./theme";
 import type { TypographyOptions } from "./typography";
 
 /* ------------------------------ 常量 ------------------------------ */
@@ -83,15 +83,25 @@ export const GISCUS_SCRIPT_SRC = "https://giscus.app/client.js";
 export const GISCUS_ORIGIN = "https://giscus.app";
 
 /**
- * 外观 → giscus 内置主题名。三套外观映射到它自带的两种：
- * 「纸」是浅色，归 light；「亮」也是浅色；「暗」用 dark。
+ * 固定的几套外观 → giscus 内置主题名（浅色归 light，深色归 dark）。
  * 想换成别的（`noborder_light`、`transparent_dark` 之类）改这一张表即可。
+ * 「自定义」没有固定值，由下面的 giscusTheme() 按它自己的深浅现算。
  */
-export const GISCUS_THEMES: Record<Theme, string> = {
+export const GISCUS_THEMES: Record<FixedTheme, string> = {
   paper: "light",
   light: "light",
   dark: "dark",
+  blueprint: "dark",
+  forest: "dark",
+  ember: "dark",
+  contrast: "light",
 };
+
+/** 当前外观该用 giscus 的哪一种内置主题（自定义配色读它自己的 data-custom-dark） */
+export function giscusTheme(theme: Theme): string {
+  if (theme === "custom") return isDarkTheme("custom") ? "dark" : "light";
+  return GISCUS_THEMES[theme];
+}
 
 /** 站内路径 → giscus 讨论的标题（列表页的 `?tag=` 会被去掉，同一篇文章始终是同一个 term） */
 export function commentsTerm(href: string): string {

@@ -14,7 +14,7 @@
  *   - 加图标时顺手按用途分组、写一行注释说明用在哪。
  */
 
-/* 图标数据在 lib/icons-data.ts（只内联用到的 49 个，原因见那个文件的说明）。
+/* 图标数据在 lib/icons-data.ts（只内联用到的 54 个，原因见那个文件的说明）。
    分组注释保留在下面的图标表里 —— 加图标时先在 icons-data.ts 补数据，再来这里登记。 */
 import {
   mdiAccountMultipleOutline,
@@ -27,11 +27,14 @@ import {
   mdiArrowUp,
   mdiBookOpenOutline,
   mdiCalendarOutline,
+  mdiCampfire,
   mdiCheck,
   mdiChevronDown,
   mdiClose,
   mdiCogOutline,
   mdiCommentTextOutline,
+  mdiCompassRose,
+  mdiContrastCircle,
   mdiDeleteOutline,
   mdiDownload,
   mdiEmailOutline,
@@ -48,6 +51,7 @@ import {
   mdiMagnify,
   mdiMagnifyClose,
   mdiPaletteOutline,
+  mdiPaletteSwatchOutline,
   mdiPostOutline,
   mdiPrinter,
   mdiRestore,
@@ -60,6 +64,7 @@ import {
   mdiTagMultipleOutline,
   mdiTextBoxOutline,
   mdiThemeLightDark,
+  mdiTreeOutline,
   mdiTranslate,
   mdiUpload,
   mdiViewAgendaOutline,
@@ -83,9 +88,14 @@ export const icons = {
   "mdi:book-open-outline": mdiBookOpenOutline,
   "mdi:weather-sunny": mdiWeatherSunny,
   "mdi:weather-night": mdiWeatherNight,
+  "mdi:compass-rose": mdiCompassRose,
+  "mdi:tree-outline": mdiTreeOutline,
+  "mdi:campfire": mdiCampfire,
+  "mdi:contrast-circle": mdiContrastCircle,
   /* 设置 */
   "mdi:cog-outline": mdiCogOutline,
   "mdi:palette-outline": mdiPaletteOutline,
+  "mdi:palette-swatch-outline": mdiPaletteSwatchOutline,
   "mdi:format-font": mdiFormatFont,
   "mdi:format-size": mdiFormatSize,
   "mdi:arrow-expand-horizontal": mdiArrowExpandHorizontal,

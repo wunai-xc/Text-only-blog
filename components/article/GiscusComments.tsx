@@ -7,8 +7,8 @@ import {
   ARTICLE_TEXT,
   GISCUS_ORIGIN,
   GISCUS_SCRIPT_SRC,
-  GISCUS_THEMES,
   commentsTerm,
+  giscusTheme,
 } from "@/lib/article";
 import { icons } from "@/lib/icons";
 import type { Lang } from "@/lib/lang";
@@ -24,7 +24,7 @@ import { currentTheme, subscribeTheme, type Theme } from "@/lib/theme";
  *      才把 giscus.app 的 `<script>` 插进去 —— 不读评论的读者，一个字节都不会连到那边；
  *   2. **没配置就说明白**：`lib/site.ts` 的 `COMMENTS` 四个值还空着时，
  *      显示「编辑此处」与怎么配，而不是一个空白框（约定第 2 条）；
- *   3. **外观跟着站点走**：三套外观映射成 giscus 的 light / dark（表在 lib/article.ts）。
+ *   3. **外观跟着站点走**：各套外观映射成 giscus 的 light / dark（表与 giscusTheme() 在 lib/article.ts）。
  *      换外观时用 `postMessage` 通知 iframe 换配色（giscus 的官方接口），**不重新加载**
  *      整个评论区 —— 重载会丢掉读了一半的评论列表；
  *   4. **失败要说话**：iframe 被插件拦掉 / 断网时给一行提示；正文不受影响。
@@ -100,7 +100,7 @@ export default function GiscusComments({
       reactionsEnabled: "1",
       emitMetadata: "0",
       inputPosition: "top",
-      theme: GISCUS_THEMES[currentTheme()],
+      theme: giscusTheme(currentTheme()),
       lang: lang === "zh" ? "zh-CN" : "en",
       loading: "lazy",
     };
@@ -130,7 +130,7 @@ export default function GiscusComments({
     const iframe = hostRef.current?.querySelector("iframe");
     if (!iframe?.contentWindow) return;
     iframe.contentWindow.postMessage(
-      { giscus: { setConfig: { theme: GISCUS_THEMES[theme] } } },
+      { giscus: { setConfig: { theme: giscusTheme(theme) } } },
       GISCUS_ORIGIN,
     );
   }, [near, theme]);

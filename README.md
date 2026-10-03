@@ -23,8 +23,8 @@
 | 只读文字 | 背景没有图片、没有视频、没有头像位（只有 `<html>` 的底色 + 每页**两枚硬边几何实体**：一枚主实体 + 一枚小卫星，随换页丝滑形变，浓度压到 `--figure-alpha`）；线条只有**跟着实体走的手绘草稿线**，没有满页图案 / 网格；唯一能放图的地方是顶栏右上角那一格（`HEADER_IMAGE`，可以一直空着） |
 | 换页不打扰 | 换页时正文淡入一次（420ms，只改不透明度、不动版面），背景的几何实体同时**形变**成下一页的样子；系统开「减少动效」就完全不做 |
 | 中文读得舒服 | 渲染时自动优化排版（中英之间补空格、半角标点转全角……），四条规则可单篇关掉 |
-| 版面可调 | 正文字体四档（黑体 / 宋体 / 楷体 / 等宽，全用设备已有字体）+ 一档「自定义」（读者上传自己的字体文件）；宽度 / 字号 / 行距各三档。偏好写在本机，瞬时生效 |
-| 护眼 | 三套外观：纸（默认，暖白）、亮、暗；没有 JS 时就是「纸」 |
+| 版面可调 | 正文字体八档（黑体 / 宋体 / 楷体 / 仿宋 / 圆体 / 隶书 / 行楷 / 等宽，全用设备已有字体）+ 一档「自定义」（读者上传自己的字体文件）；宽度 / 字号 / 行距各三档。偏好写在本机，瞬时生效 |
+| 护眼 | 七套预设外观（纸 · 默认暖白 / 亮 / 暗 / 蓝图纸 / 森林绿 / 夜幕暖光 / 高对比）+ 一套自定义配色（从预设起步，调底 / 字 / 重点 / 警示四个色）；没有 JS 时就是「纸」 |
 | 能带走 | 打印即排版好的 PDF；RSS 订阅；PWA 离线可读 |
 | 零后端 | 纯静态导出，搜索索引 / RSS / sitemap / 更新日志全在 `next build` 里生成 |
 | 数学与图表 | KaTeX（含 `\ce` 化学式）、Mermaid / ECharts / Graphviz / ABC 五线谱 / SMILES 结构式，按需动态加载 |
@@ -46,8 +46,9 @@ npm run deploy       # 部署到 Cloudflare Workers 静态资源
 
 1. 打开 `/zh/`（或 `/en/`），**左下角有一颗齿轮** —— 外观、正文宽度 / 字号 / 行距、语言都在里面；
 2. 往 `content/zh/posts/` 里丢一个 `.md`，刷新：首页第 2 栏、列表页、归档、搜索索引会一起出现它；
-3. 想看三套外观的差别，可以直接用调试参数（不写 localStorage，刷新即失效）：
-   `/zh/?theme=paper`、`/zh/?theme=light`、`/zh/?theme=dark`。
+3. 想看各套外观的差别，可以直接用调试参数（不写 localStorage，刷新即失效）：
+   `/zh/?theme=paper`、`/zh/?theme=light`、`/zh/?theme=dark`、`/zh/?theme=blueprint`、
+   `/zh/?theme=forest`、`/zh/?theme=ember`、`/zh/?theme=contrast`、`/zh/?theme=custom`。
 
 只想把它跑在**自己的一台机器 / 内网**（不走 Cloudflare）→ 看第 3 节。
 
@@ -238,7 +239,7 @@ public/                     sw.js、wunai_logo.png
 | `lib/site.ts` 的 `COMMENTS` | giscus 的 repo / repoId / category / categoryId（**留空则文章页显示「编辑此处」**，不加载任何第三方脚本） |
 | `lib/links.ts` 的 `LINKS` | 友链（**已填八个**；头像与一句话介绍取自各位自己的主页，`avatar` 留空则回退成名称首字） |
 | `lib/site.ts` 的 `HEADER_IMAGE` | 顶栏右上角那张图（**留空时是一格虚线空位，写着「图片位 · 编辑此处」**；尺寸与有图时一样，补图不会让顶栏跳一下） |
-| `lib/prefs.ts` 的 `CUSTOM_FONT_ENABLED` | 「自定义」字体那一档要不要摆出来（**默认 `true`**）。这一档是**读者自己上传字体文件**：设置中心里选一份设备上的 woff2 / woff / ttf / otf，浏览器读成 FontFace、存进 IndexedDB（localStorage 装不下），**不上传服务器**，换设备不跟着走。改成 `false` 就把这一档藏起来。前四档（黑体 / 宋体 / 楷体 / 等宽）用的都是读者设备上已有的字体，一个字体文件都不下载；改这一档也**不用你准备任何文件** |
+| `lib/prefs.ts` 的 `CUSTOM_FONT_ENABLED` | 「自定义」字体那一档要不要摆出来（**默认 `true`**）。这一档是**读者自己上传字体文件**：设置中心里选一份设备上的 woff2 / woff / ttf / otf，浏览器读成 FontFace、存进 IndexedDB（localStorage 装不下），**不上传服务器**，换设备不跟着走。改成 `false` 就把这一档藏起来。其余几档（黑体 / 宋体 / 楷体 / 仿宋 / 圆体 / 隶书 / 行楷 / 等宽）用的都是读者设备上已有的字体，一个字体文件都不下载；改这一档也**不用你准备任何文件** |
 | `lib/home.ts` 的 `intro.body`、`themes.demo`、`fonts.sample` | 首页第 1 / 7 / 8 栏的示范文字 |
 | `content/zh/posts/` 与 `content/en/posts/` | 文章本体（中英各一份；现有几篇笔记与 about 页都是你亲笔写的，新文章照 `content/README.md` 的格式加） |
 
@@ -261,7 +262,7 @@ public/                     sw.js、wunai_logo.png
 - 类型与构建的最终结果以你本地 `npm run typecheck && npm run build` 为准；
 - 有报错就把日志贴回来，按证据修；
 - **[PROJECTS.md](./PROJECTS.md) 第 8 节**列着「只有你本机能确认」的清单（每一项都有具体怎么看），
-  从三套外观的对比度、首帧不闪、Service Worker 离线，到文章页的悬浮目录与进度条。
+  从各套外观的对比度、首帧不闪、Service Worker 离线，到文章页的悬浮目录与进度条。
 
 已经**在 Cloudflare 云构建里真跑过**的部分：`bun install` → Turbopack 编译 → 类型检查 →
 静态导出（14/14 页）连续多次通过；部署命令踩过的坑（Pages 权限、命令拼错、JSON 尾逗号）

@@ -147,7 +147,7 @@ const ZH: HomeText = {
     changelog: { title: "更新日志", kicker: "最近几条提交" },
     inventory: { title: "站内内容", kicker: "有几类东西" },
     reading: { title: "阅读改善", kicker: "为读中文做的调整" },
-    themes: { title: "外观切换", kicker: "纸 / 亮 / 暗" },
+    themes: { title: "外观切换", kicker: "七套预设 + 自定义" },
     fonts: { title: "字体设置", kicker: "字体 / 宽度 / 字号 / 行距" },
   },
   intro: {
@@ -205,8 +205,8 @@ const ZH: HomeText = {
     ],
     featuresLabel: "这一项已经做到的",
     features: [
-      "护眼纸质底色，纸 / 亮 / 暗三套外观（第 7 栏可试）",
-      "正文字体四档（黑体 / 宋体 / 楷体 / 等宽，用的都是本地字体）+ 自定义（上传自己的字体文件），宽度 / 字号 / 行距各三档（第 8 栏可调）",
+      "护眼纸质底色，七套预设外观 + 一套自定义配色（第 7 栏可试）",
+      "正文字体八档（黑体 / 宋体 / 楷体 / 仿宋 / 圆体 / 隶书 / 行楷 / 等宽，用的都是本地字体）+ 自定义（上传自己的字体文件），宽度 / 字号 / 行距各三档（第 8 栏可调）",
       "代码高亮、KaTeX 公式（含 \\ce 化学式）、五类图表按需加载",
       "打印即排版好的 PDF（Ctrl+P 存一份）",
       "RSS 订阅、离线可用（Service Worker + 离线页）",
@@ -214,11 +214,11 @@ const ZH: HomeText = {
     ],
   },
   themes: {
-    lead: "颜色的唯一事实来源是 app/globals.css 的三套令牌。「纸」是默认，也是没有 JS 时的外观；点一下立刻全站生效。",
+    lead: "颜色的唯一事实来源是 app/globals.css 里的外观令牌。「纸」是默认，也是没有 JS 时的外观；七套预设点一下立刻全站生效，还可以在设置中心里从预设起步、调出一套自己的配色。",
     demo: "只有一件事是不可或缺的：人必须达成自我满足，不管是通过诗歌还是艺术的方式；只有这样，人才值得一看。”然而，达成自我满足至多只是一个必要条件。世界上有许多人达成了自我满足，而且，也正因为如此，他们不值得一看。",
   },
   fonts: {
-    lead: "字体 / 宽度 / 字号 / 行距写的是 --reading-* 四个令牌：正文与下面这段示范用的是同一套度量，所以改完立刻生效。四档预设用的都是你设备上已有的字体，第五档「自定义」用你自己上传的字体文件 —— 无论哪一档，都不下载任何字体文件。",
+    lead: "字体 / 宽度 / 字号 / 行距写的是 --reading-* 四个令牌：正文与下面这段示范用的是同一套度量，所以改完立刻生效。八档预设用的都是你设备上已有的字体，最后一档「自定义」用你自己上传的字体文件 —— 无论哪一档，都不下载任何字体文件。",
     sample: "阿尔伯特·爱因斯坦Albert Einstein， E = mc² 于1905年在狭义相对论框架下提出",
     custom:
       "「自定义」那一档要你先传一份字体文件：在左下角的设置中心里选一份（woff2 / woff / ttf / otf），它只在你的浏览器里读、存本机，不上传服务器。",
@@ -235,7 +235,7 @@ const EN: HomeText = {
     changelog: { title: "Changelog", kicker: "Latest commits" },
     inventory: { title: "What is inside", kicker: "Content types" },
     reading: { title: "Reading comfort", kicker: "Tuned for Chinese" },
-    themes: { title: "Appearance", kicker: "Paper / light / dark" },
+    themes: { title: "Appearance", kicker: "Seven presets + custom" },
     fonts: { title: "Text settings", kicker: "Font / width / size / leading" },
   },
   intro: {
@@ -294,8 +294,8 @@ const EN: HomeText = {
     ],
     featuresLabel: "What is already in place",
     features: [
-      "Eye-friendly paper background, three appearance token sets (try block 7)",
-      "Body font (four presets pulled from fonts on your device, plus a Custom preset that uses a font file you upload) and width / size / leading, three steps each (block 8)",
+      "Eye-friendly paper background, seven appearance presets plus a custom palette (try block 7)",
+      "Body font (eight presets pulled from fonts on your device, plus a Custom preset that uses a font file you upload) and width / size / leading, three steps each (block 8)",
       "Code highlighting, KaTeX math (incl. \\ce chemistry), five chart types loaded on demand",
       "Print to a properly typeset PDF (Ctrl+P)",
       "RSS feed and offline support (Service Worker + offline page)",
@@ -303,11 +303,11 @@ const EN: HomeText = {
     ],
   },
   themes: {
-    lead: "Colour has exactly one source of truth: the three token sets in app/globals.css. “Paper” is the default and what you get without JS; one click applies site-wide.",
+    lead: "Colour has exactly one source of truth: the appearance tokens in app/globals.css. “Paper” is the default and what you get without JS; the seven presets apply site-wide in one click, and you can start from a preset and tune your own palette in the settings panel.",
     demo: "Only one thing is indispensable: a man must attain self-fulfilment — whether through poetry or through art — only then is a man worth looking at. Yet self-fulfilment is at most a necessary condition. There are many people in the world who have attained self-fulfilment, and for that very reason they are not worth looking at.",
   },
   fonts: {
-    lead: "Font / width / size / leading are the four --reading-* tokens: the body text and the sample below share the same metrics, so changes apply instantly. The four presets use fonts already on your device; the fifth, Custom, uses a font file you upload yourself — either way, nothing is downloaded.",
+    lead: "Font / width / size / leading are the four --reading-* tokens: the body text and the sample below share the same metrics, so changes apply instantly. The eight presets use fonts already on your device; the last, Custom, uses a font file you upload yourself — either way, nothing is downloaded.",
     sample: "Albert Einstein — E = mc², proposed in 1905 within the framework of special relativity",
     custom:
       "The Custom preset needs a font file from you first: pick one (woff2 / woff / ttf / otf) in the settings panel at the bottom-left. It is read and stored inside your browser only — never uploaded.",

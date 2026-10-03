@@ -184,6 +184,208 @@
   --shape-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
+/* ---------------------------------------------------------------------------
+   3b. 第 2026-10 轮新增的四套预设（蓝图纸 / 森林绿 / 夜幕暖光 / 高对比）
+   前三套是**深底**（暗色系，颜料沿用「暗」那一组浅颜料：暗底下高明度才看得出来），
+   高对比是**浅底**但刻意**不用彩色**（几何实体改成一组灰阶）—— 它的诉求是清晰，
+   往画面里放彩色只会削弱对比。三套深底的颜料逐套微调过冷暖，别直接删成一套。
+   --------------------------------------------------------------------------- */
+[data-theme="blueprint"] {
+  color-scheme: dark;
+
+  --c-canvas: #0f2740;
+  --c-surface: #14314f;
+  --c-surface-2: #1b3d60;
+  --c-ink: #e8f0f7;
+  --c-ink-muted: #a9c1d4;
+  --c-ink-subtle: #7794ad;
+  --c-rule: #234a6e;
+  --c-rule-strong: #35638f;
+  --c-accent: #7fd4e6;
+  --c-accent-soft: #123a52;
+  --c-accent-ink: #06283a;
+  --c-danger: #ff9a8a;
+  --c-mark: #1d4a6b;
+
+  --figure-tint-1: #f0a08c;
+  --figure-tint-2: #dcbf94;
+  --figure-tint-3: #f2b28c;
+  --figure-tint-4: #e6cf86;
+  --figure-tint-5: #b6d0a0;
+  --figure-tint-6: #9ed6e2; /* 比「暗」更偏青，呼应底色的蓝 */
+  --figure-tint-7: #a8bce6;
+  --figure-tint-8: #c3aee6;
+  --figure-alpha: 0.30;
+  --figure-ink: rgba(200, 225, 230, 0.38);
+  --figure-ink-soft: rgba(200, 225, 230, 0.22);
+
+  --shape-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="forest"] {
+  color-scheme: dark;
+
+  --c-canvas: #16241d;
+  --c-surface: #1c2e25;
+  --c-surface-2: #24382d;
+  --c-ink: #e6efe7;
+  --c-ink-muted: #a7b8ab;
+  --c-ink-subtle: #77897c;
+  --c-rule: #2c4236;
+  --c-rule-strong: #3f5a4a;
+  --c-accent: #9ecfa8;
+  --c-accent-soft: #1e3a2a;
+  --c-accent-ink: #0d2417;
+  --c-danger: #ff9a86;
+  --c-mark: #23402f;
+
+  --figure-tint-1: #e8a08c;
+  --figure-tint-2: #d8bf94;
+  --figure-tint-3: #eeb08a;
+  --figure-tint-4: #dcd086;
+  --figure-tint-5: #a8d4a0; /* 比「暗」更绿，呼应底色的森林 */
+  --figure-tint-6: #96cfc6;
+  --figure-tint-7: #a8bce6;
+  --figure-tint-8: #c6b0e0;
+  --figure-alpha: 0.30;
+  --figure-ink: rgba(210, 228, 214, 0.34);
+  --figure-ink-soft: rgba(210, 228, 214, 0.2);
+
+  --shape-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="ember"] {
+  color-scheme: dark;
+
+  --c-canvas: #1a1410;
+  --c-surface: #221a14;
+  --c-surface-2: #2c2119;
+  --c-ink: #f0e6da;
+  --c-ink-muted: #bfae9b;
+  --c-ink-subtle: #8d7d6b;
+  --c-rule: #3a2c20;
+  --c-rule-strong: #523e2c;
+  --c-accent: #e8a15c;
+  --c-accent-soft: #35251a;
+  --c-accent-ink: #2a1808;
+  --c-danger: #ff8f7a;
+  --c-mark: #3d2a1c;
+
+  --figure-tint-1: #f0a08c;
+  --figure-tint-2: #e2c08c; /* 比「暗」更暖，呼应底色的暖棕 */
+  --figure-tint-3: #f2b48c;
+  --figure-tint-4: #e8d08a;
+  --figure-tint-5: #bacfa0;
+  --figure-tint-6: #9ed2c8;
+  --figure-tint-7: #b0bce0;
+  --figure-tint-8: #d0b0e0;
+  --figure-alpha: 0.30;
+  --figure-ink: rgba(232, 214, 194, 0.34);
+  --figure-ink-soft: rgba(232, 214, 194, 0.2);
+
+  --shape-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="contrast"] {
+  color-scheme: light;
+
+  --c-canvas: #ffffff;
+  --c-surface: #ffffff;
+  --c-surface-2: #f0f0f0;
+  --c-ink: #000000;
+  --c-ink-muted: #3a3a3a;
+  --c-ink-subtle: #5c5c5c;
+  --c-rule: #767676;
+  --c-rule-strong: #000000;
+  --c-accent: #0000ee; /* 纯蓝链接：白底上对比度高，又能一眼认出是链接 */
+  --c-accent-soft: #e6e6ff;
+  --c-accent-ink: #ffffff;
+  --c-danger: #cc0000;
+  --c-mark: #ffff00; /* 经典高对比高亮：黄底黑字 */
+
+  /* 几何实体：不用彩色，改一组灰阶（浅底 → 深灰；alpha 压得更低，别喧宾夺主） */
+  --figure-tint-1: #1a1a1a;
+  --figure-tint-2: #3d3d3d;
+  --figure-tint-3: #5c5c5c;
+  --figure-tint-4: #737373;
+  --figure-tint-5: #8c8c8c;
+  --figure-tint-6: #a3a3a3;
+  --figure-tint-7: #bdbdbd;
+  --figure-tint-8: #d6d6d6;
+  --figure-alpha: 0.18;
+  --figure-ink: rgba(0, 0, 0, 0.5);
+  --figure-ink-soft: rgba(0, 0, 0, 0.26);
+
+  --shape-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+/* ---------------------------------------------------------------------------
+   3c. 自定义配色（custom）：预设方案 + 微调
+   读者只挑四个色（底 / 字 / 重点 / 警示），由 lib/theme.ts 写成 `<html>` 上的行内变量
+   （--seed-*）；这里用 color-mix 把「面 / 线 / 弱字 / 重点底色」从它们推出来 ——
+   所以读者怎么调，整套都还是协调的。深浅两块由 `data-custom-dark` 选。
+   ⚠️ 行内变量写在 <html> 上，即使当前不是 custom 也在（无害）；这两块只在 data-theme="custom"
+   时命中，改这里的公式时对照 lib/theme.ts 的 CUSTOM_SEED_VARS。
+   ⚠️ 必须放在 :root/[data-theme="paper"] 之后 —— 否则同特异性的 :root 会盖回来。
+   --------------------------------------------------------------------------- */
+[data-theme="custom"] {
+  color-scheme: light;
+  /* 面往哪个方向偏：浅底要「面比底亮、第二面比底暗」，深底两者都比底亮，靠这个变量切换 */
+  --seed-deep: #000000;
+
+  --c-canvas: var(--seed-canvas, #f1ece0);
+  --c-surface: color-mix(in srgb, var(--c-canvas) 72%, #ffffff);
+  --c-surface-2: color-mix(in srgb, var(--c-canvas) 92%, var(--seed-deep));
+  --c-ink: var(--seed-ink, #23201c);
+  --c-ink-muted: color-mix(in srgb, var(--c-ink) 64%, var(--c-canvas));
+  --c-ink-subtle: color-mix(in srgb, var(--c-ink) 42%, var(--c-canvas));
+  --c-rule: color-mix(in srgb, var(--c-ink) 16%, var(--c-canvas));
+  --c-rule-strong: color-mix(in srgb, var(--c-ink) 30%, var(--c-canvas));
+  --c-accent: var(--seed-accent, #8a6a3b);
+  --c-accent-soft: color-mix(in srgb, var(--c-accent) 15%, var(--c-canvas));
+  --c-accent-ink: var(--seed-accent-ink, #ffffff);
+  --c-danger: var(--seed-danger, #b23a2b);
+  --c-mark: color-mix(in srgb, var(--c-accent) 28%, var(--c-canvas));
+
+  /* 浅底颜料（同「亮」那一组） */
+  --figure-tint-1: #b03a2e;
+  --figure-tint-2: #6f5a2e;
+  --figure-tint-3: #c0663c;
+  --figure-tint-4: #8a6a12;
+  --figure-tint-5: #4f6b30;
+  --figure-tint-6: #1f6b6b;
+  --figure-tint-7: #2a4a86;
+  --figure-tint-8: #5c3f7a;
+  --figure-alpha: 0.22;
+  --figure-ink: rgba(20, 40, 50, 0.4);
+  --figure-ink-soft: rgba(20, 40, 50, 0.22);
+
+  --shape-shadow: 0 1px 2px rgba(20, 40, 50, 0.06);
+}
+
+[data-theme="custom"][data-custom-dark="true"] {
+  color-scheme: dark;
+  --seed-deep: #ffffff;
+
+  --c-surface: color-mix(in srgb, var(--c-canvas) 84%, #ffffff);
+  --c-surface-2: color-mix(in srgb, var(--c-canvas) 92%, var(--seed-deep));
+
+  /* 深底颜料（同「暗」那一组） */
+  --figure-tint-1: #f0a08c;
+  --figure-tint-2: #dcbf94;
+  --figure-tint-3: #f2b28c;
+  --figure-tint-4: #e6cf86;
+  --figure-tint-5: #b6d0a0;
+  --figure-tint-6: #9ed6d0;
+  --figure-tint-7: #a8bce6;
+  --figure-tint-8: #cbb0e0;
+  --figure-alpha: 0.30;
+  --figure-ink: rgba(200, 225, 230, 0.35);
+  --figure-ink-soft: rgba(200, 225, 230, 0.2);
+
+  --shape-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
 /* 三套外观共用：形状、蓝图网格尺寸、正文度量。
    阅读度量（字体 / 宽度 / 字号 / 行距 / 首行缩进）是令牌：**第 7 项的设置中心**会把读者选的档位
    写成 <html> 上的行内变量（覆盖这里的初值，见 lib/prefs.ts），
@@ -1683,9 +1885,73 @@ html[data-reading="hidden"] {
     border: 0;
   }
 
+  /* 「自定义」配色那一块（外观选到 custom 时展开，见 components/SettingsCenter.tsx）：
+     与字体上传区同一套「虚框操作区」的写法 —— 它不是一套档位按钮，是一组可调的色值 */
+  .settings-custom {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.55rem 0.6rem;
+    border: 1px dashed var(--c-rule);
+    border-radius: var(--shape-radius);
+    background-color: var(--c-canvas);
+  }
+
+  .settings-colors {
+    align-items: center;
+  }
+
+  /* 一个色盘 = 圆形的原生 color input + 一个标签（点标签也能开取色器） */
+  .settings-color {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.5rem 0.2rem 0.3rem;
+    border: 1px solid var(--c-rule);
+    border-radius: var(--shape-radius);
+    background-color: var(--c-surface);
+    color: var(--c-ink-muted);
+    font-size: 0.82rem;
+    cursor: pointer;
+  }
+
+  .settings-color:hover {
+    border-color: var(--c-rule-strong);
+    color: var(--c-ink);
+  }
+
+  .settings-color input[type="color"] {
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border: 1px solid var(--c-rule);
+    border-radius: 50%;
+    background: none;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .settings-color input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+
+  .settings-color input[type="color"]::-webkit-color-swatch {
+    border: none;
+    border-radius: 50%;
+  }
+
+  .settings-color input[type="color"]::-moz-color-swatch {
+    border: none;
+    border-radius: 50%;
+  }
+
   /* 外观预览色块。
-     ⚠️ 这是本文件里唯一允许写死颜色的地方：它预览的是**另外两套外观**，
-     不能引用当前令牌（否则四套预览会长得一模一样）。改令牌时记得同步这四组。 */
+     ⚠️ 这是本文件里唯一允许写死颜色的地方：它预览的是**另外几套外观**，
+     不能引用当前令牌（否则所有预览会长得一模一样）。改令牌时记得同步这几组。
+     唯一例外是「自定义」那一格：它读 <html> 上的 --seed-*（读者当前的自定义配色），
+     读者没选过时回落到「纸」的色值。 */
   .theme-chip {
     display: inline-flex;
     gap: 0.15rem;
@@ -1725,6 +1991,52 @@ html[data-reading="hidden"] {
   }
   .theme-chip[data-chip="dark"] > span:nth-child(3) {
     background-color: #7fc3da;
+  }
+  .theme-chip[data-chip="blueprint"] > span:nth-child(1) {
+    background-color: #0f2740;
+  }
+  .theme-chip[data-chip="blueprint"] > span:nth-child(2) {
+    background-color: #e8f0f7;
+  }
+  .theme-chip[data-chip="blueprint"] > span:nth-child(3) {
+    background-color: #7fd4e6;
+  }
+  .theme-chip[data-chip="forest"] > span:nth-child(1) {
+    background-color: #16241d;
+  }
+  .theme-chip[data-chip="forest"] > span:nth-child(2) {
+    background-color: #e6efe7;
+  }
+  .theme-chip[data-chip="forest"] > span:nth-child(3) {
+    background-color: #9ecfa8;
+  }
+  .theme-chip[data-chip="ember"] > span:nth-child(1) {
+    background-color: #1a1410;
+  }
+  .theme-chip[data-chip="ember"] > span:nth-child(2) {
+    background-color: #f0e6da;
+  }
+  .theme-chip[data-chip="ember"] > span:nth-child(3) {
+    background-color: #e8a15c;
+  }
+  .theme-chip[data-chip="contrast"] > span:nth-child(1) {
+    background-color: #ffffff;
+  }
+  .theme-chip[data-chip="contrast"] > span:nth-child(2) {
+    background-color: #000000;
+  }
+  .theme-chip[data-chip="contrast"] > span:nth-child(3) {
+    background-color: #0000ee;
+  }
+  /* 自定义：读读者当前的 --seed-*（没选过时回落到「纸」的色值），所以这一格会跟着调色实时变 */
+  .theme-chip[data-chip="custom"] > span:nth-child(1) {
+    background-color: var(--seed-canvas, #f1ece0);
+  }
+  .theme-chip[data-chip="custom"] > span:nth-child(2) {
+    background-color: var(--seed-ink, #23201c);
+  }
+  .theme-chip[data-chip="custom"] > span:nth-child(3) {
+    background-color: var(--seed-accent, #8a6a3b);
   }
   /* 跟随系统：浅色一套 / 深色一套，两格 */
   .theme-chip[data-chip="system"] > span:nth-child(1) {
@@ -4447,13 +4759,20 @@ html[data-reading="hidden"] {
 @media print {
   /* ---------- 先把「颜色」这件事钉死 ----------
      读者可以选「暗」外观，那一套令牌的 --c-ink 是**浅色**（#e4ebe9）——直接印到白纸上
-     等于看不见（正文、标题、表格线全废）。所以打印时不问当前是纸 / 亮 / 暗，一律压回
-     一套黑白墨色。选择器带上三套主题名、权重与它们各自那条规则相同，本段在文件最末 →
-     后写的那条生效。这也是「界面整体换成打印配色」的单一落点，其余规则只改版式。 */
+     等于看不见（正文、标题、表格线全废）。所以打印时不问当前是哪一套外观，一律压回
+     一套黑白墨色。选择器带上每一套主题名、权重与它们各自那条规则相同，本段在文件最末 →
+     后写的那条生效（自定义深底那条是 [data-theme][data-custom-dark] 双属性，权重更高，
+     所以这里也带上它一份）。这也是「界面整体换成打印配色」的单一落点，其余规则只改版式。 */
   :root,
   [data-theme="paper"],
   [data-theme="light"],
-  [data-theme="dark"] {
+  [data-theme="dark"],
+  [data-theme="blueprint"],
+  [data-theme="forest"],
+  [data-theme="ember"],
+  [data-theme="contrast"],
+  [data-theme="custom"],
+  [data-theme="custom"][data-custom-dark="true"] {
     color-scheme: light;
     --c-canvas: #fff;
     --c-surface: #fff;

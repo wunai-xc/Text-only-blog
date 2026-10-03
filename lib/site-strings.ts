@@ -65,6 +65,15 @@ export interface SiteStrings {
   readingLeading: string;
   readingIndent: string;
   readingCurrent: string;
+  /* 设置中心：自定义配色（外观选到「自定义」时展开） */
+  customColors: string;
+  customColorsHint: string;
+  customBase: string;
+  customCanvas: string;
+  customInk: string;
+  customAccent: string;
+  customDanger: string;
+  customDark: string;
   language: string;
   languageHint: string;
   reset: string;
@@ -124,13 +133,22 @@ export const I18N: Record<Lang, SiteStrings> = {
     appearance: "外观",
     reading: "阅读偏好",
     readingHint:
-      "调的是正文的宽度 / 字号 / 行距 / 首行缩进与字体（第 6 项那几个 --reading-* 令牌），改完立刻生效，全站通用。宽度 / 字号 / 行距是滑块：没拖过时用的是按你屏幕大小算出来的默认值（屏大一点，一行的字多几个、字号也大一档），拖过之后以你选的为准，「恢复默认」会交还给屏幕。导轨上那圈小圆环标的就是「默认值」的位置，拖动时会吸附到刻度节点上。字体四档（黑体 / 宋体 / 楷体 / 等宽）用的都是你设备上已有的字体，不下载任何字体文件；「自定义」那一档用的则是你自己上传的字体文件，只存在你的浏览器里。",
+      "调的是正文的宽度 / 字号 / 行距 / 首行缩进与字体（第 6 项那几个 --reading-* 令牌），改完立刻生效，全站通用。宽度 / 字号 / 行距是滑块：没拖过时用的是按你屏幕大小算出来的默认值（屏大一点，一行的字多几个、字号也大一档），拖过之后以你选的为准，「恢复默认」会交还给屏幕。导轨上那圈小圆环标的就是「默认值」的位置，拖动时会吸附到刻度节点上。字体那几档（黑体 / 宋体 / 楷体 / 仿宋 / 圆体 / 隶书 / 行楷 / 等宽）用的都是你设备上已有的字体，不下载任何字体文件（设备上没装的那一档会自动退回最接近的默认字体）；「自定义」那一档用的则是你自己上传的字体文件，只存在你的浏览器里。",
     readingFont: "正文字体",
     readingWidth: "正文宽度",
     readingSize: "正文字号",
     readingLeading: "行距",
     readingIndent: "首行缩进",
     readingCurrent: "当前取值",
+    customColors: "自定义配色",
+    customColorsHint:
+      "先挑一套预设当起点，再微调四个关键色，剩下的「面 / 线 / 弱字 / 重点底色」会自动从它们推出来，不用逐项去调。深浅那一档由底色决定：浅底选「亮底」，深底选「暗底」（表单控件与滚动条会跟着变）。这套配色只存在你的浏览器里。",
+    customBase: "从预设开始",
+    customCanvas: "底色",
+    customInk: "文字色",
+    customAccent: "重点色",
+    customDanger: "警示色",
+    customDark: "暗底",
     language: "语言",
     languageHint: "中英文各有一份内容，切换语言不会丢掉这里的设置。",
     reset: "恢复默认",
@@ -189,13 +207,22 @@ export const I18N: Record<Lang, SiteStrings> = {
     appearance: "Appearance",
     reading: "Reading",
     readingHint:
-      "Changes the width / size / leading / first-line indent and font of the body text (the --reading-* tokens from item 6). Takes effect immediately, site-wide. Width, size and leading are sliders: until you drag one, its value is the default worked out from your screen size (a bigger screen gets a slightly wider column and larger type); once you drag it, yours wins, and “Reset” hands it back to the screen. The small ring on the rail marks that default value, and dragging snaps to the tick nodes. The four font presets use fonts already installed on your device — nothing is downloaded. The Custom preset uses a font file you upload yourself, kept in your browser only.",
+      "Changes the width / size / leading / first-line indent and font of the body text (the --reading-* tokens from item 6). Takes effect immediately, site-wide. Width, size and leading are sliders: until you drag one, its value is the default worked out from your screen size (a bigger screen gets a slightly wider column and larger type); once you drag it, yours wins, and “Reset” hands it back to the screen. The small ring on the rail marks that default value, and dragging snaps to the tick nodes. The font presets (Sans / Song / Kai / FangSong / Yuanti / LiShu / XingKai / Mono) all use fonts already installed on your device — nothing is downloaded (a preset your device does not have falls back to the nearest default). The Custom preset uses a font file you upload yourself, kept in your browser only.",
     readingFont: "Font",
     readingWidth: "Width",
     readingSize: "Font size",
     readingLeading: "Line height",
     readingIndent: "Paragraph indent",
     readingCurrent: "Current values",
+    customColors: "Custom colors",
+    customColorsHint:
+      "Start from a preset, then fine-tune four key colors; the surfaces, rules, muted text and accent tints are derived from them automatically, so you do not have to adjust every token. The light/dark switch follows your background: pick Light for a pale canvas, Dark for a deep one (form controls and scrollbars follow along). This palette stays in your browser only.",
+    customBase: "Start from",
+    customCanvas: "Background",
+    customInk: "Text",
+    customAccent: "Accent",
+    customDanger: "Danger",
+    customDark: "Dark base",
     language: "Language",
     languageHint: "Each language has its own content; switching keeps your settings here.",
     reset: "Reset to defaults",

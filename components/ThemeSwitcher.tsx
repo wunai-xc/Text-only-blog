@@ -8,7 +8,7 @@ import type { Lang } from "@/lib/lang";
 import { SITE } from "@/lib/site";
 import {
   DEFAULT_THEME_CHOICE,
-  THEME_CHOICES,
+  THEME_CYCLE,
   THEME_LABELS,
   currentThemeChoice,
   setThemeChoice,
@@ -19,8 +19,8 @@ import {
 /**
  * 顶栏外观按钮（第 7 项；对齐 wunai-blog 顶栏那「一个位置一颗按钮」的做法）
  *
- * 点一下切到下一套：跟随系统 → 纸 → 亮 → 暗 → 跟随系统。图标与提示都跟着当前选择走，
- * 悬停时能读到这套外观的一句话说明（文案来自 lib/theme.ts 的 THEME_LABELS）。
+ * 点一下切到下一套（顺序即 lib/theme.ts 的 THEME_CYCLE，自定义配色不参与轮换）。
+ * 图标与提示都跟着当前选择走，悬停时能读到这套外观的一句话说明（文案来自 THEME_LABELS）。
  *
  * 落点是 lib/theme.ts 的 setThemeChoice()（写 localStorage + 改 <html data-theme>），
  * **不在这里碰 localStorage 与 data-theme**（约定第 7 条）。
@@ -34,6 +34,11 @@ const CHOICE_ICONS: Record<ThemeChoice, IconName> = {
   paper: "mdi:book-open-outline",
   light: "mdi:weather-sunny",
   dark: "mdi:weather-night",
+  blueprint: "mdi:compass-rose",
+  forest: "mdi:tree-outline",
+  ember: "mdi:campfire",
+  contrast: "mdi:contrast-circle",
+  custom: "mdi:palette-swatch-outline",
 };
 
 export default function ThemeSwitcher({ lang }: { lang: Lang }) {
@@ -50,8 +55,8 @@ export default function ThemeSwitcher({ lang }: { lang: Lang }) {
   const label = THEME_LABELS[active][lang];
 
   function cycle() {
-    const index = THEME_CHOICES.indexOf(active);
-    const next = THEME_CHOICES[(index + 1) % THEME_CHOICES.length];
+    const index = THEME_CYCLE.indexOf(active);
+    const next = THEME_CYCLE[(index + 1) % THEME_CYCLE.length];
     setThemeChoice(next);
     setChoice(next);
   }

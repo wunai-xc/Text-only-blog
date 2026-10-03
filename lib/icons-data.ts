@@ -2,7 +2,7 @@
  * lib/icons-data.ts —— 站点用到的 MDI 图标数据（第 7 项：框架 UI）
  *
  * ⚠️ 由脚本从 `@iconify/icons-mdi@1.2.48` 导出生成的内联副本，**不要手改**：
- * 只包含 lib/icons.ts 实际用到的 49 个图标，图标清单以 lib/icons.ts 为准。
+ * 只包含 lib/icons.ts 实际用到的 54 个图标，图标清单以 lib/icons.ts 为准。
  *
  * 为什么内联、而不是继续依赖 `@iconify/icons-mdi`：
  * 那个包整包 110MB / 27742 个文件，而 CI（Cloudflare Workers Builds）每次构建都要
@@ -123,3 +123,13 @@ export const mdiCommentTextOutline: IconData = {"width":24,"height":24,"body":"<
 export const mdiDownload: IconData = {"width":24,"height":24,"body":"<path fill=\"currentColor\" d=\"M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7l7-7Z\"/>"};
 /** mdi:printer */
 export const mdiPrinter: IconData = {"width":24,"height":24,"body":"<path fill=\"currentColor\" d=\"M18 3H6v4h12m1 5a1 1 0 0 1-1-1a1 1 0 0 1 1-1a1 1 0 0 1 1 1a1 1 0 0 1-1 1m-3 7H8v-5h8m3-6H5a3 3 0 0 0-3 3v6h4v4h12v-4h4v-6a3 3 0 0 0-3-3Z\"/>"};
+/** mdi:compass-rose（外观「蓝图纸」） */
+export const mdiCompassRose: IconData = {"width":24,"height":24,"body":"<path fill=\"currentColor\" d=\"m15 9l-3-9l-3 9l-9 3l9 3l3 9l3-9l9-3zM4 12l6-2l1 2zm8 8l-2-6l2-1zm0-16l2 6l-2 1zm2 10l-1-2h7zm-5.3 3.3L5 19l1.7-3.7l1.6.5zm8.6-2L19 19l-3.7-1.7l.5-1.6zM6.7 8.7L5 5l3.7 1.7l-.5 1.5zm8.6-2L19 5l-1.7 3.7l-1.6-.5z\"/>"};
+/** mdi:tree-outline（外观「森林绿」） */
+export const mdiTreeOutline: IconData = {"width":24,"height":24,"body":"<path fill=\"currentColor\" d=\"M10.5 3a4.48 4.48 0 0 0-4.13 6.27C5.5 10.12 5 11.28 5 12.5C5 15 7 17 9.5 17c.5 0 1-.11 1.5-.28V21h2v-5.23c.5.14 1 .23 1.5.23a5.5 5.5 0 0 0 5.5-5.5A5.5 5.5 0 0 0 14.5 5h-.26C13.41 3.76 12 3 10.5 3m0 2c1.32 0 2.41 1.03 2.5 2.35c.46-.23 1-.35 1.5-.35a3.5 3.5 0 0 1 3.5 3.5a3.5 3.5 0 0 1-3.5 3.5c-.96 0-1.87-.39-2.54-1.09A2.49 2.49 0 0 1 9.5 15A2.5 2.5 0 0 1 7 12.5c0-1.38.8-1.96 2-2.71c-.8-1.03-1-1.63-1-2.29A2.5 2.5 0 0 1 10.5 5\"/>"};
+/** mdi:campfire（外观「夜幕暖光」） */
+export const mdiCampfire: IconData = {"width":24,"height":24,"body":"<path fill=\"currentColor\" d=\"m15.9 18.5l6 1.6l-.4 1.9l-9.4-2.5L2.7 22l-.5-1.9l6-1.6l-6.1-1.6l.5-1.9l9.4 2.5l9.4-2.5l.5 1.9zm.17-10.58c-.16-.22-.36-.42-.57-.59c-.45-.43-1-.74-1.44-1.2C13 5.08 12.79 3.34 13.44 2c-.65.17-1.26.54-1.77.95C9.84 4.46 9.11 7.1 10 9.38c0 .07.04.15.04.24c0 .16-.11.3-.25.38a.51.51 0 0 1-.57-.23c-.8-1.03-.93-2.51-.38-3.7c-1.19.99-1.84 2.65-1.73 4.22c.02.36.07.71.19 1.07c.11.44.29.87.52 1.25c.75 1.25 2.08 2.15 3.5 2.33c1.52.2 3.14-.09 4.31-1.15c1.3-1.2 1.77-3.12 1.08-4.79l-.1-.17q-.21-.495-.57-.9zm-2.24 4.55c-.2.18-.52.36-.78.44c-.79.28-1.59-.12-2.05-.6c.84-.2 1.34-.84 1.5-1.48c.11-.58-.11-1.05-.21-1.61c-.08-.53-.07-.99.13-1.49c.13.27.27.55.44.77c.55.72 1.41 1.04 1.59 2c.02.13.05.22.05.33c0 .6-.24 1.24-.68 1.64\"/>"};
+/** mdi:contrast-circle（外观「高对比」） */
+export const mdiContrastCircle: IconData = {"width":24,"height":24,"body":"<path fill=\"currentColor\" d=\"M12 20c-2.21 0-4.21-.9-5.66-2.34L17.66 6.34A8 8 0 0 1 20 12a8 8 0 0 1-8 8M6 8h2V6h1.5v2h2v1.5h-2v2H8v-2H6M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2m0 14h5v-1.5h-5z\"/>"};
+/** mdi:palette-swatch-outline（外观「自定义」，也是设置中心那一块自定义配色的图标） */
+export const mdiPaletteSwatchOutline: IconData = {"width":24,"height":24,"body":"<path fill=\"currentColor\" d=\"m2.5 19.6l1.3.6v-9L1.4 17c-.4 1.1.1 2.2 1.1 2.6M15.2 4.8l5 12l-7.3 3l-5-11.9v-.1zm.1-2c-.3 0-.5 0-.8.1L7.1 6c-.7.3-1.2 1-1.2 1.8c0 .2 0 .5.1.8l5 11.9c.3.8 1 1.2 1.8 1.2c.3 0 .5 0 .8-.1l7.4-3.1c1-.4 1.5-1.6 1.1-2.6L17.1 4c-.3-.8-1.1-1.2-1.8-1.2m-4.8 7.1c-.6 0-1-.4-1-1s.4-1 1-1s1 .5 1 1s-.4 1-1 1m-4.6 9.9c0 1.1.9 2 2 2h1.4l-3.4-8.3z\"/>"};
