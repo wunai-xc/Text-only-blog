@@ -8,70 +8,65 @@
  * （"mdi:cog-outline"）拼错时 TypeScript 会直接报错。
  *
  * 约定：
- *   - 只从 `@iconify/icons-mdi` 深路径导入（本地打包 → 运行时不发请求 → 国内可用、
- *     断网可用、PWA 离线可用）；
+ *   - 图标数据取自 lib/icons-data.ts（只内联用到的图标；本地打包 → 运行时不发请求 →
+ *     国内可用、断网可用、PWA 离线可用）；
  *   - 图标名都对着 api.iconify.design/mdi/<name>.svg 核过存在；
  *   - 加图标时顺手按用途分组、写一行注释说明用在哪。
  */
 
-/* 导航（顶栏的品牌小字行与页脚那一排入口都用其中的一部分） */
-import mdiHomeOutline from "@iconify/icons-mdi/home-outline";
-import mdiPostOutline from "@iconify/icons-mdi/post-outline";
-import mdiTagMultipleOutline from "@iconify/icons-mdi/tag-multiple-outline";
-import mdiShapeOutline from "@iconify/icons-mdi/shape-outline";
-import mdiArchiveOutline from "@iconify/icons-mdi/archive-outline";
-import mdiMagnify from "@iconify/icons-mdi/magnify";
-import mdiAccountMultipleOutline from "@iconify/icons-mdi/account-multiple-outline";
-import mdiAccountOutline from "@iconify/icons-mdi/account-outline";
-/* 外观切换（四选一：跟随系统 / 纸 / 亮 / 暗） */
-import mdiThemeLightDark from "@iconify/icons-mdi/theme-light-dark";
-import mdiBookOpenOutline from "@iconify/icons-mdi/book-open-outline";
-import mdiWeatherSunny from "@iconify/icons-mdi/weather-sunny";
-import mdiWeatherNight from "@iconify/icons-mdi/weather-night";
-/* 设置中心 */
-import mdiCogOutline from "@iconify/icons-mdi/cog-outline";
-import mdiPaletteOutline from "@iconify/icons-mdi/palette-outline";
-import mdiFormatFont from "@iconify/icons-mdi/format-font";
-import mdiFormatSize from "@iconify/icons-mdi/format-size";
-import mdiArrowExpandHorizontal from "@iconify/icons-mdi/arrow-expand-horizontal";
-import mdiFormatLineSpacing from "@iconify/icons-mdi/format-line-spacing";
-import mdiFormatIndentIncrease from "@iconify/icons-mdi/format-indent-increase";
-import mdiTranslate from "@iconify/icons-mdi/translate";
-import mdiCheck from "@iconify/icons-mdi/check";
-import mdiRestore from "@iconify/icons-mdi/restore";
-import mdiClose from "@iconify/icons-mdi/close";
-/* 设置中心：「自定义」字体那一档的上传 / 移除（第 8 项字体设置） */
-import mdiUpload from "@iconify/icons-mdi/upload";
-import mdiDeleteOutline from "@iconify/icons-mdi/delete-outline";
-/* 页脚 */
-import mdiEmailOutline from "@iconify/icons-mdi/email-outline";
-import mdiGithub from "@iconify/icons-mdi/github";
-import mdiSourceRepository from "@iconify/icons-mdi/source-repository";
-import mdiRss from "@iconify/icons-mdi/rss";
-/* 列表页（第 10 项：搜索 + 筛选）与文章卡片（第 11 项：三档密度） */
-import mdiFilterOutline from "@iconify/icons-mdi/filter-outline";
-import mdiFilterVariantRemove from "@iconify/icons-mdi/filter-variant-remove";
-import mdiCalendarOutline from "@iconify/icons-mdi/calendar-outline";
-import mdiSortCalendarDescending from "@iconify/icons-mdi/sort-calendar-descending";
-import mdiSortCalendarAscending from "@iconify/icons-mdi/sort-calendar-ascending";
-import mdiViewCompactOutline from "@iconify/icons-mdi/view-compact-outline";
-import mdiViewAgendaOutline from "@iconify/icons-mdi/view-agenda-outline";
-import mdiTextBoxOutline from "@iconify/icons-mdi/text-box-outline";
-import mdiRobotOutline from "@iconify/icons-mdi/robot-outline";
-import mdiMagnifyClose from "@iconify/icons-mdi/magnify-close";
-import mdiAlertCircleOutline from "@iconify/icons-mdi/alert-circle-outline";
-/** 图标：列表页的「卡组」组头（文件夹）与折叠工具栏的箭头 */
-import mdiFolderOutline from "@iconify/icons-mdi/folder-outline";
-import mdiChevronDown from "@iconify/icons-mdi/chevron-down";
-/* 文章页（第 12 项：悬浮目录 / 进度与回顶 / 上下篇 / 评论） */
-import mdiFormatListBulleted from "@iconify/icons-mdi/format-list-bulleted";
-import mdiArrowUp from "@iconify/icons-mdi/arrow-up";
-import mdiArrowLeft from "@iconify/icons-mdi/arrow-left";
-import mdiArrowRight from "@iconify/icons-mdi/arrow-right";
-import mdiCommentTextOutline from "@iconify/icons-mdi/comment-text-outline";
-/* 文章页的「导出」：下载 Markdown 源文件 / 打印存 PDF（第 12 项） */
-import mdiDownload from "@iconify/icons-mdi/download";
-import mdiPrinter from "@iconify/icons-mdi/printer";
+/* 图标数据在 lib/icons-data.ts（只内联用到的 49 个，原因见那个文件的说明）。
+   分组注释保留在下面的图标表里 —— 加图标时先在 icons-data.ts 补数据，再来这里登记。 */
+import {
+  mdiAccountMultipleOutline,
+  mdiAccountOutline,
+  mdiAlertCircleOutline,
+  mdiArchiveOutline,
+  mdiArrowExpandHorizontal,
+  mdiArrowLeft,
+  mdiArrowRight,
+  mdiArrowUp,
+  mdiBookOpenOutline,
+  mdiCalendarOutline,
+  mdiCheck,
+  mdiChevronDown,
+  mdiClose,
+  mdiCogOutline,
+  mdiCommentTextOutline,
+  mdiDeleteOutline,
+  mdiDownload,
+  mdiEmailOutline,
+  mdiFilterOutline,
+  mdiFilterVariantRemove,
+  mdiFolderOutline,
+  mdiFormatFont,
+  mdiFormatIndentIncrease,
+  mdiFormatLineSpacing,
+  mdiFormatListBulleted,
+  mdiFormatSize,
+  mdiGithub,
+  mdiHomeOutline,
+  mdiMagnify,
+  mdiMagnifyClose,
+  mdiPaletteOutline,
+  mdiPostOutline,
+  mdiPrinter,
+  mdiRestore,
+  mdiRobotOutline,
+  mdiRss,
+  mdiShapeOutline,
+  mdiSortCalendarAscending,
+  mdiSortCalendarDescending,
+  mdiSourceRepository,
+  mdiTagMultipleOutline,
+  mdiTextBoxOutline,
+  mdiThemeLightDark,
+  mdiTranslate,
+  mdiUpload,
+  mdiViewAgendaOutline,
+  mdiViewCompactOutline,
+  mdiWeatherNight,
+  mdiWeatherSunny,
+} from "./icons-data";
 
 export const icons = {
   /* 导航 */

@@ -219,9 +219,9 @@
 | 公式 | KaTeX 0.16 + `katex/contrib/mhchem`（含自定义宏） |
 | 检索 | Fuse.js 7（构建期预生成索引，零运行时后端） |
 | 图表 | Mermaid、ECharts、Graphviz（`@hpcc-js/wasm-graphviz`）、abc.js、SmilesDrawer —— 全部按需动态加载 |
-| 图标 | Iconify（`@iconify/react/offline` + `@iconify/icons-mdi`，离线打包，无运行时请求） |
+| 图标 | Iconify（`@iconify/react/offline` + 内联的 MDI 图标数据 `lib/icons-data.ts`，离线打包，无运行时请求） |
 | 评论 | giscus（GitHub Discussions） |
-| 部署 | Cloudflare Workers 静态资源（wrangler + GitHub Actions） |
+| 部署 | Cloudflare Workers 静态资源（wrangler；由 Cloudflare Workers Builds 构建） |
 
 形态：**纯静态**。无后端、无数据库、无运行时服务端接口；所有数据在构建期生成。
 
@@ -305,7 +305,8 @@
 ├─ lib/
 │  ├─ site.ts                站点配置（第 7 项扩全：路由表 ROUTES + 落地状态、站内导航、联系方式、
 │  │                         i18n 文案表；顶栏改版新增 HEADER_IMAGE 图片位）
-│  ├─ icons.ts               用到的 MDI 图标（第 7 项；本地打包的图标数据，运行时不发请求）
+│  ├─ icons.ts               图标表（第 7 项）：图标名 `"mdi:xxx"` → 图标数据的映射
+│  ├─ icons-data.ts          用到的 49 个 MDI 图标数据（第 7 项；内联副本，运行时不发请求）
 │  ├─ prefs.ts               阅读偏好（第 7 项：宽度/字号/行距三档，写 --reading-* 令牌 + 首帧脚本）
 │  ├─ decor.ts               装饰层（第 8 项：路径 → 图纸编号 + 图案名 + 图签文字，零依赖；
 │  │                         第 8 项扩展：同一份路径 → 环境色层 AMBIENTS —— 每页三块大色块）
@@ -323,9 +324,6 @@
 │  ├─ search-index.ts        搜索索引条目构建（第 5 项，Fuse.js 字段约定在这里）
 │  ├─ feeds.ts               RSS 2.0 生成（第 5 项）
 │  └─ changelog.ts           更新日志（第 5 项：先 GitHub API、再 git log，都失败则空）
-├─ types/
-│  └─ iconify.d.ts           icons-mdi 深路径导入兜底声明
-├─ .github/workflows/deploy.yml
 ├─ wrangler.toml
 ├─ next.config.ts  postcss.config.mjs  tsconfig.json  package.json
 ├─ .gitignore
@@ -398,7 +396,7 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 - `app/globals.css`：Tailwind 4 用 `@import "tailwindcss"` + CSS 变量（`@theme`）配置，不生成 `tailwind.config.js`；一并引入 KaTeX 样式与 monokai 代码高亮主题。
 - 依赖版本策略：`next 16.3.1` / `react 19.2.8` 与 `wunai-Blog` 对齐；其余用宽松主版本区间（`^11`、`^5` 等），避免锁到不存在的版本号导致安装失败。`overrides` 把 katex 钉在 `^0.16`。
 - 图表库（mermaid / echarts / graphviz / abcjs / smiles-drawer）**不进入首屏包**，只在文章真的出现对应代码块时动态 `import`，为此保留了 PWA 离线可用性。
-- 图标走 `@iconify/react/offline` + `@iconify/icons-mdi`，构建期打包，运行时不发请求。
+- 图标走 `@iconify/react/offline`，图标数据内联在 `lib/icons-data.ts`（只留用到的 49 个）。原先依赖 `@iconify/icons-mdi` 整包（110MB / 27742 个文件），CI 每次构建都要完整 `npm ci`，是构建慢的主因之一，故改为内联。
 
 ### 2. 内容管线 —— 已完成 ✅
 
