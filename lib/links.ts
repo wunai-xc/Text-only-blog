@@ -40,6 +40,15 @@ export interface FriendLink {
  */
 export const LINKS: FriendLink[] = [
   {
+  name: "DeepMinecraftCode",
+  url: "https://dmcc.wunai.top",
+  avatar: "",
+  note: {
+    zh: "这是我的另一个网站：DeepMinecraftCode深度解析mc代码",
+    en: "This is another website of mine: DeepMinecraftCode deeply analyzes mc code.",
+    },
+  },
+  {
     name: "hconzlvra",
     url: "https://hconzlvra.top/",
     avatar: "https://avatars.githubusercontent.com/u/273501356?v=4&s=96",
