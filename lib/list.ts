@@ -547,6 +547,12 @@ export interface ListText {
     ungroupedNote: string;
     pageNote: string;
     backAll: string;
+    /**
+     * 组头右侧那个折叠开关的读屏文案（第 10 项：卡组可折叠）。
+     * 带上组名，一组多的时候读屏不会只听到两个没头没尾的「收起 / 展开」。
+     */
+    fold: (name: string) => string;
+    unfold: (name: string) => string;
   };
 
   /* 卡片（第 11 项） */
@@ -623,6 +629,8 @@ const ZH: ListText = {
     ungroupedNote: "没放进任何目录的文章（放在 content/<lang>/posts/ 顶层的那些）。",
     pageNote: "这个卡组（目录）里的文章都列在下面。",
     backAll: "← 全部文章",
+    fold: (name) => `收起「${name}」`,
+    unfold: (name) => `展开「${name}」`,
   },
 
   card: {
@@ -692,6 +700,8 @@ const EN: ListText = {
     ungroupedNote: "Posts that do not live in a directory of their own (directly under content/<lang>/posts/).",
     pageNote: "Every post in this card group is listed below.",
     backAll: "← All posts",
+    fold: (name) => `Collapse “${name}”`,
+    unfold: (name) => `Expand “${name}”`,
   },
 
   card: {

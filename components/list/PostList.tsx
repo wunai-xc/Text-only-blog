@@ -151,6 +151,12 @@ export default function PostList({
    * 也保持收起：条件已经显示在收起那一行里（`activeNames`），没必要把一整套控件摊开。
    */
   const [panelOpen, setPanelOpen] = useState(false);
+  /**
+   * 折叠起来的卡组（按 slug 记）：默认**全部展开** —— 这一页没有 JS 时也必须读得到文章
+   *（约定第 4 条），所以折叠只是「清单太长时收起不想看的那几组」的增强，不是默认形态。
+   * 状态只活在这次会话里，不写地址栏、也不记本机（它是临时的看，不是偏好）。
+   */
+  const [foldedGroups, setFoldedGroups] = useState<Set<string>>(new Set());
   const engineRef = useRef<Engine | null>(null);
   const loadingRef = useRef(false);
   const hydrated = useRef(false);
@@ -195,6 +201,16 @@ export default function PostList({
     setFilters((current) => {
       const next = { ...current, ...patch };
       if (patch.density && patch.density !== current.density) saveDensity(next.density);
+      return next;
+    });
+  }, []);
+
+  /* ---- 折叠一个卡组（键是卡组 slug，见上面 foldedGroups 的注释） ---- */
+  const toggleGroup = useCallback((slug: string) => {
+    setFoldedGroups((current) => {
+      const next = new Set(current);
+      if (next.has(slug)) next.delete(slug);
+      else next.add(slug);
       return next;
     });
   }, []);
@@ -565,33 +581,53 @@ export default function PostList({
               </section>
             ) : null}
 
-            {grouping.groups.map((entry) => (
-              <section
-                className="list-group"
-                id={`group-${entry.group.slug}`}
-                key={entry.group.slug}
-                aria-label={groupTitle(entry.group)}
-              >
-                <header className="list-group-head">
-                  <p className="list-group-kicker">
-                    <Icon icon={icons["mdi:folder-outline"]} width="1em" height="1em" />
-                    {t.groups.kicker}
-                    {entry.group.explicit ? null : ` · ${entry.group.slug}/`}
-                  </p>
-                  <h2 className="list-group-title">
-                    {/* 组头链到卡组自己的页面（/zh/posts/notes/）—— 与 sitemap、卡组页同一份地址 */}
-                    <a href={groupHref(lang, entry.group.slug)}>{groupTitle(entry.group)}</a>
-                  </h2>
-                  <span className="list-group-count">
-                    {t.groups.count(entry.posts.length)}
-                  </span>
-                  {entry.group.description ? (
-                    <p className="list-group-desc">{entry.group.description}</p>
-                  ) : null}
-                </header>
-                {renderGrid(entry.posts)}
-              </section>
-            ))}
+            {grouping.groups.map((entry) => {
+              const name = groupTitle(entry.group);
+              /** 这一组是不是收起状态；bodyId 给 aria-controls 指认被折叠的那块 */
+              const folded = foldedGroups.has(entry.group.slug);
+              const bodyId = `group-body-${entry.group.slug.replace(/\//g, "-")}`;
+              return (
+                <section
+                  className="list-group"
+                  id={`group-${entry.group.slug}`}
+                  key={entry.group.slug}
+                  aria-label={name}
+                >
+                  <header className="list-group-head">
+                    <p className="list-group-kicker">
+                      <Icon icon={icons["mdi:folder-outline"]} width="1em" height="1em" />
+                      {t.groups.kicker}
+                      {entry.group.explicit ? null : ` · ${entry.group.slug}/`}
+                    </p>
+                    <h2 className="list-group-title">
+                      {/* 组头链到卡组自己的页面（/zh/posts/notes/）—— 与 sitemap、卡组页同一份地址 */}
+                      <a href={groupHref(lang, entry.group.slug)}>{name}</a>
+                    </h2>
+                    <span className="list-group-count">
+                      {t.groups.count(entry.posts.length)}
+                    </span>
+                    {/* 折叠开关：与组名分开，组名仍然可点去卡组页（别把两者塞进同一个 <summary>） */}
+                    <button
+                      type="button"
+                      className="icon-button list-group-toggle"
+                      aria-expanded={!folded}
+                      aria-controls={bodyId}
+                      title={folded ? t.groups.unfold(name) : t.groups.fold(name)}
+                      aria-label={folded ? t.groups.unfold(name) : t.groups.fold(name)}
+                      onClick={() => toggleGroup(entry.group.slug)}
+                    >
+                      <Icon icon={icons["mdi:chevron-down"]} width="1em" height="1em" />
+                    </button>
+                    {entry.group.description ? (
+                      <p className="list-group-desc">{entry.group.description}</p>
+                    ) : null}
+                  </header>
+                  <div className="list-group-body" id={bodyId} hidden={folded}>
+                    {renderGrid(entry.posts)}
+                  </div>
+                </section>
+              );
+            })}
           </div>
         ) : (
           renderGrid(visible)

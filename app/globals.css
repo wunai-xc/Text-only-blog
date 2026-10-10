@@ -2519,6 +2519,31 @@ html[data-reading="hidden"] {
     color: var(--c-ink-muted);
   }
 
+  /* 组头右侧的折叠开关（第 10 项：卡组可折叠）。默认展开，点一下把这一组的卡片收起来。
+     外壳复用 `.icon-button`（与工具栏的按钮同一件），这里只加定位：`margin-left: auto`
+     把它推到这一行最右；组里多组并排时每条组头都对齐同一个位置。 */
+  .list-group-toggle {
+    margin-left: auto;
+    align-self: center;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .list-group-toggle > svg {
+      transition: transform 0.18s ease;
+    }
+  }
+
+  /* 收起时箭头转 90 度朝右（展开是朝下的 chevron），与工具栏那个 180 度翻转同一套语言 */
+  .list-group-toggle[aria-expanded="false"] > svg {
+    transform: rotate(-90deg);
+  }
+
+  /* 折叠中的那一块不显示。`.list-grid` 的 `display: grid` 会盖过 UA 的 `[hidden]`，
+     所以在这一层显式藏起来（`hidden` 属性本身还留着，`aria-controls` 因此始终有落点）。 */
+  .list-group-body[hidden] {
+    display: none;
+  }
+
   /* ---------- 文章卡片（第 11 项） ---------- */
 
   .list-grid {
@@ -4546,6 +4571,11 @@ html[data-reading="hidden"] {
   /* 第 10 项的列表页：工具栏（搜索框、选项片）在纸上是点不动的噪音，不印；
      列表按当前筛选结果排成一条连续的书单，宽度也不再受屏幕宽度限制。 */
   .list-toolbar {
+    display: none;
+  }
+
+  /* 卡组的折叠开关也是屏幕上的东西（纸上按不了），不印；当前收起的那几组仍保持收起 */
+  .list-group-toggle {
     display: none;
   }
 
