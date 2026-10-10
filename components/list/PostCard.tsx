@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Icon } from "@iconify/react/offline";
 
 import { icons } from "@/lib/icons";
@@ -16,8 +17,13 @@ import { ARTICLE_ROUTE } from "@/lib/routes";
  *
  * 标题可点与否看正文页的落地状态 —— 判断与 RouteLink 是同一个约定（约定第 8 条：
  * 不留会 404 的死链），落点只有一个：lib/site.ts 的 ARTICLE_ROUTE。第 12 项把它改成了
- * `"ready"`，所以这里现在是真 `<a>`；哪天把状态改回 `"pending"`（例如换了 slug 规则），
+ * `"ready"`，所以这里现在是真链接；哪天把状态改回 `"pending"`（例如换了 slug 规则），
  * 卡片的标题会一起退回「不可点 + 说明」的形态，不需要回来改这个文件。
+ *
+ * 可点时用 `next/link` 的 `<Link>` 而**不是**原生 `<a>`：原生 `<a>` 走整页刷新，
+ * App Router 的 `usePathname()` 不会变，挂在根布局的 RouteLoading（顶部描线）与
+ * PageIntro（正文淡入）就永远等不到「换页完成」，从卡片进文章时看着像直接载入。
+ * 这一点对首页 / 列表页 / 卡组页三处入口（都走这个组件）一起生效。
  *
  * 卡片上的文案跟着**卡片自己**走（lib/list.ts 的 LIST_TEXT），不从父组件透传 ——
  * 首页与列表页因此不会各写一份「几分钟」。
@@ -58,7 +64,7 @@ export default function PostCard({
             {post.title}
           </span>
         ) : (
-          <a href={post.href}>{post.title}</a>
+          <Link href={post.href}>{post.title}</Link>
         )}
       </h3>
 
