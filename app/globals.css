@@ -4306,6 +4306,24 @@ html[data-reading="hidden"] {
     font-size: 0.95rem;
   }
 
+  /* 宽表：在自己的框里横向滚动，而不是把整页撑宽。
+     结构由构建期 rehypeTableScroll 套上（lib/markdown.ts，与代码块工具头同一做法）。
+     不这么做时，某个长单元格（`ExperimentalRedstoneController` 这种长标识符、长 URL）
+     会把表格的 min-content 顶到正文列宽之外，`.article-body` 跟着溢出 ——
+     于是**整页**多出一条横向滚动：顶栏 / 页脚变宽，文章页右侧固定的进度条被挤出屏幕。
+     纵向间距挪到这一层（里面的 table 归零），滚动区才不会带上上下那 0.9rem。 */
+  .article-body .table-scroll {
+    margin: 0.9rem 0;
+    max-width: 100%;
+    overflow-x: auto;
+    /* 触屏惯性滚动（老 iOS 要显式开） */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .article-body .table-scroll > table {
+    margin: 0;
+  }
+
   .article-body th,
   .article-body td {
     padding: 0.4rem 0.6rem;
@@ -4672,6 +4690,7 @@ html[data-reading="hidden"] {
      长行（一整行日志、一条很长的 URL）才不会被右边裁掉。 */
   .article-body pre,
   .article-body .katex-display,
+  .article-body .table-scroll,
   .chart-canvas {
     overflow: visible;
   }
@@ -4696,6 +4715,7 @@ html[data-reading="hidden"] {
   /* 这些块被分页切开就读不成：整块挪到下一页（代码块连工具头一起，所以列的是外层容器） */
   .article-body :is(pre, blockquote, table, figure, img, .katex-display),
   .article-body .code-block,
+  .article-body .table-scroll,
   .chart-block,
   .references,
   .article-pager {

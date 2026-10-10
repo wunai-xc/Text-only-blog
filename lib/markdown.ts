@@ -21,6 +21,7 @@
  *   rehype-katex             KaTeX（含 mhchem、自定义宏）
  *   rehype-highlight         highlight.js（monokai 主题在 globals.css 里）
  *   rehypeCodeBlocks         代码块套上工具头、印出语言名（上面那段）
+ *   rehypeTableScroll        给每个表格套一层横向滚动容器（宽表不撑破版面）
  *   rehype-stringify         hast → HTML 字符串
  *
  * 图表为什么不在构建期渲染：mermaid / echarts / graphviz / abcjs / smiles-drawer
@@ -552,6 +553,46 @@ function wrapCodeBlock(pre: HastNode): HastNode | null {
   };
 }
 
+/* -------------------------- 插件：表格横向滚动 -------------------------- */
+
+/**
+ * 给每个 `<table>` 套一层 `.table-scroll`，让宽表在**自己的框里**横向滚动。
+ *
+ * 为什么不直接在 table 上写 `overflow-x: auto`：表格有自己的格式化上下文，overflow
+ * 在它身上不一定生效；而且 `width: 100%` 只是「至少撑满」，一旦某个单元格的长内容
+ * （`ExperimentalRedstoneController` 这种长标识符、长 URL）把 min-content 顶到正文列宽之外，
+ * 整张表就会戳破 `.article-body`。于是**整页**多出一条横向滚动：顶栏 / 页脚跟着变宽，
+ * 文章页右侧那条固定进度条被挤出屏幕（这就是「红石系统全剖析」手机上那一段的问题）。
+ * 套一层块级滚动容器（CSS 里 `.article-body .table-scroll { overflow-x: auto }`）之后，
+ * 溢出被关在这一层里，正文列宽与整页布局都不再受影响。
+ *
+ * 与 rehypeCodeBlocks（上面那个）同一做法：结构在这里定，样式在 globals.css，
+ * 所以同一段结构注释也要在 globals.css 的表格一节留一份。
+ */
+function rehypeTableScroll() {
+  return (tree: HastNode): void => {
+    /** 需要父节点才能换掉孩子，所以这里自己递归（walkHast 不给父节点） */
+    const visit = (parent: HastNode): void => {
+      const children = parent.children;
+      if (!children) return;
+      for (let index = 0; index < children.length; index += 1) {
+        const child = children[index];
+        if (child.type === "element" && child.tagName === "table") {
+          children[index] = {
+            type: "element",
+            tagName: "div",
+            properties: { className: ["table-scroll"] },
+            children: [child],
+          };
+          continue;
+        }
+        visit(child);
+      }
+    };
+    visit(tree);
+  };
+}
+
 /* ---------------------------- 插件：目录 ---------------------------- */
 
 export interface HeadingRecord {
@@ -736,6 +777,8 @@ export async function renderMarkdown(
     .use(rehypeHighlight, { detect: false, ignoreMissing: true })
     // 排在 highlight 之后：语言名读的是它写在 <code> 上的 `language-xxx` 类
     .use(rehypeCodeBlocks)
+    // 表格也套一层滚动容器：宽表不该把整页撑宽（见上面那段注释）
+    .use(rehypeTableScroll)
     .use(rehypeStringify, { allowDangerousHtml: true });
 
   const file = await processor.process(markdown);
