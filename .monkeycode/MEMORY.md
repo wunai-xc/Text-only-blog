@@ -45,4 +45,4 @@ Entries discovered by the Agent during task execution should follow this format:
 - Category: Troubleshooting & Debugging
 - Instructions:
   - 本仓库为 Next.js 静态站点，构建部署在 Cloudflare 上完成，本地无需也不能作为验证手段。
-  - `public/` 目录在站点根路径下提供服务：文章里引用图片应写 `/minecraft/xxx.png`，写 `/public/minecraft/xxx.png` 会 404（图片碎裂）。
+  - 文章图片统一按仓库目录书写 `/public/xxx.png`；渲染管线（lib/markdown.ts 的 `rehypePublicAssets`）会在渲染时自动去掉 `/public` 前缀，因为 `public/` 实际映射到站点根路径。

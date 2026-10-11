@@ -14,6 +14,7 @@
  *   remarkCitations          [reference:N] → 角标链接
  *   remark-rehype            mdast → hast（保留内联 HTML）
  *   rehype-raw               解析正文里的内联 HTML
+ *   rehypePublicAssets       图片 src 的 /public 前缀归一化（见下）
  *   rehypeLinkCards          外链：行内加站点图标，单独成行的换成卡片（见 lib/link-cards.ts）
  *   rehype-slug              给标题加 id（目录靠它）
  *   rehypeCollectHeadings    收集标题 → 目录
@@ -593,6 +594,30 @@ function rehypeTableScroll() {
   };
 }
 
+/* ------------------------ 插件：public 资源路径 ------------------------ */
+
+/**
+ * 正文里按仓库目录直觉写成 `/public/xxx.png` 时，把 `/public` 前缀去掉。
+ *
+ * `public/` 在 Next.js 里映射到站点根路径：`public/a.png` 实际由 `/a.png` 提供，
+ * 直接写 `/public/a.png` 会 404（图碎了）。这里统一归一化成 `/a.png`，
+ * 让作者可以照仓库结构书写，不必记这条约定。
+ */
+function rehypePublicAssets() {
+  return (tree: HastNode): void => {
+    walkHast(tree, (node) => {
+      if (node.type !== "element" || !node.tagName) return;
+      if (node.tagName !== "img" && node.tagName !== "source" && node.tagName !== "video") return;
+      const properties = node.properties;
+      if (!properties) return;
+      const src = properties.src;
+      if (typeof src === "string" && src.startsWith("/public/")) {
+        properties.src = src.slice("/public".length);
+      }
+    });
+  };
+}
+
 /* ---------------------------- 插件：目录 ---------------------------- */
 
 export interface HeadingRecord {
@@ -769,6 +794,7 @@ export async function renderMarkdown(
     .use(remarkCitations, { index, cited, warn })
     .use(remarkRehype, { allowDangerousHtml: options.allowRawHtml !== false })
     .use(rehypeRaw)
+    .use(rehypePublicAssets)
     .use(rehypeLinkCards)
     .use(rehypeSlug)
     .use(rehypeCollectHeadings, { collect: (heading: HeadingRecord) => headings.push(heading) })
