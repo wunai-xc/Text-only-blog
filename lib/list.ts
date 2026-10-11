@@ -117,6 +117,12 @@ export interface ListGroup {
   explicit: boolean;
   /** 排序权重，小的在前 */
   order: number;
+  /**
+   * 组内文章数 —— 「长卡组默认收起」用它判断（见 AUTO_FOLDS）。
+   * 用的是**内容管线算好的这一组有多少篇**，不是当前筛选结果里还剩几篇：
+   * 读者刚进页面时还没搜、没筛，长度要按卡组本身来量。
+   */
+  count: number;
 }
 
 /** `CardGroupMeta` → `ListGroup`（只挑列表页要用的字段） */
@@ -127,6 +133,7 @@ export function toListGroup(group: CardGroupMeta): ListGroup {
     description: group.description,
     explicit: group.explicit,
     order: group.order,
+    count: group.count,
   };
 }
 
@@ -223,6 +230,43 @@ export function isDensity(value: unknown): value is Density {
   return typeof value === "string" && DENSITIES.some((option) => option.id === value);
 }
 
+/**
+ * 「长卡组默认收起」（第 10 项增强）：卡组里文章一多，列表页会被撑得很长 ——
+ * 于是给一个「组内超过 N 篇就默认收起来」的档位，读者在设置中心改（存在本机）。
+ *
+ * 它只管**默认形态**：这一页读者手动展开过的组，不会因为挪动这个设置而反复被重置
+ * —— 「先应用一次、之后手动优先」的规则写在 components/list/PostList.tsx 里。
+ * 与密度同一个定位：是本机偏好（localStorage），不是筛选参数（不进地址栏）。
+ */
+export type AutoFoldId = "off" | "3" | "5" | "10";
+
+export interface AutoFoldOption {
+  id: AutoFoldId;
+  /** 组内文章数**超过**这个数就默认收起；0 = 不自动收起 */
+  threshold: number;
+  zh: string;
+  en: string;
+}
+
+export const AUTO_FOLDS: AutoFoldOption[] = [
+  { id: "off", threshold: 0, zh: "不自动", en: "Off" },
+  { id: "3", threshold: 3, zh: "超过 3 篇", en: "Over 3" },
+  { id: "5", threshold: 5, zh: "超过 5 篇", en: "Over 5" },
+  { id: "10", threshold: 10, zh: "超过 10 篇", en: "Over 10" },
+];
+
+/** 默认：超过 3 篇就收起（站长要的那条） */
+export const DEFAULT_AUTO_FOLD: AutoFoldId = "3";
+
+export function isAutoFoldId(value: unknown): value is AutoFoldId {
+  return typeof value === "string" && AUTO_FOLDS.some((option) => option.id === value);
+}
+
+/** 档位 id → 「超过几篇就收起」；0 表示不自动收起 */
+export function autoFoldThreshold(id: AutoFoldId): number {
+  return AUTO_FOLDS.find((option) => option.id === id)?.threshold ?? 0;
+}
+
 export type ListSort = "newest" | "oldest";
 
 export interface SortOption {
@@ -270,6 +314,12 @@ export const DEFAULT_FILTERS: ListFilters = {
 
 /** 密度存在本机（与阅读偏好同一套路数：只在读者自己的浏览器里，不上传） */
 export const DENSITY_STORAGE_KEY = "tob:list-density";
+
+/** 自动收起的档位也存本机（同上，是偏好，不是筛选） */
+export const AUTO_FOLD_STORAGE_KEY = "tob:list-autofold";
+
+/** 列表偏好变了派发：设置抽屉开在列表页时，PostList 靠它立刻跟着改（与阅读偏好同构） */
+export const LIST_PREFS_EVENT = "tob:listprefschange";
 
 /** 搜索索引的公开地址（第 5 项的构建产物，见 app/search-index.json/route.ts） */
 export const SEARCH_INDEX_URL = "/search-index.json";
@@ -475,6 +525,62 @@ export function saveDensity(density: Density): void {
   } catch {
     /* 写盘失败（隐私模式）：这次会话内仍然生效 */
   }
+}
+
+/* ----------------------- 本机记忆（自动收起档位） ----------------------- */
+
+/** 读者上次选的自动收起档位；没存过 / 存坏了返回 null（由默认值说了算） */
+export function readSavedAutoFold(): AutoFoldId | null {
+  const store = storage();
+  if (!store) return null;
+  try {
+    const raw = store.getItem(AUTO_FOLD_STORAGE_KEY);
+    return isAutoFoldId(raw) ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 存下档位 + 派发事件（设置中心用；返回存下的 id，方便调用处同步本地状态） */
+export function saveAutoFold(id: AutoFoldId): AutoFoldId {
+  const store = storage();
+  if (store) {
+    try {
+      store.setItem(AUTO_FOLD_STORAGE_KEY, id);
+    } catch {
+      /* 写盘失败（隐私模式）：这次会话内仍然生效 */
+    }
+  }
+  dispatchListPrefs(id);
+  return id;
+}
+
+/** 恢复默认：删掉存储键并广播默认档（与 resetReadingPrefs 同一个做法） */
+export function resetAutoFold(): AutoFoldId {
+  const store = storage();
+  try {
+    store?.removeItem(AUTO_FOLD_STORAGE_KEY);
+  } catch {
+    /* 忽略 */
+  }
+  dispatchListPrefs(DEFAULT_AUTO_FOLD);
+  return DEFAULT_AUTO_FOLD;
+}
+
+function dispatchListPrefs(id: AutoFoldId): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent<AutoFoldId>(LIST_PREFS_EVENT, { detail: id }));
+}
+
+/** 订阅自动收起档位的变化；返回解绑函数 */
+export function subscribeAutoFold(listener: (id: AutoFoldId) => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  const handler = (event: Event) => {
+    const detail = (event as CustomEvent<AutoFoldId>).detail;
+    listener(isAutoFoldId(detail) ? detail : (readSavedAutoFold() ?? DEFAULT_AUTO_FOLD));
+  };
+  window.addEventListener(LIST_PREFS_EVENT, handler);
+  return () => window.removeEventListener(LIST_PREFS_EVENT, handler);
 }
 
 /* ------------------------------ 文案 ------------------------------ */

@@ -2538,10 +2538,32 @@ html[data-reading="hidden"] {
     transform: rotate(-90deg);
   }
 
-  /* 折叠中的那一块不显示。`.list-grid` 的 `display: grid` 会盖过 UA 的 `[hidden]`，
-     所以在这一层显式藏起来（`hidden` 属性本身还留着，`aria-controls` 因此始终有落点）。 */
-  .list-group-body[hidden] {
-    display: none;
+  /* 展开 / 收起用 grid-template-rows 从 1fr 滑到 0fr —— 内容高度是未知的（卡片数不定），
+     这个写法不用先量高度也能滑（比 max-height 猜一个大数干净），且尊重 prefers-reduced-motion。
+     `.list-grid` 的 `display: grid` 会盖过 UA 的 `[hidden]`，所以收起**不用** hidden 属性，
+     改用 data-folded：JS 没跑时没有这个形态，一律 1fr（完整展开，无 JS 也读得到全部文章）。
+     收起时子元素要 `overflow: hidden` 才真的裁到 0 高，`min-height: 0` 是让网格项肯缩下去。 */
+  .list-group-body {
+    display: grid;
+    grid-template-rows: 1fr;
+  }
+
+  .list-group-body > * {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .list-group-body[data-folded="true"] {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .list-group-body {
+      transition:
+        grid-template-rows 0.26s cubic-bezier(0.22, 0.61, 0.36, 1),
+        opacity 0.26s ease;
+    }
   }
 
   /* ---------- 文章卡片（第 11 项） ---------- */
@@ -4613,9 +4635,17 @@ html[data-reading="hidden"] {
     display: none;
   }
 
-  /* 卡组的折叠开关也是屏幕上的东西（纸上按不了），不印；当前收起的那几组仍保持收起 */
+  /* 卡组的折叠开关也是屏幕上的东西（纸上按不了），不印。
+     纸面要的是一份**完整书单**：无论屏幕上自动收起 / 手动收着哪几组，打印时都摊开
+     （长卡组默认收起只是屏幕上的便利，不该让纸上的文章凭空少掉几篇）。 */
   .list-group-toggle {
     display: none;
+  }
+
+  .list-group-body,
+  .list-group-body[data-folded="true"] {
+    grid-template-rows: 1fr;
+    opacity: 1;
   }
 
   .list-page {

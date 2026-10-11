@@ -9,6 +9,15 @@ import { icons, type IconName } from "@/lib/icons";
 import type { Lang } from "@/lib/lang";
 import { SITE } from "@/lib/site";
 import {
+  AUTO_FOLDS,
+  DEFAULT_AUTO_FOLD,
+  readSavedAutoFold,
+  resetAutoFold,
+  saveAutoFold,
+  subscribeAutoFold,
+  type AutoFoldId,
+} from "@/lib/list";
+import {
   CUSTOM_FONT_ENABLED,
   READING_DEFAULTS,
   READING_KEYS,
@@ -54,7 +63,7 @@ import {
 /**
  * 设置中心（第 7 项）
  *
- * 四块内容，全部只影响**读者自己的浏览器**（localStorage），站点是纯静态的，
+ * 五块内容，全部只影响**读者自己的浏览器**（localStorage），站点是纯静态的，
  * 这些偏好与内容无关、也不上传：
  *   1. 外观：跟随系统 / 纸 / 亮 / 暗 —— 直接调 lib/theme.ts 的 setThemeChoice()，
  *      不在这里碰 localStorage 与 data-theme（约定第 7 条）；
@@ -62,8 +71,10 @@ import {
  *      （lib/prefs.ts），正文已经在读它们，所以改完立刻生效、不需要通知任何组件。
  *      宽度 / 字号 / 行距是**滑块**，字体与首行缩进是**档位按钮**（两组各有各的道理：
  *      前三个是连续量，后者是「选哪一种」）；
- *   3. 语言：中英切换（与页脚的导航栏共用 components/LangSwitcher.tsx）；
- *   4. 恢复默认：清掉偏好键 + 移除行内 CSS 变量。
+ *   3. 列表 / 卡组：长卡组默认收起的档位（lib/list.ts 的 AUTO_FOLDS）—— 与密度同路数，
+ *      存本机；列表页读同一条存储，所以它跟着变（订阅在 PostList 里）；
+ *   4. 语言：中英切换（与页脚的导航栏共用 components/LangSwitcher.tsx）；
+ *   5. 恢复默认：清掉偏好键 + 移除行内 CSS 变量。
  *
  * 首帧与主题按钮同理：先按默认值渲染（服务端与浏览器算出来的一样），挂载后再读真实值，
  * 否则 React 会报水合不一致。滑块的位置有个额外的坑：读者没拖过时它要显示的是
@@ -97,6 +108,8 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
   const t = SITE.i18n[lang];
   const [choice, setChoice] = useState<ThemeChoice | null>(null);
   const [prefs, setPrefs] = useState<ReadingPrefs | null>(null);
+  // 长卡组默认收起的档位（lib/list.ts；列表页与本机各读同一条 localStorage）
+  const [autoFold, setAutoFold] = useState<AutoFoldId | null>(null);
   // 滑块的当前数值（= 令牌实际生效的值）：读者拖过就是他的，没拖过就是按屏幕算出来的
   const [numbers, setNumbers] = useState<Record<ReadingSliderKey, number> | null>(null);
   // 当前屏幕下的默认值（= 导轨上那个固定点）：不随读者设置变，随屏幕宽度变
@@ -108,6 +121,7 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
 
   useEffect(() => {
     setChoice(currentThemeChoice());
+    setAutoFold(readSavedAutoFold() ?? DEFAULT_AUTO_FOLD);
     // 偏好、滑块数值、默认点一起刷新：滑块与默认点的源都是令牌本身，所以三者永远一致
     const sync = () => {
       setPrefs(readReadingPrefs());
@@ -118,6 +132,8 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
     const unsubscribeTheme = subscribeTheme(() => setChoice(currentThemeChoice()));
     const unsubscribePrefs = subscribeReadingPrefs(sync);
     const unsubscribeFont = subscribeLocalFont((meta) => setLocalFont(meta));
+    // 设置抽屉开在列表页时，两边读的是同一条存储；订阅让抽屉里的档位跟列表同步
+    const unsubscribeList = subscribeAutoFold((id) => setAutoFold(id));
     // 屏幕宽度跨过媒体查询的档位时，默认值（与没拖过时的生效值）会变，默认点要跟着挪
     window.addEventListener("resize", sync);
 
@@ -133,11 +149,13 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
       unsubscribeTheme();
       unsubscribePrefs();
       unsubscribeFont();
+      unsubscribeList();
     };
   }, []);
 
   const activeChoice = choice ?? DEFAULT_THEME_CHOICE;
   const activePrefs = prefs ?? READING_DEFAULTS;
+  const activeAutoFold = autoFold ?? DEFAULT_AUTO_FOLD;
   /** 滑块位置：挂载前用首帧兜底值（服务端不知道屏幕多大），挂载后是真令牌里的数 */
   const sliderNumber = (key: ReadingSliderKey): number =>
     numbers?.[key] ?? READING_SLIDER_BASE[key];
@@ -208,11 +226,16 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
     }
   }
 
+  function pickAutoFold(id: AutoFoldId) {
+    setAutoFold(saveAutoFold(id));
+  }
+
   function resetAll() {
     resetReadingPrefs();
     setThemeChoice(DEFAULT_THEME_CHOICE);
     setPrefs(READING_DEFAULTS);
     setChoice(DEFAULT_THEME_CHOICE);
+    setAutoFold(resetAutoFold());
   }
 
   // 把当前各令牌的**实际取值**显示出来：调完能立刻看到 rem / 倍率 / 字体栈变成了什么。
@@ -371,7 +394,42 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
         </p>
       </section>
 
-      {/* ③ 语言 */}
+      {/* ③ 列表 / 卡组：长卡组默认收起（档位按钮；与密度一样存本机） */}
+      <section className="panel settings-group">
+        <p className="settings-group-label">
+          <Icon icon={icons["mdi:folder-outline"]} width="1em" height="1em" />
+          {t.listPrefs}
+        </p>
+        <p className="settings-hint">{t.listPrefsHint}</p>
+        <div className="settings-field">
+          <span className="settings-field-label">
+            <Icon icon={icons["mdi:view-agenda-outline"]} width="1em" height="1em" />
+            {t.autoFoldLabel}
+          </span>
+          <div className="settings-row">
+            {AUTO_FOLDS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className="settings-opt"
+                aria-pressed={activeAutoFold === option.id}
+                onClick={() => pickAutoFold(option.id)}
+              >
+                <Icon
+                  icon={icons["mdi:check"]}
+                  className="opt-check"
+                  width="1em"
+                  height="1em"
+                />
+                <span>{option[lang]}</span>
+              </button>
+            ))}
+          </div>
+          <p className="settings-hint">{t.autoFoldHint}</p>
+        </div>
+      </section>
+
+      {/* ④ 语言 */}
       <section className="panel settings-group">
         <p className="settings-group-label">
           <Icon icon={icons["mdi:translate"]} width="1em" height="1em" />
@@ -383,7 +441,7 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
         </div>
       </section>
 
-      {/* ④ 恢复默认 */}
+      {/* ⑤ 恢复默认 */}
       <section className="settings-group">
         <button type="button" className="settings-opt settings-reset" onClick={resetAll}>
           <Icon icon={icons["mdi:restore"]} width="1em" height="1em" />

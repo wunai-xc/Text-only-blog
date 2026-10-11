@@ -7,6 +7,7 @@ import PostCard from "./PostCard";
 import LangSwitcher from "@/components/LangSwitcher";
 import { icons, type IconName } from "@/lib/icons";
 import {
+  DEFAULT_AUTO_FOLD,
   DEFAULT_FILTERS,
   DENSITIES,
   INLINE_SEARCH_FIELDS,
@@ -16,14 +17,18 @@ import {
   SORTS,
   activeFilterCount,
   applyFilters,
+  autoFoldThreshold,
   fromSearchDoc,
   groupHref,
   groupPosts,
   groupTitle,
   listQueryString,
   parseListQuery,
+  readSavedAutoFold,
   readSavedDensity,
   saveDensity,
+  subscribeAutoFold,
+  type AutoFoldId,
   type Density,
   type ListFacets,
   type ListFilters,
@@ -152,14 +157,23 @@ export default function PostList({
    */
   const [panelOpen, setPanelOpen] = useState(false);
   /**
-   * 折叠起来的卡组（按 slug 记）：默认**全部展开** —— 这一页没有 JS 时也必须读得到文章
-   *（约定第 4 条），所以折叠只是「清单太长时收起不想看的那几组」的增强，不是默认形态。
-   * 状态只活在这次会话里，不写地址栏、也不记本机（它是临时的看，不是偏好）。
+   * 折叠起来的卡组（按 slug 记）。
+   *
+   * **首帧一律全部展开**（含没有 JS 时）—— 这一页没有 JS 也必须读得到文章（约定第 4 条），
+   * 所以折叠是挂载之后的增强。挂载后按「长卡组默认收起」的档位（`autoFold`，
+   * lib/list.ts 的 AUTO_FOLDS）把超过阈值的组收起来，读者自己点开的则不回弹。
+   * 这一份是**当前页面的临时形态**：不写地址栏、也不记本机（档位才是偏好，形态不是）。
    */
   const [foldedGroups, setFoldedGroups] = useState<Set<string>>(new Set());
+  /** 「长卡组默认收起」的档位（本机偏好）：挂载后从 localStorage 读，设置里改也同步 */
+  const [autoFold, setAutoFold] = useState<AutoFoldId>(DEFAULT_AUTO_FOLD);
+  /** 本机偏好读完了没有 —— 读完之前不应用自动收起，免得先按默认档闪一下再切到读者存的档 */
+  const [prefsReady, setPrefsReady] = useState(false);
   const engineRef = useRef<Engine | null>(null);
   const loadingRef = useRef(false);
   const hydrated = useRef(false);
+  /** 已经按哪个阈值应用过自动收起；同一个阈值不重复应用（否则会盖掉读者的手动展开） */
+  const appliedAutoFold = useRef<number | null>(null);
   /** 挂载后的第一次「地址栏同步」不写：那一次地址栏就是刚读进来的那份 */
   const skipUrlWrite = useRef(true);
 
@@ -174,6 +188,13 @@ export default function PostList({
     //（summary 的「当前条件」），读者要改哪一项再自己点开 —— 站长明确要求默认收起。
     if (autoFocusSearch) setPanelOpen(true);
   }, [autoFocusSearch]);
+
+  /* ---- 长卡组默认收起：挂载后读本机档位，并订阅设置中心的改动（同一条 localStorage） ---- */
+  useEffect(() => {
+    setAutoFold(readSavedAutoFold() ?? DEFAULT_AUTO_FOLD);
+    setPrefsReady(true);
+    return subscribeAutoFold(setAutoFold);
+  }, []);
 
   /* ---- 专门的搜索页：工具栏展开、光标放进搜索框（见 autoFocusSearch 的注释） ---- */
   useEffect(() => {
@@ -305,6 +326,24 @@ export default function PostList({
 
   /* ---- 卡组：把筛完的这列文章按目录切开（纯函数在 lib/list.ts，这里只调一次） ---- */
   const grouping = useMemo(() => groupPosts(visible, groups), [visible, groups]);
+
+  /* ---- 长卡组默认收起：按阈值把超过篇数的组收起来。
+     「只应用一次」有两个意思：同一个阈值不重跑（否则读者手动展开的会被反复弹回去），
+     换了阈值才按新值重算一遍。判数用的是 group.count（卡组本身有多少篇），
+     不是当前筛选结果（刚进页面时本来就还没筛）。 ---- */
+  useEffect(() => {
+    if (!prefsReady) return;
+    const threshold = autoFoldThreshold(autoFold);
+    if (appliedAutoFold.current === threshold) return;
+    appliedAutoFold.current = threshold;
+    const next = new Set<string>();
+    if (threshold > 0) {
+      for (const group of groups) {
+        if (group.slug !== "" && group.count > threshold) next.add(group.slug);
+      }
+    }
+    setFoldedGroups(next);
+  }, [prefsReady, autoFold, groups]);
 
   /** 收起时那一行里显示的「当前条件」，例如 `#笔记 · 2026 年`（空则由 filtersNone 兜底） */
   const activeNames: string[] = [];
@@ -622,7 +661,14 @@ export default function PostList({
                       <p className="list-group-desc">{entry.group.description}</p>
                     ) : null}
                   </header>
-                  <div className="list-group-body" id={bodyId} hidden={folded}>
+                  {/* data-folded 驱动 CSS 的 grid-template-rows 动画（1fr ↔ 0fr）；
+                      收起时 inert：读屏与 Tab 都跳过这一块，也免得焦点落进看不见的卡片 */}
+                  <div
+                    className="list-group-body"
+                    id={bodyId}
+                    data-folded={folded}
+                    inert={folded}
+                  >
                     {renderGrid(entry.posts)}
                   </div>
                 </section>

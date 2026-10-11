@@ -65,6 +65,11 @@ export interface SiteStrings {
   readingLeading: string;
   readingIndent: string;
   readingCurrent: string;
+  /* 设置中心：列表 / 卡组（长卡组默认收起） */
+  listPrefs: string;
+  listPrefsHint: string;
+  autoFoldLabel: string;
+  autoFoldHint: string;
   language: string;
   languageHint: string;
   reset: string;
@@ -131,10 +136,16 @@ export const I18N: Record<Lang, SiteStrings> = {
     readingLeading: "行距",
     readingIndent: "首行缩进",
     readingCurrent: "当前取值",
+    listPrefs: "列表与卡组",
+    listPrefsHint:
+      "列表页把文章按目录分成一个个卡组；这里决定卡组在打开时是摊开还是先收起来。改完立刻生效。",
+    autoFoldLabel: "长卡组默认收起",
+    autoFoldHint:
+      "组内文章超过这个篇数时，列表页默认把这一组收起来（点组头右侧的箭头就能展开）。它只定「打开时的默认形态」，你在这几组里手动点开的会保持你点的样子。",
     language: "语言",
     languageHint: "中英文各有一份内容，切换语言不会丢掉这里的设置。",
     reset: "恢复默认",
-    resetHint: "把外观与阅读偏好都还原成默认值（文章内容不受影响）。",
+    resetHint: "把外观、阅读偏好与列表卡组设置都还原成默认值（文章内容不受影响）。",
     localFontUpload: "上传字体文件",
     localFontReplace: "更换",
     localFontRemove: "移除",
@@ -196,10 +207,16 @@ export const I18N: Record<Lang, SiteStrings> = {
     readingLeading: "Line height",
     readingIndent: "Paragraph indent",
     readingCurrent: "Current values",
+    listPrefs: "Lists & card groups",
+    listPrefsHint:
+      "The list page groups posts by directory into card groups; this decides whether a group opens or starts folded. Takes effect immediately.",
+    autoFoldLabel: "Fold long groups",
+    autoFoldHint:
+      "Groups with more posts than this start folded on the list page (click the arrow next to a group name to expand it). It only sets the opening state — any group you open by hand stays as you left it.",
     language: "Language",
     languageHint: "Each language has its own content; switching keeps your settings here.",
     reset: "Reset to defaults",
-    resetHint: "Restores appearance and reading preferences (your posts are untouched).",
+    resetHint: "Restores appearance, reading preferences and list/card-group settings (your posts are untouched).",
     localFontUpload: "Upload a font file",
     localFontReplace: "Replace",
     localFontRemove: "Remove",
