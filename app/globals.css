@@ -4643,7 +4643,8 @@ html[data-reading="hidden"] {
 
   /* 第 12 项的文章页：悬浮目录（含那个开关）、粘性标题、进度线（滑块）、百分比、回顶
      都是「屏幕上才有意义」的东西；评论区是第三方 iframe，纸上既印不出来也不该印。
-     文章末尾的上下篇留着（纸上的链接是给人拿去地址栏敲的）。 */
+     文章末尾的「上/下篇」按钮与文首的分类 / 标签片也一并去掉 —— 都是屏幕上的导航，
+     纸上的链接点不动、只占地方。 */
   .article-toc,
   .article-sticky,
   .article-progress,
@@ -4651,16 +4652,14 @@ html[data-reading="hidden"] {
   .article-progress-value,
   .article-top,
   .article-comments,
-  .article-actions {
+  .article-actions,
+  .article-pager,
+  .article-tools {
     display: none;
   }
 
   .article-page {
     max-width: none;
-  }
-
-  .article-pager[data-variant="full"] {
-    grid-template-columns: 1fr 1fr;
   }
 
   html,
@@ -4669,45 +4668,67 @@ html[data-reading="hidden"] {
     color: #000;
   }
 
-  /* 正文字号：纸上按「紧凑、密度合理」重定，不再沿用屏幕的阅读字号（那是按视口定的，
-     印到 A4 上偏大、也费墨）。各级标题一律显式钉死 —— 屏幕上的标题用 rem，会跟着根字号
-     在纸上被整体放大；段落行距与上下间距一并收紧，一张纸多装几行。 */
+  /* 正文字号：纸上按「紧凑、高文本密度」重定，字号与 wunai-blog 的打印版一致 ——
+     不再沿用屏幕的阅读字号（那是按视口定的，印到 A4 上偏大、费墨）。各级标题一律
+     显式钉死，屏幕上的 rem 标题在纸上会被整体放大；行距与段间距一并收紧，一页多装几行。 */
   .article-body {
     max-width: none;
-    font-size: 10pt;
-    line-height: 1.5;
-  }
-
-  .article-body :is(h1, h2, h3, h4, h5, h6) {
-    margin: 0.9rem 0 0.4rem;
+    font-size: 11px;
     line-height: 1.3;
   }
 
+  .article-body :is(p, ul, ol, blockquote, pre, table, figure),
+  .article-body :is(.table-scroll, .code-block) {
+    margin: 3px 0;
+  }
+
+  .article-body :is(h1, h2, h3, h4, h5, h6) {
+    margin: 6px 0 3px;
+    line-height: 1.2;
+  }
+
   .article-body h1 {
-    font-size: 18pt;
+    font-size: 24px;
   }
   .article-body h2 {
-    font-size: 15pt;
+    font-size: 20px;
   }
   .article-body h3 {
-    font-size: 12.5pt;
+    font-size: 16px;
   }
   .article-body h4 {
-    font-size: 10.5pt;
+    font-size: 13px;
   }
-  .article-body h5,
+  .article-body h5 {
+    font-size: 12px;
+  }
   .article-body h6 {
-    font-size: 10pt;
+    font-size: 11px;
+  }
+
+  /* 文章大标题 / 导语 / 元信息也跟着收一档 */
+  .article-title {
+    font-size: 26px;
+    line-height: 1.2;
+  }
+
+  .article-lead {
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .article-meta {
+    font-size: 10px;
   }
 
   /* 代码块：白底 + 细边框（省墨），并把 monokai 的彩色 token 压成黑 ——
      纸上彩色几乎都读不清，浅灰底也只会把整块糊成一片灰。 */
   .article-body pre {
-    border: 1px solid #bbb;
+    border: 1px solid #b0b0b0;
     background: #fff;
-    font-size: 8.5pt;
-    line-height: 1.35;
-    padding: 0.35rem 0.5rem;
+    font-size: 10px;
+    line-height: 1.3;
+    padding: 4px 6px;
     color: #000;
   }
 
@@ -4717,7 +4738,8 @@ html[data-reading="hidden"] {
   }
 
   .article-body code {
-    font-size: 8.5pt;
+    font-size: 10px;
+    padding: 0 2px;
   }
 
   /* 代码块工具头（语言名 + 复制按钮）：它在 `<pre>` 外面，上面那两条压不到它，
@@ -4814,8 +4836,8 @@ html[data-reading="hidden"] {
     display: table;
     width: 100%;
     border-collapse: collapse;
-    font-size: 9pt;
-    line-height: 1.35;
+    font-size: 10px;
+    line-height: 1.3;
     break-inside: auto;
     border-top: 1pt solid #000;
   }
