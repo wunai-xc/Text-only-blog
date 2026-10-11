@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect } from "react";
 import { Icon } from "@iconify/react/offline";
 
 import { ARTICLE_TEXT } from "@/lib/article";
 import { icons } from "@/lib/icons";
 import type { Lang } from "@/lib/lang";
+import { SITE } from "@/lib/site";
 
 /**
  * 文章页的「导出」两个按钮（第 12 项）：下载 .md / 打印存 PDF
@@ -25,13 +27,49 @@ export default function ArticleExport({
   lang,
   markdown,
   filename,
+  title,
 }: {
   lang: Lang;
   markdown: string;
   /** 下载后的文件名（*.md），由文章页从 slug 推出 */
   filename: string;
+  /** 打印页脚要用的篇名（注入 CSS 变量，见下）；缺省时页脚那格留空 */
+  title?: string;
 }) {
   const t = ARTICLE_TEXT[lang];
+
+  /**
+   * 把打印页眉 / 页脚要用的动态文本注入成 CSS 自定义属性。
+   *
+   * 为什么在这里：`@page` 的页边距盒（`@top-left` 等，见 globals.css 第 9 节）
+   * 只能用 `content` 描述，既取不到当前时间，也读不到 DOM 文本 —— 只能由客户端组件
+   * 写进根元素的自定义属性。`content` 的值必须是合法的 `<content-list>`，字符串要带引号，
+   * 所以用 `JSON.stringify` 生成（顺带转义站名里的撇号、篇名里的引号与反斜杠）。
+   *
+   * 两件事保证「点按钮」与「直接按 Ctrl+P」都能拿到接近打印时刻的时间：
+   * 挂载时先同步一次，并监听 `beforeprint` 再刷新一次。
+   */
+  useEffect(() => {
+    const root = document.documentElement;
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const stamp = () => {
+      const d = new Date();
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+    const sync = () => {
+      root.style.setProperty("--print-site", JSON.stringify(SITE.title));
+      root.style.setProperty("--print-stamp", JSON.stringify(stamp()));
+      if (title) root.style.setProperty("--print-title", JSON.stringify(title));
+    };
+    sync();
+    window.addEventListener("beforeprint", sync);
+    return () => {
+      window.removeEventListener("beforeprint", sync);
+      root.style.removeProperty("--print-site");
+      root.style.removeProperty("--print-stamp");
+      root.style.removeProperty("--print-title");
+    };
+  }, [title]);
 
   function download() {
     const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });

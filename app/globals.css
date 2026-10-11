@@ -3257,14 +3257,6 @@ html[data-reading="hidden"] {
     outline-offset: 2px;
   }
 
-  /* ---------- 纸上的页眉 / 页脚（只在打印出现） ----------
-     屏幕上没有它们（`display: none`），打印时顶栏与页脚整块藏掉、由它们顶上。
-     文章的页眉 / 页脚在 app/[lang]/posts/[...slug]/page.tsx 里渲染。 */
-  .print-head,
-  .print-foot {
-    display: none;
-  }
-
   /* ---------- 粘性标题（大标题滚出视野后，顶栏下面挂一条同名的紧凑标题） ----------
      容器是**零高**的 sticky（`height: 0`）并且贴在 `<article>` 里面：
        - 零高 → 不占版面，正文第一行不会被推下去；
@@ -4514,9 +4506,56 @@ html[data-reading="hidden"] {
     --shape-shadow: none;
   }
 
-  /* 页边距：浏览器默认留白对文档来说偏宽，给纸一个稳定、好读的边 */
+  /* 页边距：浏览器默认留白对文档来说偏宽，给纸一个稳定、好读的边。
+     单独一条规则（与下面的页边距盒分开）：旧浏览器解析不了页边距盒时，
+     只会丢掉那一条，不会连边距一起丢。 */
   @page {
     margin: 16mm 14mm;
+  }
+
+  /* 纸上的页眉 / 页脚：改用 `@page` 的**页边距盒**，每一页都会重复，还能印页码
+     （早先那版是在文章里塞两条 DOM，只在首屏顶端 / 文末各出现一次，翻到中间就没了）。
+     盒里只能用 `content` 描述，取不到时间也读不到 DOM 文本，动态文本由
+     components/article/ArticleExport.tsx 注入成 CSS 自定义属性（值已用 JSON.stringify
+     加好引号）。每个属性都带 `""` 兜底 —— 缺失时退化成「不显示」，而不是整条规则失效。
+     只需声明每个方向的一个盒，浏览器就会在该方向抑制自带的页眉页脚；同侧其余盒显式留空。
+     支持：Chrome / Edge 131+、Safari；更旧的浏览器忽略本段，退回自带页眉页脚，
+     只能靠打印对话框取消勾选。 */
+  @page {
+    @top-left {
+      content: var(--print-site, "");
+      font-family: var(--font-mono);
+      font-size: 8pt;
+      line-height: 1;
+      color: #555;
+      vertical-align: bottom;
+    }
+    @top-center { content: ""; }
+    @top-right {
+      content: var(--print-stamp, "");
+      font-family: var(--font-mono);
+      font-size: 8pt;
+      line-height: 1;
+      color: #555;
+      vertical-align: bottom;
+    }
+    @bottom-left {
+      content: var(--print-title, "");
+      font-family: var(--font-mono);
+      font-size: 8pt;
+      line-height: 1;
+      color: #555;
+      vertical-align: top;
+    }
+    @bottom-center { content: ""; }
+    @bottom-right {
+      content: counter(page) " / " counter(pages);
+      font-family: var(--font-mono);
+      font-size: 8pt;
+      line-height: 1;
+      color: #555;
+      vertical-align: top;
+    }
   }
 
   /* 几何实体层（第 15 项）：纸上没有「背景里的几何实体」这回事，半透明色块与草稿线
@@ -4539,8 +4578,8 @@ html[data-reading="hidden"] {
 
   /* 第 7 项的框架件（2）：顶栏与页脚**整块不印** —— 顶栏是导航（纸上的链接点不动，
      还平白占掉每页顶端）；页脚是语言切换 / 联系方式 / 统计 / 齿轮那一堆屏幕上的东西，
-     印出来全是噪音。纸上的「页眉 / 页脚」改由文章页渲染的那两条顶上
-     （`.print-head` / `.print-foot`，见 app/[lang]/posts/[...slug]/page.tsx）。 */
+     印出来全是噪音。纸上的「页眉 / 页脚」改由 `@page` 页边距盒统一负责
+     （见本节开头的 `@top-*` / `@bottom-*`），不再额外渲染两条 DOM。 */
   .site-header,
   .site-footer {
     display: none;
@@ -4620,41 +4659,6 @@ html[data-reading="hidden"] {
     max-width: none;
   }
 
-  /* 纸上的页眉 / 页脚：屏幕上藏起来的这两条，打印时显出来并排成一行
-     （左一项、右一项，底下 / 上面各压一条细线把它和正文分开） */
-  .print-head,
-  .print-foot {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-    font-family: var(--font-mono);
-    font-size: 8.5pt;
-    color: #333;
-  }
-
-  .print-head {
-    margin-bottom: 0.9rem;
-    padding-bottom: 0.35rem;
-    border-bottom: 1px solid #999;
-  }
-
-  .print-foot {
-    margin-top: 1.4rem;
-    padding-top: 0.35rem;
-    border-top: 1px solid #999;
-  }
-
-  .print-head-title {
-    color: #000;
-    font-weight: 600;
-  }
-
-  /* 长地址（带目录的 slug）不许顶破右边距 */
-  .print-foot-url {
-    overflow-wrap: anywhere;
-  }
-
   .article-pager[data-variant="full"] {
     grid-template-columns: 1fr 1fr;
   }
@@ -4665,21 +4669,55 @@ html[data-reading="hidden"] {
     color: #000;
   }
 
+  /* 正文字号：纸上按「紧凑、密度合理」重定，不再沿用屏幕的阅读字号（那是按视口定的，
+     印到 A4 上偏大、也费墨）。各级标题一律显式钉死 —— 屏幕上的标题用 rem，会跟着根字号
+     在纸上被整体放大；段落行距与上下间距一并收紧，一张纸多装几行。 */
   .article-body {
     max-width: none;
-    font-size: 11pt;
-    line-height: 1.6;
+    font-size: 10pt;
+    line-height: 1.5;
   }
 
-  /* 代码块转浅底，并且把 monokai 的彩色 token 压成黑色：纸上彩色几乎都读不清 */
+  .article-body :is(h1, h2, h3, h4, h5, h6) {
+    margin: 0.9rem 0 0.4rem;
+    line-height: 1.3;
+  }
+
+  .article-body h1 {
+    font-size: 18pt;
+  }
+  .article-body h2 {
+    font-size: 15pt;
+  }
+  .article-body h3 {
+    font-size: 12.5pt;
+  }
+  .article-body h4 {
+    font-size: 10.5pt;
+  }
+  .article-body h5,
+  .article-body h6 {
+    font-size: 10pt;
+  }
+
+  /* 代码块：白底 + 细边框（省墨），并把 monokai 的彩色 token 压成黑 ——
+     纸上彩色几乎都读不清，浅灰底也只会把整块糊成一片灰。 */
   .article-body pre {
-    border: 1px solid #ccc;
-    background: #f6f6f6;
+    border: 1px solid #bbb;
+    background: #fff;
+    font-size: 8.5pt;
+    line-height: 1.35;
+    padding: 0.35rem 0.5rem;
+    color: #000;
   }
 
   .article-body pre,
   .article-body pre * {
-    color: #1a1a1a !important;
+    color: #000 !important;
+  }
+
+  .article-body code {
+    font-size: 8.5pt;
   }
 
   /* 代码块工具头（语言名 + 复制按钮）：它在 `<pre>` 外面，上面那两条压不到它，
@@ -4701,7 +4739,7 @@ html[data-reading="hidden"] {
 
   .code-head,
   .code-head * {
-    background: #f6f6f6;
+    background: #fff;
     color: #1a1a1a !important;
   }
 
@@ -4742,18 +4780,76 @@ html[data-reading="hidden"] {
     widows: 3;
   }
 
-  /* 这些块被分页切开就读不成：整块挪到下一页（代码块连工具头一起，所以列的是外层容器） */
-  .article-body :is(pre, blockquote, table, figure, img, .katex-display),
-  .article-body .code-block,
-  .article-body .table-scroll,
+  /* 这些块被分页切开就读不成：整块挪到下一页。
+     代码块与表格**故意不在此列** —— 它们往往长于一页，强留整块只会被压扁或直接截断：
+     代码块靠 pre-wrap + orphans/widows 自行逐行断开；表格靠下面 thead 的「每页重复表头」接续。 */
+  .article-body :is(blockquote, figure, img, .katex-display),
   .chart-block,
   .references,
   .article-pager {
     break-inside: avoid;
   }
 
+  /* 代码块允许跨页：box-decoration-break: clone 让每一页那段都带上内边距与边框，
+     断开处不贴着页面边缘；orphans / widows 保证页边不会只剩孤零零一行。 */
+  .article-body pre {
+    break-inside: auto;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* ---------- 表格与「续表」----------
+     屏幕版把宽表套进 `.table-scroll`（overflow-x: auto）横向滚。纸不会滚，
+     所以先放开裁切；再把表头设成 `table-header-group`，跨页时浏览器会在每一页
+     顶部自动重印表头 —— 这就是「续表」的效果（无需自己写 `thead::before` 的“续表”字样，
+     那种写法分不清首页与续页）。单行不许被切开，表头也不许单独留在页尾。 */
+  .article-body .table-scroll,
+  .article-body table {
+    overflow: visible;
+  }
+
+  .article-body table {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+    line-height: 1.35;
+    break-inside: auto;
+    border-top: 1pt solid #000;
+  }
+
+  .article-body thead {
+    display: table-header-group;
+    break-inside: avoid;
+    break-after: avoid;
+  }
+
+  .article-body tbody {
+    display: table-row-group;
+  }
+
+  .article-body tr {
+    break-inside: avoid;
+  }
+
+  .article-body th,
+  .article-body td {
+    padding: 2pt 4pt;
+    border: 0.5pt solid #000;
+    text-align: left;
+  }
+
+  /* 表头只留一条下边线，不铺灰底：省墨，又和正文分得开（跨页重复时同样清楚） */
+  .article-body th {
+    border-bottom: 1pt solid #000;
+    font-weight: 600;
+  }
+
   /* 纸上没有屏幕上的强调色（墨色已压成黑），链接补一条下划线才认得出来；
-     外链再把地址印进括号 —— 读纸的人点不了，只能照着敲。 */
+     外链再把地址印进括号 —— 读纸的人点不了，只能照着敲。
+     但锚点、表格 / 代码里的链接一律不附：长 URL 会撑宽表格列、把分页搅乱。 */
   .article-body a {
     text-decoration: underline;
   }
@@ -4764,5 +4860,12 @@ html[data-reading="hidden"] {
     font-family: var(--font-mono);
     font-size: 0.82em;
     overflow-wrap: anywhere;
+  }
+
+  .article-body a[href^="#"]::after,
+  .article-body table a[href]::after,
+  .article-body pre a[href]::after,
+  .article-body code a[href]::after {
+    content: "";
   }
 }

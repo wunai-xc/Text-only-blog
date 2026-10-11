@@ -242,13 +242,6 @@ export default async function LangPost({
       <ReadingHeader />
 
       <article className="article" id="article-main">
-        {/* 纸上才出现的一行页眉（站名在左、篇名在右）：`.print-head` 在屏幕上不显示，
-            打印顶栏已经被整块藏掉，这一行就是纸上的「顶栏」 */}
-        <header className="print-head" aria-hidden="true">
-          <span className="print-head-site">{SITE.title}</span>
-          <span className="print-head-title">{meta.title}</span>
-        </header>
-
         {/* 粘性标题（第 12 项）：零高、贴在 <article> 里，标题滚出视野后在顶栏下面挂一条 ——
             左边篇名、右边正在读的那一小节（小节名与目录高亮、进度条方块同一份判定） */}
         <ArticleStickyTitle lang={lang} title={meta.title} toc={rendered.toc} />
@@ -310,7 +303,12 @@ export default async function LangPost({
 
             {/* 导出（下载 .md / 打印存 PDF）：客户端组件，两个按钮都在浏览器里做事。
                 靠右站：`.article-tools` 是两端对齐，它自己再用 margin-left: auto 顶到右边 */}
-            <ArticleExport lang={lang} markdown={source} filename={downloadName} />
+            <ArticleExport
+              lang={lang}
+              markdown={source}
+              filename={downloadName}
+              title={meta.title}
+            />
           </div>
         </header>
 
@@ -327,12 +325,6 @@ export default async function LangPost({
         <footer className="article-foot">
           {/* 文章末尾的上下篇（`full` 档）：窄屏上悬浮目录整块不显示，所以这一份是必需的 */}
           <ArticlePager lang={lang} older={older} newer={newer} variant="full" />
-        </footer>
-
-        {/* 纸上才出现的页脚（这一篇的完整地址 + 站名）：读纸的人点不了链接，只能照着敲地址 */}
-        <footer className="print-foot" aria-hidden="true">
-          <span className="print-foot-url">{`${SITE.url}${meta.href}`}</span>
-          <span className="print-foot-site">{SITE.title}</span>
         </footer>
       </article>
 
