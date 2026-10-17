@@ -371,7 +371,9 @@ html[data-reading="hidden"] {
    整层 position: fixed; inset: 0; z-index: -1; pointer-events: none; aria-hidden ——
    **永不**上移，实体**永远在文字后面**（正文列不加不透明底、没有前景装饰层）。
    线宽 0.6~1px、只跟着实体走，**没有满页网格 / 点阵**（那正是被否掉的东西）。
-   浓度只有一处 `--figure-alpha`（纸 0.26 / 亮 0.22 / 暗 0.30），八号颜料的色值在三套令牌里。
+   浓度只有两处：外观档位 `--figure-alpha`（纸 0.26 / 亮 0.22 / 暗 0.30）
+    × 路由档位 `--figure-route-alpha`（阅读页 0.48~0.78，首页与离线页 1）。
+   首页的两枚 `contain: true`，会夹在视口内完整展示，且不参与滚动位移。
 
    滚动联动：组件往这一层写 `--scroll-shift`（±8vh），`.figure-slot` 的 translateY 读它 ——
    那条 transform **故意不设 transition**，滚动才跟手（形变的过渡在 left/top/width/height 上）。
@@ -383,8 +385,54 @@ html[data-reading="hidden"] {
     z-index: -1;
     overflow: hidden; /* 实体允许超出视口，但不该让页面多出滚动条 */
     pointer-events: none;
-    opacity: var(--figure-alpha);
+    /* 整层浓度 = 外观档位 × 路由档位。路由档位只压阅读页：首页保持 1（完整展示），
+       正文页压到一半左右，装饰还在，但不与文字抢注意力。 */
+    --figure-route-alpha: 1;
+    opacity: calc(var(--figure-alpha) * var(--figure-route-alpha));
     transition: opacity 0.18s ease; /* 与 <html> 换底色同一个节拍 */
+  }
+
+  /* 阅读页再压淡一档（见 lib/decor.ts 的 FIGURES）：正文最淡，长文页次之，
+     列表 / 索引页轻压，首页与离线页保持原浓度。 */
+  .figure[data-route="article"] {
+    --figure-route-alpha: 0.55;
+  }
+
+  .figure[data-route="about"] {
+    --figure-route-alpha: 0.68;
+  }
+
+  .figure[data-route="posts"],
+  .figure[data-route="tags"],
+  .figure[data-route="categories"],
+  .figure[data-route="archives"],
+  .figure[data-route="search"],
+  .figure[data-route="links"] {
+    --figure-route-alpha: 0.78;
+  }
+
+  .figure[data-route="settings"] {
+    --figure-route-alpha: 0.9;
+  }
+
+  /* 窄屏文字更贴边，再收一档；首页不参与（它要完整展示）。 */
+  @media (max-width: 48rem) {
+    .figure[data-route="article"] {
+      --figure-route-alpha: 0.48;
+    }
+
+    .figure[data-route="about"] {
+      --figure-route-alpha: 0.6;
+    }
+
+    .figure[data-route="posts"],
+    .figure[data-route="tags"],
+    .figure[data-route="categories"],
+    .figure[data-route="archives"],
+    .figure[data-route="search"],
+    .figure[data-route="links"] {
+      --figure-route-alpha: 0.7;
+    }
   }
 
   /* 实体的容器：两枚都是它的绝对定位子元素（圆心按视口百分比算，与文档滚动无关） */
@@ -399,6 +447,10 @@ html[data-reading="hidden"] {
      y 的偏向由 `--figure-ease` 决定：主实体是标准 ease-out。 */
   .figure-slot {
     position: absolute;
+    left: var(--figure-x, 50vw);
+    top: var(--figure-y, 50vh);
+    width: var(--figure-w, 20vmax);
+    height: var(--figure-h, 20vmax);
     --figure-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
     transform: translate(-50%, -50%) translateY(var(--scroll-shift, 0px));
     transition:
@@ -419,6 +471,22 @@ html[data-reading="hidden"] {
     --figure-ease: cubic-bezier(0.34, 1.42, 0.5, 1);
     transform: translate(-50%, -50%)
       translateY(var(--scroll-shift-satellite, var(--scroll-shift, 0px)));
+  }
+
+  /* 完整入画（`Figure.contain`，目前只有首页两枚）：
+     - 尺寸先受视口宽 / 高限制（74vw / 70vh），超宽屏上不会长到一屏装不下；
+     - 外接半径按长边的 0.62 估算（覆盖 rot ≤ 10° 的旋转），再用 clamp 把圆心夹在
+       「半径 ~ 视口 − 半径」之间 —— 任何比例的屏幕上都整枚可见；
+     - 不读 `--scroll-shift*`：±8vh 的滚动位移会重新把实体推出视口。 */
+  .figure-slot[data-contain] {
+    --figure-w-safe: min(var(--figure-w, 20vmax), 74vw, 70vh);
+    --figure-h-safe: min(var(--figure-h, 20vmax), 74vw, 70vh);
+    --figure-half: calc(max(var(--figure-w-safe), var(--figure-h-safe)) * 0.62);
+    width: var(--figure-w-safe);
+    height: var(--figure-h-safe);
+    left: clamp(var(--figure-half), var(--figure-x, 50vw), calc(100% - var(--figure-half)));
+    top: clamp(var(--figure-half), var(--figure-y, 50vh), calc(100% - var(--figure-half)));
+    transform: translate(-50%, -50%);
   }
 
   /* body：只负责**朝向 / 浓度**的过渡。注解与尺寸文字挂在这一层 ——

@@ -30,6 +30,8 @@ import {
  *   - 滚动联动只改 CSS 变量（`--scroll-shift` / `--scroll-shift-satellite`），落在 `.figure-slot`
  *     的 `translateY` 上，而那条 `transform` **没有过渡**，所以滚动是跟手的
  *     （不会被 1100ms 的形变拖住）。
+ *   - 标了 `contain: true` 的实体（首页两枚）由 CSS 夹在视口内，并**不读**上面两个滚动变量：
+ *     首页要求「完整看见」，位移会把实体推出画外。
  * 卫星比主实体**晚动** `--figure-delay`（160ms，见 globals.css 与 lib/decor.ts 的常量）且用一条
  * 带过冲的曲线，滚动时又走欠阻尼弹簧 —— 合起来就是 V2 说的「二阶运动」，
  * 看起来像「一个东西带着一个小东西走」。
@@ -246,13 +248,14 @@ function FigureNode({ figure, variant, seedKey, code, label }: FigureNodeProps) 
      （确定性、同一页每次推导都一样，也就不会和另一枚实体的 id 撞车）。 */
   const hatchId = `figure-hatch-${seed.toString(36)}`;
 
-  // 位置 / 尺寸走 CSS，换页时被 transition 插值；圆心靠 translate(-50%, -50%) 对齐
-  const slotStyle: CSSProperties = {
-    left: `${figure.x}vw`,
-    top: `${figure.y}vh`,
-    width: `${figure.w}vmax`,
-    height: `${figure.h}vmax`,
-  };
+  // 位置 / 尺寸走 CSS 变量：默认由样式表直接读（首页的 contain 会在此基础上夹紧）；
+  // 圆心靠 translate(-50%, -50%) 对齐
+  const slotStyle = {
+    "--figure-x": `${figure.x}vw`,
+    "--figure-y": `${figure.y}vh`,
+    "--figure-w": `${figure.w}vmax`,
+    "--figure-h": `${figure.h}vmax`,
+  } as CSSProperties;
   // 朝向 / 浓度走行内样式（`.figure-body` 的形变，与位置分开）
   const bodyStyle: CSSProperties = {
     transform: `rotate(${figure.rot}deg)`,
@@ -260,7 +263,12 @@ function FigureNode({ figure, variant, seedKey, code, label }: FigureNodeProps) 
   };
 
   return (
-    <div className="figure-slot" data-variant={variant} style={slotStyle}>
+    <div
+      className="figure-slot"
+      data-variant={variant}
+      data-contain={figure.contain ? "true" : undefined}
+      style={slotStyle}
+    >
       {/* body 只负责朝向 / 浓度。注解与尺寸文字挂在这一层 —— 实体被 clip-path
           裁成三角形 / 十字时，它们才不会被一起裁掉。 */}
       <div className="figure-body" style={bodyStyle}>

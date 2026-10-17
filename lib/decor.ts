@@ -72,6 +72,8 @@ export interface Figure {
   tint: FigureTint;
   /** 这一块自己的浓度（默认 1；用不上的写 0 —— 但规格仍然写出来，换页时才不会跳变） */
   fade?: number;
+  /** 整枚实体必须完整落在视口内（首页用）：位置按实体半径夹紧，滚动位移也一并取消 */
+  contain?: boolean;
   /** 草稿线种类与密度 */
   sketch: Sketch;
   /** 注解位置（贴在这枚实体的角上，随它一起动） */
@@ -140,16 +142,19 @@ const SHEETS: Record<DecorSection, string> = {
  * 单块再乘 `fade`。所以这里写 0.8 只是「比別页淡一点」，不是绝对透明度。
  */
 const FIGURES: Record<DecorSection, FigurePair> = {
-  /* 01 首页：群青大长方形压左上（整页最大的一块）+ 右上角一枚青灰小圆 */
+  /* 01 首页：群青长方形压左上（整页最大的一块）+ 右上角一枚青灰小圆。
+     这一页的两枚都标 `contain: true` —— 首页要「完整看见」，所以位置与尺寸由 CSS
+     夹在视口内（见 globals.css 的 `.figure-slot[data-contain]`），滚动时也不再上下挪。 */
   home: {
     main: {
       shape: "rect",
-      x: 18,
-      y: 30,
-      w: 30,
-      h: 38,
-      rot: -12,
+      x: 24,
+      y: 33,
+      w: 26,
+      h: 32,
+      rot: -8,
       tint: 7,
+      contain: true,
       sketch: { contour: true, construction: true, density: 2 },
       note: "bl",
     },
@@ -157,11 +162,12 @@ const FIGURES: Record<DecorSection, FigurePair> = {
       shape: "circle",
       x: 86,
       y: 74,
-      w: 14,
-      h: 14,
+      w: 12,
+      h: 12,
       rot: 0,
       tint: 3,
       fade: 0.9,
+      contain: true,
       sketch: { contour: true, construction: false, density: 1 },
       note: "tr",
     },
@@ -197,15 +203,18 @@ const FIGURES: Record<DecorSection, FigurePair> = {
      这是 2026-10-03 的修订：原先是一枚压在正文里的竖长方形（`x: 30` / `w: 16` / `h: 54`），
      1440×900 下压住正文列宽的 25%，有人反映挡读。
 
-     为什么是 `x: 0` + 直径 `20vmax`：
+     2026-10-17 再收一档：直径从 `20vmax` 降到 `18vmax`，正文页整层再压淡
+     （`globals.css` 的 `--figure-route-alpha`）—— 半圆还在，但更靠边、更淡。
+
+     为什么是 `x: 0` + 直径 `18vmax`：
        · 约束 = **任何屏宽下最多压住正文列宽的 1/5**。正文列左缘 = `(W - C) / 2`
          （`C` = `--reading-measure`，`.article-page` 两侧各 1.5rem 内边距正好抵消），
          最坏情况是正文列吃满屏幕（窄屏，或读者把度量拖到 72rem 上限）。
-         半圆右缘 = `0.1 · vmax`，代入最窄的 390×844 是 84px → 压住 60px ≈ 列宽 17.7%；
-         逐屏宽扫过（含读者把宽度拖到两端）：默认设置最坏 18.4%、极端 19.8%，都在 1/5 以内。
-       · **20 是上限，别再往上调**：`22vmax` 在 592×1243 就已经 20.7%，越界。
+         18vmax 在最窄的 390×844 上压住 15.2%，把宽度拖满时约 16.6%，都留有余量。
+       · **18 是当前值，20 仍是上限**：20vmax 已接近 1/5，`22vmax` 会越界。
        · 之所以允许一部分移出屏幕：窄屏两侧几乎没有留白（列左缘只剩 24px），
          「完整留在屏幕内」只能把实体缩到很小；贴边 + 允许出屏是任何屏宽都成立的规则。
+         只有首页用 `contain: true` 反过来要求完整入画。
 
      `dimension` 关掉：那条尺寸线与那行文字画在实体的**左侧**（`.figure-dim` 是 `right: 100% + 1.4rem`），
      贴了左缘之后整条都在屏幕外。注解因此改挂右下角（`br`，落在留白里）而不是原来的 `bl`（那一角出屏了）。 */
@@ -214,8 +223,8 @@ const FIGURES: Record<DecorSection, FigurePair> = {
       shape: "circle",
       x: 0,
       y: 46,
-      w: 20,
-      h: 20,
+      w: 18,
+      h: 18,
       rot: 0,
       tint: 1,
       sketch: { contour: true, construction: true, density: 2, hatch: true },
