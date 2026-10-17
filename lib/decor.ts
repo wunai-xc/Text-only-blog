@@ -72,8 +72,6 @@ export interface Figure {
   tint: FigureTint;
   /** 这一块自己的浓度（默认 1；用不上的写 0 —— 但规格仍然写出来，换页时才不会跳变） */
   fade?: number;
-  /** 整枚实体必须完整落在视口内（首页用）：位置按实体半径夹紧，滚动位移也一并取消 */
-  contain?: boolean;
   /** 草稿线种类与密度 */
   sketch: Sketch;
   /** 注解位置（贴在这枚实体的角上，随它一起动） */
@@ -142,19 +140,17 @@ const SHEETS: Record<DecorSection, string> = {
  * 单块再乘 `fade`。所以这里写 0.8 只是「比別页淡一点」，不是绝对透明度。
  */
 const FIGURES: Record<DecorSection, FigurePair> = {
-  /* 01 首页：群青长方形压左上（整页最大的一块）+ 右上角一枚青灰小圆。
-     这一页的两枚都标 `contain: true` —— 首页要「完整看见」，所以位置与尺寸由 CSS
-     夹在视口内（见 globals.css 的 `.figure-slot[data-contain]`），滚动时也不再上下挪。 */
+  /* 01 首页：群青大长方形压左上（整页最大的一块）+ 右上角一枚青灰小圆。
+     这一页保留原来的尺寸与位置，也保留滚动联动 —— 首页的「动」本身是版面的一部分。 */
   home: {
     main: {
       shape: "rect",
-      x: 24,
-      y: 33,
-      w: 26,
-      h: 32,
-      rot: -8,
+      x: 18,
+      y: 30,
+      w: 30,
+      h: 38,
+      rot: -12,
       tint: 7,
-      contain: true,
       sketch: { contour: true, construction: true, density: 2 },
       note: "bl",
     },
@@ -162,12 +158,11 @@ const FIGURES: Record<DecorSection, FigurePair> = {
       shape: "circle",
       x: 86,
       y: 74,
-      w: 12,
-      h: 12,
+      w: 14,
+      h: 14,
       rot: 0,
       tint: 3,
       fade: 0.9,
-      contain: true,
       sketch: { contour: true, construction: false, density: 1 },
       note: "tr",
     },
@@ -214,7 +209,6 @@ const FIGURES: Record<DecorSection, FigurePair> = {
        · **18 是当前值，20 仍是上限**：20vmax 已接近 1/5，`22vmax` 会越界。
        · 之所以允许一部分移出屏幕：窄屏两侧几乎没有留白（列左缘只剩 24px），
          「完整留在屏幕内」只能把实体缩到很小；贴边 + 允许出屏是任何屏宽都成立的规则。
-         只有首页用 `contain: true` 反过来要求完整入画。
 
      `dimension` 关掉：那条尺寸线与那行文字画在实体的**左侧**（`.figure-dim` 是 `right: 100% + 1.4rem`），
      贴了左缘之后整条都在屏幕外。注解因此改挂右下角（`br`，落在留白里）而不是原来的 `bl`（那一角出屏了）。 */
