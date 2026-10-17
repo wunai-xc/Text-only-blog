@@ -262,6 +262,24 @@
 **没动的规矩**：实体仍在字后面（§15.7 第 2 条）、颜色仍只在三套令牌里、
 首页仍然没有满页网格、`prefers-reduced-motion` 下仍然不播。
 
+### 15.11 正文字体扩到七档（2026-10-17）
+
+在原来的黑体 / 宋体 / 楷体 / 等宽之外，新增 **仿宋 / 圆体 / 隶书** 三档，`READING_FONTS`
+现在是七档本地预设 + 一档「自定义」（读者上传自己的字体文件）。仍然**一个 webfont 都不发**：
+每档只列设备上可能已有的族名，缺哪份就顺着栈掉到最接近的通用族。
+
+- 字体栈补了 Windows / macOS / Linux 的常见族名：宋体加 `STSong` / `Noto Serif CJK SC`，
+  楷体加 `AR PL UKai CN`，仿宋用 `FangSong` / `STFangsong`，圆体用 `Yuanti SC` / `YouYuan`，
+  隶书用 `LiSu` / `STLiti` / `Baoli SC`。
+- `app/globals.css` 的 `--font-sans` / `--font-serif` / `--font-mono` 同时扩了兜底名单
+  （`Source Han Sans/Serif`、`Noto * CJK`、`WenQuanYi`、`Cascadia Code` 等），
+  自定义字体与各预设的栈尾都接到这三份令牌上。
+- 界面文案跟着改成「七档」（首页第 6 / 8 栏、设置中心阅读偏好、README），
+  档位顺序按字形气质排：黑体 / 宋体 / 楷体 / 仿宋 / 圆体 / 隶书 / 等宽。
+
+**没动的规矩**：偏好仍只存本机、不联网取字体；字体按钮仍然就是全页预览；
+「自定义」仍是最后一档，上传文件仍只进 IndexedDB。
+
 ---
 
 ## 1. 项目定位

@@ -27,10 +27,14 @@
    1. 字体（不随外观变）
    ============================================================ */
 @theme {
-  --font-sans: system-ui, -apple-system, "Segoe UI", "Noto Sans SC",
-    "PingFang SC", "Microsoft YaHei", sans-serif;
-  --font-serif: "Source Han Serif SC", "Noto Serif SC", Georgia, serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-sans: system-ui, -apple-system, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "Source Han Sans SC",
+    "Noto Sans CJK SC", "WenQuanYi Micro Hei", sans-serif;
+  --font-serif: "Source Han Serif SC", "Noto Serif CJK SC", "Noto Serif SC",
+    "Songti SC", "SimSun", Georgia, serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Cascadia Code", "Sarasa Mono SC", "Noto Sans Mono CJK SC", "Liberation Mono",
+    monospace;
 }
 
 /* 这里**没有**给「自定义」那一档写 @font-face：那一档用的是**读者自己上传的字体**，

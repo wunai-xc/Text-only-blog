@@ -17,7 +17,7 @@
  * 这是有意的，缩进本就是一件「要或不要」的事。
  *
  * 「字体」那一组与另外几组有两处不一样，都写在 READING_FONTS 上头：换的是字体族不是数值，
- * 而且第五档「自定义」默认藏着（要站长先放字体文件）。
+ * 而且最后一档「自定义」用的是读者自己上传的字体文件（默认摆出来，见 CUSTOM_FONT_ENABLED）。
  *
  * 三个设计决定：
  *   1. **写进 CSS 变量的永远是最终值**（`44rem` / `1.1rem` / `1.85`），不是档位 id 或
@@ -123,13 +123,17 @@ export const READING_INDENTS: ReadingOption[] = [
 export const CUSTOM_FONT_ENABLED = true;
 
 /**
- * 正文字体（第 8 项）。前四档**全是设备上已有的字体** —— 这一站一个 webfont 都不发：
- * 选哪一档都发不出一个网络请求，离线与国内可用性不受影响。第五档「自定义」用的是
- * **读者自己上传的字体文件**（lib/local-font.ts，存在浏览器里），同样不走网络。
+ * 正文字体（第 8 项）。除「自定义」外的**每一档都是设备上已有的字体** —— 这一站一个
+ * webfont 都不发：选哪一档都发不出一个网络请求，离线与国内可用性不受影响。最后一档
+ * 「自定义」用的是**读者自己上传的字体文件**（lib/local-font.ts，存在浏览器里），同样不走网络。
+ *
+ * 档位按字形气质排：黑体 / 宋体 / 楷体 / 仿宋 / 圆体 / 隶书 / 等宽。仿宋、圆体、隶书
+ * 在三大桌面系统上的常见族名都列进了栈里（Windows / macOS 各有各的叫法），缺哪一份就
+ * 顺着栈往下掉到该档最接近的通用族 —— **不下载、不探测**，装没装由系统自己决定。
  *
  * 每档写的是完整字体栈，中文名在前、西文名在后（正文里中文占多数，西文名跟在后面兜数字
  * 与英文的观感）；栈尾**接回 @theme 里那三个 --font-* 令牌**，而不是把同一串名字再抄一遍 ——
- * 3 套栈的兜底顺序只有 app/globals.css 一份事实来源。
+ * 三个 --font-* 令牌的兜底顺序只有 app/globals.css 一份事实来源。
  *
  * 「自定义」那一档的栈头 "Text Local Upload" 是 lib/local-font.ts 注册上传字体时
  * **写死的族名** —— 两处是一对，改要一起改。读者还没传（或传的那份载入失败）就掉到
@@ -145,19 +149,37 @@ export const READING_FONTS: ReadingOption[] = [
   },
   {
     id: "song",
-    value: '"Songti SC", "SimSun", var(--font-serif)',
+    value: '"Songti SC", "STSong", "SimSun", "Noto Serif CJK SC", var(--font-serif)',
     zh: "宋体",
     en: "Song",
   },
   {
     id: "kai",
-    value: '"Kaiti SC", "KaiTi", "STKaiti", var(--font-serif)',
+    value: '"Kaiti SC", "STKaiti", "KaiTi", "AR PL UKai CN", var(--font-serif)',
     zh: "楷体",
     en: "Kai",
   },
   {
+    id: "fangsong",
+    value: '"FangSong", "STFangsong", "FangSong_GB2312", var(--font-serif)',
+    zh: "仿宋",
+    en: "FangSong",
+  },
+  {
+    id: "round",
+    value: '"Yuanti SC", "YouYuan", "Hiragino Maru Gothic ProN", var(--font-sans)',
+    zh: "圆体",
+    en: "Round",
+  },
+  {
+    id: "lishu",
+    value: '"LiSu", "STLiti", "Baoli SC", var(--font-serif)',
+    zh: "隶书",
+    en: "Clerical",
+  },
+  {
     id: "mono",
-    value: '"Sarasa Mono SC", "Noto Sans Mono CJK SC", var(--font-mono)',
+    value: '"Sarasa Mono SC", "Noto Sans Mono CJK SC", "SFMono-Regular", var(--font-mono)',
     zh: "等宽",
     en: "Mono",
   },
