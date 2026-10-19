@@ -28,6 +28,7 @@
 | 能带走 | 打印即排版好的 PDF；RSS 订阅；PWA 离线可读 |
 | 零后端 | 纯静态导出，搜索索引 / RSS / sitemap / 更新日志全在 `next build` 里生成 |
 | 数学与图表 | KaTeX（含 `\ce` 化学式）、Mermaid / ECharts / Graphviz / ABC 五线谱 / SMILES 结构式，按需动态加载 |
+| 版面组件 | 正文按 MDX 编译，可写分栏、配图、图组、引文、提示框、通栏；构建期转静态 HTML，不增加客户端脚本 |
 
 ---
 
@@ -171,6 +172,8 @@ tags = ["随笔"]
 - 放在目录里就是一个**卡组**（目录即分组）：列表页按卡组分块显示，每个卡组还有自己的页面
   （`content/zh/posts/notes/` → `/zh/posts/notes/`），想让卡组有名字 / 说明 / 封面就在目录里放
   `_index.md`；
+- 正文按 MDX 编译：Markdown 照旧，另可写 `<Figure>`、`<Columns>`、`<Gallery>`、`<Quote>`、
+  `<Note>`、`<FullBleed>` 这些版面组件（不用 import，写法见 content/README.md 第 9 节）；
 - 文件名以 `_` 开头、以及 `README.md` 会被加载器跳过；
 - 草稿写 `draft: true`：**生产构建里根本不含它**，`npm run dev` 下才会出现（带一个草稿徽章）；
 - 想让某篇文章成为「关于」页的内容，写 `about: true`（每语言取最新的一篇，显示在 `/zh/about/`）；

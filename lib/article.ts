@@ -177,7 +177,7 @@ function nonEmptyObject(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * frontmatter 的 `typography` → `renderMarkdown` 的选项（规范见 content/README.md 第 9 节）：
+ * frontmatter 的 `typography` → `renderMarkdown` 的选项（规范见 content/README.md 第 10 节）：
  *
  *   typography: false                        → 整块关掉
  *   typography: { spacing: false }           → 只关某几条

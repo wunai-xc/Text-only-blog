@@ -4,7 +4,7 @@
 - Start the file with `---` (YAML) or `+++` (TOML) frontmatter — see [../README.md](../README.md) (Chinese).
 - This file (`README.md`) is never treated as a post, and so are files starting with `_`.
 - No sample posts on purpose: write your own first one.
-- CJK typography is fixed up at render time (spaces between CJK and Latin, halfwidth → fullwidth punctuation) — see [../README.md](../README.md) section 9.
+- CJK typography is fixed up at render time (spaces between CJK and Latin, halfwidth → fullwidth punctuation) — see [../README.md](../README.md) section 10.
 
 Minimal start:
 

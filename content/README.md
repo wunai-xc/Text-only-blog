@@ -271,7 +271,132 @@ note = "可选的一句话备注"
 
 ---
 
-## 9. 中文排版自动优化（第 4 项）
+## 9. 版面组件（MDX）
+
+正文按 **MDX** 编译：Markdown 语法照旧，另外多了八个版面组件。作者**不用写 `import`**，
+构建期已经把这八个名字交给 MDX；组件在构建期就变成静态 HTML，读者拿到的仍是一段普通正文
+（没有额外客户端脚本）。
+
+| 组件 | 作用 | 主要属性 |
+| --- | --- | --- |
+| `<Columns>` | 分栏容器 | `count="2"`（默认）/ `"3"` |
+| `<Column>` | 一栏 | `span="2"` 跨两栏，`span="3"` 跨满整行 |
+| `<Figure>` | 单张配图 | `src`、`alt`、`caption`、`size="body\|wide\|full"`、`align="left\|right\|center"`、`href` |
+| `<Gallery>` | 图组 | `columns="2"`（默认）/ `"3"`、`caption` |
+| `<Quote>` | 重点引文 | `cite`（出处） |
+| `<Note>` | 旁注 / 提示 / 警告 | `title`、`tone="note\|tip\|warn"` |
+| `<FullBleed>` | 通栏块 | 无 |
+| `<Chart>` | 图表占位 | **不要手写**，由图表代码块自动生成（见第 8 节） |
+
+### 分栏
+
+组件与 Markdown 之间要留空行，MDX 才会把里面当 Markdown 解析：
+
+```mdx
+<Columns count="2">
+<Column>
+
+### 左栏
+
+左栏的正文，照常写 Markdown。
+
+</Column>
+<Column>
+
+### 右栏
+
+列表、公式、代码块都可以。
+
+</Column>
+</Columns>
+```
+
+窄屏（`48rem` 以下）自动落成一栏；`span="2"` / `span="3"` 在单栏布局里不再跨列。
+
+### 配图
+
+```mdx
+<Figure src="/public/notes/a.png" alt="一张示意图" caption="图注写在这里" />
+
+<Figure src="/public/notes/b.png" alt="通栏图" size="full" />
+
+<Figure
+  src="/public/notes/c.png"
+  alt="让文字绕图"
+  align="right"
+  caption="右侧浮动，正文从左边绕过去"
+/>
+```
+
+- `src` 写 `/public/notes/a.png` 或 `/notes/a.png` 都行，构建期会去掉 `/public` 前缀；
+- `size="body"` 默认正文宽；`wide` 向左右各借 `0.75rem`；`full` 借 `1.5rem`；
+- 只有 `body` 档支持 `align="left"` / `"right"` 浮动，窄屏自动回到普通块；
+- `href` 会给图片套一层链接，地址由作者自己保证；
+- `caption` 只收纯文本。
+
+### 图组
+
+```mdx
+<Gallery columns="3" caption="三张一组，图注逐张写在 Figure 上">
+
+<Figure src="/public/a.png" alt="" caption="第一张" />
+<Figure src="/public/b.png" alt="" caption="第二张" />
+<Figure src="/public/c.png" alt="" caption="第三张" />
+
+</Gallery>
+```
+
+窄屏两列，`30rem` 以下一列；图组里的 `<Figure>` 不再浮动，也不再自己留外边距。
+
+### 引文与提示框
+
+```mdx
+<Quote cite="—— 某人">
+
+引文里可以写 **Markdown**。
+
+</Quote>
+
+<Note title="注意" tone="warn">
+
+提示框里同样可以写 Markdown、列表和公式。
+
+</Note>
+```
+
+`tone` 三档只换左边色条与底色：`note`（默认）/ `tip` / `warn`。
+
+### 通栏
+
+```mdx
+<FullBleed>
+
+| 很宽的表 | … |
+| --- | --- |
+| … | … |
+
+</FullBleed>
+```
+
+通栏块向左右各借 `1.5rem`，窄屏不会超出视口；打印时所有负外边距都会归零。
+
+### 内联 HTML 与注释
+
+正文现在按 JSX 解析，内联 HTML 仍可用，但规则变了：
+
+- 标签必须闭合（`<br>` 要写成 `<br />`）；
+- 属性用 JSX 写法（`className`、`style={{ color: "var(--c-accent)" }}`）；
+- 注释用 `{/* … */}`，旧的 `<!-- … -->` 不再被当成注释；
+- 正文里的 `{` / `}` 会被当成 JSX 表达式，写在代码块或行内代码里最稳。
+
+### 打印
+
+分栏落成一栏、浮动图回到普通块、`wide` / `full` 去掉负外边距；图组在纸上最多三列，
+图注字号收小。版面组件本身不印任何背景装饰。
+
+---
+
+## 10. 中文排版自动优化（第 4 项）
 
 写中文时**不用**手工在半角/全角之间纠结，也不用自己敲中英文之间的空格 —— 渲染期会收拾干净
 （实现在 [lib/typography.ts](../lib/typography.ts)，只改正文文本，不碰代码与公式）。
@@ -287,7 +412,7 @@ note = "可选的一句话备注"
 
 - 代码块、行内代码、公式（`$…$` / `$$…$$`）里的内容原样保留；
 - 链接与图片的**地址**（链接文字会被排版，地址不会）；
-- 内联 HTML 里的内容；
+- JSX 属性里的字符串；组件内部的 Markdown 正文照常参与排版；
 - `1,000`、`3.14`、`v1.2.3`、`example.com`、`a.ts` 这类数字/英文内部的标点
   （规则只认「前一个字符是中文」）；
 - 引号：半角 `"` `'` 一律不转，中文引号请直接写 `“ ”`。
@@ -318,7 +443,7 @@ typography = false          # 整块关掉
 
 ---
 
-## 10. 常见报错
+## 11. 常见报错
 
 | 报错 | 原因 |
 | --- | --- |
@@ -328,5 +453,7 @@ typography = false          # 整块关掉
 | `键 "x" 重复定义` | 同一个键写了两次 |
 | `slug 冲突` | 两个文件推出同一个 slug，用 `slug` 字段区分 |
 | `无法解析的值 "…"（字符串请加引号）` | TOML 里的字符串忘了加引号 |
+| `MDX 编译失败…` | 正文里有没闭合的 JSX 标签、在 JSX 里用了 HTML 注释，或组件属性写错（例如 `count=2` 少了引号） |
+| `MDX 渲染失败` | 组件属性类型不对、图片 `src` 为空，或正文里裸写了 `{…}`（会被当成 JavaScript 表达式） |
 
 构建期报错会带上源文件路径，按提示改即可。

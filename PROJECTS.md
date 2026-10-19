@@ -280,6 +280,35 @@
 **没动的规矩**：偏好仍只存本机、不联网取字体；字体按钮仍然就是全页预览；
 「自定义」仍是最后一档，上传文件仍只进 IndexedDB。
 
+### 15.12 正文改 MDX + 版面组件（2026-10-19）
+
+**目标**：让文章能排分栏、配图、图组、引文、提示框、通栏，同时保住「纯静态、零客户端脚本、
+作者不写 import」这三条底线。
+
+落地：
+
+1. **管线换成 MDX**：`lib/markdown.ts` 不再走 `remark-parse → remark-rehype → rehype-stringify`，
+   改为 `compile(…, { format: "mdx", outputFormat: "function-body" })` + `run()` +
+   `renderToStaticMarkup()`。remark / rehype 插件表原样保留，目录、参考文献、警告统计都不变。
+2. **去掉 `rehype-raw`**：它与 MDX 的 JSX 节点不兼容（会抛
+   `Cannot compile 'mdxJsxFlowElement' node … using MDX nodes with hast-util-raw`）。
+   现在正文里的 HTML 按 JSX 解析，标签必须闭合、属性用 JSX 写法、注释改 `{/* … */}`；
+   `RenderOptions.allowRawHtml` 标记为 deprecated，保留仅为兼容调用方。
+3. **新增 `components/mdx/index.tsx`**：`Columns`、`Column`、`Figure`、`Gallery`、`Quote`、
+   `Note`、`FullBleed`、`Chart` 八个构建期组件，统一导出 `MDX_COMPONENTS`。没有 hook、
+   没有事件、没有浏览器 API；组件名固定，文章里直接写标签名。
+4. **`Chart` 接管图表占位**：`remarkChartBlocks` 现在生成 `mdxJsxFlowElement`；
+   输出结构与原来的 `.chart-block` / `.chart-canvas` / `.chart-source` 一致，
+   `components/ArticleBody.tsx` 的动态加载逻辑不用改。
+5. **样式**：`app/globals.css` 新增「7a. MDX 版面组件」，宽度仍从 `--reading-measure` 派生；
+   `48rem` 以下分栏落一栏、浮动图回普通块，`30rem` 以下图组落一列；打印时负外边距归零、
+   分栏按顺序排、图注收小。
+6. **文档**：`content/README.md` 新增第 9 节「版面组件（MDX）」（原 9 / 10 节顺延为 10 / 11）；
+   `博客写作规范.md` §6.11 改为「内联 HTML 与版面组件（MDX）」；两份 posts README 的节号同步。
+
+**没动的规矩**：正文仍是 `.md`，frontmatter 仍由 gray-matter 先解析；页面仍是静态 HTML；
+客户端不新增脚本；图表仍按需动态加载；打印仍只印墨色。
+
 ---
 
 ## 1. 项目定位
@@ -302,7 +331,7 @@
 | 框架 | Next.js 16.3（App Router，`output: "export"` 静态导出） |
 | UI | React 19.2、Tailwind CSS 4（`@tailwindcss/postcss`）+ 自定义 `app/globals.css` |
 | 语言 | TypeScript 5 |
-| Markdown | unified / remark（`parse`、`gfm`、`math`、`breaks`）+ rehype（`raw`、`highlight`、`katex`、`slug`、`autolink`、`stringify`） |
+| Markdown | MDX 3（`@mdx-js/mdx`）+ remark（`gfm`、`math`、`breaks`）+ rehype（`highlight`、`katex`、`slug`、`autolink`）；构建期 `renderToStaticMarkup` 输出静态 HTML |
 | 公式 | KaTeX 0.16 + `katex/contrib/mhchem`（含自定义宏） |
 | 检索 | Fuse.js 7（构建期预生成索引，零运行时后端） |
 | 图表 | Mermaid、ECharts、Graphviz（`@hpcc-js/wasm-graphviz`）、abc.js、SmilesDrawer —— 全部按需动态加载 |
@@ -503,10 +532,11 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 
 ### 3. Markdown 渲染 —— 已完成 ✅
 
-- `lib/markdown.ts` 一条 unified 管线（全部在构建期跑，客户端只收 HTML 字符串）：
-  `remark-parse → gfm → cjk-friendly → cjk-friendly-gfm-strikethrough → breaks → math → 图表块 →
-  引用角标 → remark-rehype → rehype-raw → slug →
-  目录收集 → autolink-headings → katex → highlight → stringify`。
+- `lib/markdown.ts` 一条 MDX 管线（全部在构建期跑，客户端只收 HTML 字符串）：
+  `@mdx-js/mdx compile → gfm → cjk-friendly → cjk-friendly-gfm-strikethrough → breaks → math →
+  中文排版 → 图表块（生成 <Chart>） → 引用角标 → rehype（public 资源 / 链接卡片 / slug / 目录收集 /
+  autolink-headings / katex / highlight / 代码块头 / 表格滚动） → run() → renderToStaticMarkup()`。
+  `rehype-raw` 已移除：它与 MDX 的 JSX 节点不兼容，正文 HTML 现在按 JSX 解析。
 - **中文里 `**` / `~~` 的修正（追加，2026-10-01 站长的《医药学笔记》把它暴露出来的）**：
   加 `remark-cjk-friendly` + `remark-cjk-friendly-gfm-strikethrough`（都从 `/parseOnly` 进 ——
   本站只解析、从不把 mdast 写回 Markdown）。修的是 CommonMark 的一条规则（commonmark-spec#650）：
@@ -556,7 +586,7 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
      换半个会得到 `中文（test）` 这种错配。
 - **防误伤是这块的主要工作量**，靠的是两条：
   - 只处理 mdast 的 `text` 节点 —— 代码块/行内代码/公式/链接地址/内联 HTML 的字符串分别在
-    `code` / `inlineCode` / `math` / `inlineMath` / `html` 节点或属性里，天生不在处理范围内；
+    `code` / `inlineCode` / `math` / `inlineMath` 节点或 JSX 属性里，天生不在处理范围内；
   - 标点规则只看「前一个字符是不是中文」，于是 `1,000`、`3.14`、`v1.2.3`、`example.com`、
     `a.ts`、`http://` 全部自动免疫（又对 `.` 补了「后面跟字母数字或 `/` 就不换」的兜底）。
   - 引号（半角 `"` `'`）**刻意不转**：英文引号与代码里的引号误伤率太高，中文引号请直接写 `“ ”`。
@@ -567,7 +597,7 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 - 开关：`renderMarkdown(body, { typography: false | { spacing, punctuation, parentheses } })`；
   返回值多了 `typography: { texts, spaces, punctuation, parentheses, ellipses }`，供构建日志与自检显示。
   frontmatter 的 `typography` 字段接到这里属于第 12 项（文章页）的活，规范已在
-  `content/README.md` 第 9 节写明。
+  `content/README.md` 第 10 节写明。
 - 自检：`components/dev/PipelineCheck.tsx` 新增两段样例 —— 一段故意写得很糙的中英混排
   （应当被收拾干净），一段是对照组（`typography: false`，应当原样输出），并在页面上打印改动计数。
   —— 这一段自检随第 12 项删掉了：它的任务（在文章页之前验证渲染器）已经由真的文章页承担。
@@ -1095,7 +1125,7 @@ public/icon-192.png 等          PNG 图标（可选，见第 4 节第 5 项「P
 - **frontmatter 的 `typography` 字段接上了**（第 4 项留给第 12 项的接口）：
   `parseTypographyOption()` 把 `false` / `{ spacing = false }` 这类写法翻成
   `RenderOptions.typography`，**返回 `undefined` 与返回 `false` 是两件事**
-  （前者「没说」、后者「说了要关」）。规范在 `content/README.md` 第 9 节。
+  （前者「没说」、后者「说了要关」）。规范在 `content/README.md` 第 10 节。
 - **渲染警告进构建日志**：`renderMarkdown` 的 `warnings`（缺引用、公式没渲染成功……）在这里
   逐条 `console.warn`，带上源文件路径 —— 与第 3 项「写错公式不弄挂整站」的口径一致。
 - **五线谱（abcjs）的配色缺口补上了**（第 6 项记下的待办）：abcjs 把颜色写在 SVG 元素
@@ -2271,7 +2301,7 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
      如果亮色下一眼看着和以前不一样，也告诉我（那说明 `recolorInk()` 碰到了不该碰的属性）。
   9. **frontmatter 的 `typography`**：给某一篇写 `typography = false`（TOML）或
      `typography: false`（YAML），那一篇的中英之间就**不该再补空格**；删掉这行恢复。
-     `{ spacing = false }` 这类写法只关一条 —— 规范在 `content/README.md` 第 9 节。
+     `{ spacing = false }` 这类写法只关一条 —— 规范在 `content/README.md` 第 10 节。
   10. **metadata 与 RSS 发现表**：查看源代码，`<link rel="alternate" type="application/rss+xml">`
      应当**两条都在**（zh 与 en）—— 文章页自己写了 `alternates`，把根布局那份覆盖掉过一次；
      同时 `<link rel="canonical">` 应当是文章自己的地址。
@@ -2515,3 +2545,4 @@ Workers 静态资源用的是该 token 本来就有的 `Workers Scripts: Edit`�
 | 本次提交 | **中文里的 `**` / `~~` 修正（站长报「我写的 md 渲染有问题」）**。站长指的是《医药学笔记》里那几处加粗失效 —— 去线上把 HTML 抓回来看（`/zh/posts/pharmacy-note-1/`），根因**不是站点 bug、也不是作者写错**，而是 CommonMark 的既定行为（commonmark-spec#650，中日韩文本的强调标记问题）：闭合定界符的**内侧是标点**、**外侧既不是空白也不是标点**时不算「右翼定界符」。现场证据正好把这条规则证出来 —— 坏的四处（`**抗生素(antibiotic)**的定义`、`**亚历山大·弗莱明[…]**发现`、`*青霉素(Penicillin)*开始`、`**钱恩[…]**利用`）与好的三处（`**抗生素(antibiotic)**，`、`**弗洛里[…]**, `、`**弗莱明**与`）的差别只有「外侧那个字是标点还是汉字」。修法是**渲染层**（站长选的）：`package.json` 加 `remark-cjk-friendly@^2.3.2` + `remark-cjk-friendly-gfm-strikethrough@^2.3.1`（版本与入口点取自 npm registry 的包元数据：两者都有 `/parseOnly` 导出，都是 ESM-only、Node ≥ 18、peer 只要 `unified@^11`，本站全满足），`lib/markdown.ts` 在 `remark-gfm` 之后挂上这两个（`remark-cjk-friendly-gfm-strikethrough` 必须排在 `remark-gfm` 之后，插件自己的要求）、文件头注释写清「与第 4 项的 `remarkCjkTypography` 不是一回事」（那个改 text 节点的值，这个决定解析阶段认不认定界符）。同时把《笔记1》里的 `1.有序` / `2.有序` 改成 `1. 有序` / `2. 有序` —— 有序列表标记后面必须有空格（CommonMark 硬要求，GitHub 同样如此），这条渲染器修不了。台账：第 3 项小节补一段（管线清单同步）。⚠️ **本环境无 shell，装不了包也跑不了 `npm run build`**：验证得靠本机或 Cloudflare 云构建（`bun install` 会按 package.json 装新依赖），上线后对照 `/zh/posts/pharmacy-note-1/` 那四处是否变成 `<strong>` / `<em>` |
 | 本次提交 | **新笔记补 slug + 有序列表标记**（站长写《微时序笔记1》那一轮）。站长新写的 `content/zh/posts/minecraft_notes/微时序笔记1.md` 文件名是中文却没写 `slug` —— 这正是上一轮被 `lib/content.ts` 的 `assertUrlSafeSlug()` 拦下来的那种写法（非 ASCII slug 线上必 404），已补 `slug = "micro-timing-note-1"`，地址是 `/zh/posts/micro-timing-note-1/`（卡组页仍是 `/zh/posts/minecraft_notes/`）。正文里 13 处 `1.世界边界检查` 补上标记后的空格（→ `1. 世界边界检查`）：**有序列表标记后面必须有空格**，缺了它只是一个「以 1. 开头的普通段落」，而这条渲染器不会替你补（`remark-cjk-friendly` 修的是强调定界符，不是列表标记）—— 作者在《笔记1》里已经漏过一次同一处，所以顺手把这条写进 `content/README.md` 第 9 节的「写之前要知道的」清单（原文「两点要知道」改成「三点」），免得再犯。⚠️ 本环境无 shell：要等下一次构建（本机或 Cloudflare）才能确认 `/zh/posts/micro-timing-note-1/` 打得开、那个 13 项是有序列表而不是 13 个段落 |
 | 本次提交 | **台账状态变更 + 第 15 项现行规范（几何实体与手绘草稿）**（站长的判断：框架已经出来了，这份台账属于项目前期的东西）。**§1~§9 全部转为「历史档案」** —— 追溯与查证用，不再要求逐条遵守（新代码不必照它们的措辞写注释，也不必再提「第 N 项落地」）；**文件开头新增【现行】一节**作为唯一要严格遵守的规范。站长对八个追问的答复逐条落成规格：① **C：每页 1 主实体 + 1 小卫星**（元素数量恒定，用不上的写 `fade: 0` 而不是删行）；② 实体**允许跨过正文列**（「穿插在正文里」），正文列**不加**不透明底；③ **实体永远放在文字后面** —— 整层永远 `z-index: -1`、没有前景装饰层；④ **八色颜料表**（朱 / 暖褐 / 陶土 / 芥黄 / 苔绿 / 青 / 群青 / 紫），**浅底（纸 / 亮）用重色、深底（暗）用浅色**，整层浓度由 `--figure-alpha` 收着（历史里「文章页压到六成」那条取消：文章页的实体是主角）；⑤ **不做指针跟随**（只留「换页形变 + 滚动联动」两件互动）；⑥ 草稿线**做细（0.6~1px）、只跟着实体**、四类（轮廓双线 / 构造线 / 排线 / 标注，V1 做前两类）、**不做满页网格**；⑦ **图签合并进实体**（`TOB-ZH-03` + 页名变成实体的注解，`BlueprintBackground.tsx` 与 `.blueprint-tag` 删除、`data-route` 挪到实体层）；⑧ **分两批**（V1 / V2 清单见 §15.6）。技术取舍也写进去了：去掉 `mask-image` 之后**允许直接 transition `width` / `height`**（整层 `fixed`、不占文档流，不会引起 CLS）、手绘路径必须**确定性**（种子来自路径，禁止 `Math.random()`，否则 hydration 不一致）、滚动**只读**且位移上限 ±8vh（实体必须留在视野里）。**本节显式替代历史两处**：约定第 5 条「背景只许纯色与大色块、加线先问一声」→ 改为「细线可以，但只许跟着实体、不许满页网格」；软边大色块 → 硬边带描边的几何实体。另外记下参考站取证（阿卡迪亚 `arcadia.moe` 只借「跨场景持续色块的声明式 morph」，不借指针跟随的小圆、满页 12 栏网格、`blur` 入场与噪点）。⚠️ **本次只改了这份台账，`app/` `components/` `lib/` 一行没动** —— 代码留到 V1 那一轮；届时 `grep -rn "data-decor\|blueprint\|ambient"` 应当为空 |
+| 本次提交 | **正文改 MDX + 八类版面组件**（选择「MDX + 版面组件」路线）：`package.json` 加 `@mdx-js/mdx@^3.1.1`，`lib/markdown.ts` 从 `remark-parse → rehype-stringify` 改为 `compile({ format: "mdx", outputFormat: "function-body" })` + `run()` + `renderToStaticMarkup()`，客户端仍只收 HTML 字符串。**移除 `rehype-raw`**（与 MDX 的 `mdxJsxFlowElement` 不兼容，会直接抛错），正文 HTML 改按 JSX 解析；remark / rehype 插件表、KaTeX、高亮、目录、参考文献、警告统计全部保留。新增 `components/mdx/index.tsx`：`Columns` / `Column` / `Figure` / `Gallery` / `Quote` / `Note` / `FullBleed` / `Chart`，统一导出 `MDX_COMPONENTS`，零 hook、零客户端脚本；`remarkChartBlocks` 改为生成 `<Chart>` 节点，输出结构与 `ArticleBody` 原有图表加载逻辑一致。`app/globals.css` 新增「7a. MDX 版面组件」：宽度从 `--reading-measure` 派生，`48rem` 落单栏、`30rem` 图组落一列，打印时负外边距归零、分栏顺序排。顺手修了引用占位符被二次处理的 bug（缺失引用会套两层 span）：`walkMdast` 跳过插件生成的节点。文档同步：`content/README.md` 新增第 9 节（原 9 / 10 顺延为 10 / 11）、`博客写作规范.md` §6.11、两份 posts README、README、维护指南、PROJECTS §3 与 §15.12。**验证**：在临时目录用 esbuild + 仓库同一套插件打包 `renderMarkdown`，把 `content/` 下 17 个 `.md` 全部渲染通过（含 61 万字节的《数学公式》），并单独覆盖组件嵌套、图表、引用缺失与 MDX 报错路径；未在本机执行 `next build`。 |

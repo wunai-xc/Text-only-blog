@@ -369,7 +369,8 @@ export function stripMarkdown(body: string): string {
     .replace(/`[^`\n]*`/g, " ") // 行内代码
     .replace(/\$\$[\s\S]*?\$\$/g, " ") // 块公式
     .replace(/\$[^$\n]*\$/g, " ") // 行内公式
-    .replace(/<!--[\s\S]*?-->/g, " ") // 注释
+    .replace(/<!--[\s\S]*?-->/g, " ") // HTML 注释
+    .replace(/\{\/\*[\s\S]*?\*\/\}/g, " ") // MDX 注释
     .replace(/!\[[^\]]*\]\([^)]*\)/g, " ") // 图片
     .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1") // 链接保留文字
     .replace(/^[ \t]{0,3}#{1,6}[ \t]+/gm, "") // 标题井号

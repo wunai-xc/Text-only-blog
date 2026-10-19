@@ -4546,6 +4546,263 @@ html[data-reading="hidden"] {
     font-size: 0.85rem;
     white-space: pre-wrap;
   }
+
+  /* ==========================================================
+     7a. MDX 版面组件（components/mdx/index.tsx）
+     文章仍是 Markdown，只是多了几个块级组件：分栏、配图、图组、引言、提示框、通栏。
+     宽度仍从 --reading-measure 派生：wide / full 只向页面内边距借位，不写死数值。
+     结构见组件文件，写作规范见 content/README.md 第 10 节。
+     ========================================================== */
+
+  /* 分栏：2 栏默认，3 栏用 data-count 切；窄屏由下面的媒体查询落成一栏 */
+  .mdx-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.2rem 1.6rem;
+    margin: 1.4rem 0;
+    clear: both;
+  }
+
+  .mdx-columns[data-count="3"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mdx-column {
+    min-width: 0;
+  }
+
+  .mdx-column > :first-child {
+    margin-top: 0;
+  }
+
+  .mdx-column > :last-child {
+    margin-bottom: 0;
+  }
+
+  /* 栏内段落不缩首行：分栏本身已经提供了「换一块」的视觉边界 */
+  .mdx-column > p {
+    text-indent: 0;
+  }
+
+  /* span=2 跨两栏；span=3 跨满整行（2 栏布局里等于通栏） */
+  .mdx-column[data-span="2"] {
+    grid-column: span 2;
+  }
+
+  .mdx-column[data-span="3"] {
+    grid-column: 1 / -1;
+  }
+
+  /* 配图：默认正文宽、居中；wide / full 向左右借出页面内边距 */
+  .mdx-figure {
+    margin: 1.4rem 0;
+    clear: both;
+  }
+
+  .mdx-figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--c-rule);
+    border-radius: var(--shape-radius);
+    background: var(--c-surface);
+  }
+
+  .mdx-figure-link {
+    display: block;
+  }
+
+  .mdx-figure-caption,
+  .mdx-gallery-caption {
+    margin-top: 0.5rem;
+    color: var(--c-ink-muted);
+    font-size: 0.82rem;
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  .mdx-figure[data-size="wide"] {
+    width: calc(100% + 1.5rem);
+    margin-inline: -0.75rem;
+  }
+
+  .mdx-figure[data-size="full"],
+  .mdx-full-bleed {
+    width: calc(100% + 3rem);
+    margin-inline: -1.5rem;
+  }
+
+  /* 栏内的图不再向栏外借位：分栏已经比正文窄，再借就会盖到隔壁栏 */
+  .mdx-column .mdx-figure,
+  .mdx-column .mdx-figure[data-size="wide"],
+  .mdx-column .mdx-figure[data-size="full"],
+  .mdx-column .mdx-full-bleed {
+    width: auto;
+    margin-inline: 0;
+  }
+
+  /* 正文宽时可以让文字绕图；wide / full 不再浮动（通栏图旁边没有文字可绕） */
+  .mdx-figure[data-align="left"],
+  .mdx-figure[data-align="right"] {
+    width: min(42%, 17rem);
+  }
+
+  .mdx-figure[data-align="left"] {
+    float: left;
+    margin: 0.35rem 1.1rem 0.85rem 0;
+    clear: none;
+  }
+
+  .mdx-figure[data-align="right"] {
+    float: right;
+    margin: 0.35rem 0 0.85rem 1.1rem;
+    clear: none;
+  }
+
+  /* 浮动图之后的块级组件与标题先清一下，免得下一块从图旁边插进来 */
+  .mdx-gallery,
+  .mdx-quote,
+  .mdx-note,
+  .mdx-columns,
+  .mdx-full-bleed {
+    clear: both;
+  }
+
+  .article-body :is(h1, h2, h3, h4, h5, h6) {
+    clear: both;
+  }
+
+  /* 图组：Figure 在网格里不再浮动、不再自己留外边距 */
+  .mdx-gallery {
+    margin: 1.4rem 0;
+  }
+
+  .mdx-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+
+  .mdx-gallery[data-count="3"] .mdx-gallery-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mdx-gallery .mdx-figure {
+    width: auto;
+    max-width: none;
+    margin: 0;
+    float: none;
+    clear: none;
+  }
+
+  .mdx-gallery .mdx-figure img {
+    width: 100%;
+  }
+
+  /* 重点引文：上下两条细线，字号略大，不带普通引用块的左边框 */
+  .mdx-quote {
+    margin: 1.8rem 0;
+    padding: 0.55rem 0;
+    border-top: 1px solid var(--c-rule-strong);
+    border-bottom: 1px solid var(--c-rule-strong);
+  }
+
+  .mdx-quote blockquote {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: var(--c-ink);
+    font-size: 1.08em;
+    line-height: 1.75;
+  }
+
+  .mdx-quote blockquote p {
+    margin: 0;
+    text-indent: 0;
+  }
+
+  .mdx-quote figcaption {
+    margin-top: 0.55rem;
+    color: var(--c-ink-subtle);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    text-align: right;
+  }
+
+  /* 提示框：默认中性，tip 用强调色，warn 用危险色；只换色条与底色，不改排版 */
+  .mdx-note {
+    margin: 1.4rem 0;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--c-rule);
+    border-left: 3px solid var(--c-rule-strong);
+    border-radius: var(--shape-radius);
+    background: var(--c-surface);
+  }
+
+  .mdx-note[data-tone="tip"] {
+    border-left-color: var(--c-accent);
+    background: var(--c-accent-soft);
+  }
+
+  .mdx-note[data-tone="warn"] {
+    border-left-color: var(--c-danger);
+  }
+
+  .mdx-note-title {
+    margin: 0 0 0.35rem;
+    color: var(--c-ink-muted);
+    text-indent: 0;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+
+  .mdx-note p {
+    text-indent: 0;
+  }
+
+  .mdx-note > :last-child {
+    margin-bottom: 0;
+  }
+
+  /* 通栏块自己不再留上下外边距：里面的图 / 表 / 段落各有各的间距 */
+  .mdx-full-bleed > :first-child {
+    margin-top: 0;
+  }
+
+  .mdx-full-bleed > :last-child {
+    margin-bottom: 0;
+  }
+
+  /* 窄屏：分栏落成一栏，浮动图回到普通块，图组两列 */
+  @media (max-width: 48rem) {
+    .mdx-columns,
+    .mdx-columns[data-count="3"] {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .mdx-column[data-span="2"],
+    .mdx-column[data-span="3"] {
+      grid-column: auto;
+    }
+
+    .mdx-figure[data-align="left"],
+    .mdx-figure[data-align="right"] {
+      width: auto;
+      margin: 1.2rem 0;
+      float: none;
+    }
+  }
+
+  @media (max-width: 30rem) {
+    .mdx-gallery-grid,
+    .mdx-gallery[data-count="3"] .mdx-gallery-grid {
+      grid-template-columns: 1fr;
+    }
+  }
 }
 
 /* ============================================================
@@ -4970,5 +5227,83 @@ html[data-reading="hidden"] {
   .article-body pre a[href]::after,
   .article-body code a[href]::after {
     content: "";
+  }
+
+  /* ---------- MDX 版面组件 ----------
+     纸上没有「绕图」和「通栏」：一律回到单栏、去掉负外边距，避免被页面边缘裁掉。
+     分栏在 A4 上仍可读，但跨页时容易断在中间，干脆按顺序排下来。 */
+  .article-body .mdx-columns,
+  .article-body .mdx-columns[data-count="3"] {
+    display: block;
+    margin: 3px 0;
+  }
+
+  .article-body .mdx-column + .mdx-column {
+    margin-top: 6px;
+  }
+
+  .article-body .mdx-figure,
+  .article-body .mdx-gallery,
+  .article-body .mdx-quote,
+  .article-body .mdx-note,
+  .article-body .mdx-full-bleed {
+    width: auto;
+    max-width: none;
+    margin: 6px 0;
+    float: none;
+    clear: both;
+  }
+
+  .article-body .mdx-figure[data-size="wide"],
+  .article-body .mdx-figure[data-size="full"] {
+    width: auto;
+    margin-inline: 0;
+  }
+
+  .article-body .mdx-figure[data-align="left"],
+  .article-body .mdx-figure[data-align="right"] {
+    width: auto;
+    margin: 6px 0;
+  }
+
+  .article-body .mdx-gallery-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .article-body .mdx-gallery[data-count="3"] .mdx-gallery-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .article-body .mdx-figure-caption,
+  .article-body .mdx-gallery-caption,
+  .article-body .mdx-quote figcaption {
+    font-size: 9px;
+    line-height: 1.4;
+  }
+
+  .article-body .mdx-quote {
+    padding: 3px 0;
+  }
+
+  .article-body .mdx-quote blockquote {
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  .article-body .mdx-note {
+    padding: 4px 6px;
+  }
+
+  .article-body .mdx-note-title {
+    font-size: 9px;
+  }
+
+  .article-body .mdx-figure,
+  .article-body .mdx-gallery,
+  .article-body .mdx-quote,
+  .article-body .mdx-note,
+  .article-body .mdx-column {
+    break-inside: avoid;
   }
 }

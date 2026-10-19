@@ -1,19 +1,17 @@
 /**
- * lib/markdown.ts —— Markdown → HTML（第 3 项：渲染）
+ * lib/markdown.ts —— MDX → HTML（第 3 项：渲染）
  *
  * 整条管线都在构建期 / 服务端跑，客户端只拿到一个 HTML 字符串：
  *
- *   remark-parse             Markdown → mdast
+ *   @mdx-js/mdx compile/run  Markdown + JSX 组件 → React 函数
  *   remark-gfm               GFM：表格、任务列表、脚注、删除线、裸链接
  *   remark-cjk-friendly      中文里「标点紧贴 **」的强调修正（见下面那段注释）
  *   remark-cjk-friendly-gfm-strikethrough  同一问题的 ~~ 删除线版本
  *   remark-breaks            单个换行即换行（写中文随笔更顺手）
  *   remark-math              $…$ / $$…$$ → math 节点
  *   remarkCjkTypography      中文排版优化（第 4 项：补空格、半角标点转全角）
- *   remarkChartBlocks        ```mermaid 之类 → 占位 <figure>（浏览器按需渲染）
+ *   remarkChartBlocks        ```mermaid 之类 → <Chart> 占位组件（浏览器按需渲染）
  *   remarkCitations          [reference:N] → 角标链接
- *   remark-rehype            mdast → hast（保留内联 HTML）
- *   rehype-raw               解析正文里的内联 HTML
  *   rehypePublicAssets       图片 src 的 /public 前缀归一化（见下）
  *   rehypeLinkCards          外链：行内加站点图标，单独成行的换成卡片（见 lib/link-cards.ts）
  *   rehype-slug              给标题加 id（目录靠它）
@@ -23,14 +21,23 @@
  *   rehype-highlight         highlight.js（monokai 主题在 globals.css 里）
  *   rehypeCodeBlocks         代码块套上工具头、印出语言名（上面那段）
  *   rehypeTableScroll        给每个表格套一层横向滚动容器（宽表不撑破版面）
- *   rehype-stringify         hast → HTML 字符串
+ *   react-dom/server         React → HTML 字符串（renderToStaticMarkup）
+ *
+ * 正文是 **MDX**：Markdown 语法照旧，另可用 `<Columns>` / `<Figure>` 这些版面组件
+ *（实现在 components/mdx/index.tsx，样式在 globals.css 的「7a」）。组件在构建期
+ * 就渲染成静态 HTML，读者拿到的仍是一段没有额外脚本的正文。作者**不需要 import**：
+ * 固定组件表 MDX_COMPONENTS 已经交给 MDX，文章里只写标签名。
+ *
+ * 正文里的 HTML 也按 JSX 解析（`rehype-raw` 已移除，它与 MDX 节点不兼容）：标签必须闭合、
+ * 属性用 JSX 写法、注释用 MDX 的花括号注释（不再是 HTML 的 `<!-- -->`）。
+ * 这条约束在 content/README.md 第 9 节有面向作者的说明。
  *
  * 图表为什么不在构建期渲染：mermaid / echarts / graphviz / abcjs / smiles-drawer
  * 加起来体积可观，而一篇文章通常只用其中一两种。占位 figure 里带着源码，
  * components/ArticleBody.tsx 见到了才动态 import 对应的库（离线 PWA 也友好）。
  *
  * 第 4 项（中文排版优化）在 lib/typography.ts：它只改 text 节点的值，
- * 代码块 / 行内代码 / 公式 / 链接地址 / 内联 HTML 都不是 text 节点，因此天然躲开；
+ * 代码块 / 行内代码 / 公式 / 链接地址 / JSX 属性都不是 text 节点，因此天然躲开；
  * 位置排在 remarkCitations 之前，而 `[reference:1]` 里的 `:` 左边是字母 `e`、
  * `[` 左边也不是「汉字与字母相邻」，所以角标语法不会被排版规则碰坏。
  *
@@ -52,20 +59,22 @@
 
 import "katex/contrib/mhchem"; // 副作用导入：注册 \ce{} / \pu{}
 
+import { compile, run } from "@mdx-js/mdx";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import * as jsxRuntime from "react/jsx-runtime";
 import rehypeAutolinkHeadings, { type Options as AutolinkOptions } from "rehype-autolink-headings";
 import rehypeHighlight from "rehype-highlight";
 import rehypeKatex, { type Options as KatexOptions } from "rehype-katex";
-import rehypeRaw from "rehype-raw";
 import rehypeSlug from "rehype-slug";
-import rehypeStringify from "rehype-stringify";
 import remarkBreaks from "remark-breaks";
 import remarkCjkFriendly from "remark-cjk-friendly/parseOnly";
 import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethrough/parseOnly";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
-import remarkParse from "remark-parse";
-import remarkRehype from "remark-rehype";
-import { unified } from "unified";
+import type { PluggableList } from "unified";
+
+import { MDX_COMPONENTS } from "@/components/mdx";
 
 import { chartLanguage } from "./charts";
 import type { ReferenceEntry } from "./frontmatter";
@@ -168,7 +177,10 @@ export interface RenderOptions {
   references?: ReferenceEntry[];
   /** 是否在结尾追加参考列表的 HTML（默认 true） */
   referenceList?: boolean;
-  /** 是否允许正文里的内联 HTML（默认 true） */
+  /**
+   * 是否允许正文里的内联 HTML。
+   * @deprecated 正文已改为 MDX：HTML 标签按 JSX 解析，不再有单独的「原样输出」开关。
+   */
   allowRawHtml?: boolean;
   /**
    * 中文排版（第 4 项）。
@@ -206,6 +218,12 @@ export interface RenderedMarkdown {
  * 免得插件升级后类型路径变动导致整站编译不过。
  */
 
+interface MdastAttribute {
+  type: string;
+  name?: string;
+  value?: unknown;
+}
+
 interface MdastNode {
   type: string;
   value?: string;
@@ -214,6 +232,10 @@ interface MdastNode {
   depth?: number;
   url?: string;
   title?: string;
+  name?: string;
+  attributes?: MdastAttribute[];
+  /** 本插件生成、不需要再遍历的节点（避免把占位文本当成新的 Markdown 再处理一遍） */
+  skipWalk?: boolean;
   children?: MdastNode[];
   data?: { hProperties?: Record<string, unknown> };
 }
@@ -235,8 +257,9 @@ function walkMdast(node: MdastNode, visit: MdastVisitor): void {
   for (let index = 0; index < children.length; index += 1) {
     const child = children[index];
     visit(child, node, index);
-    // 替换过的节点（图表块 → html）不再往下走
-    if (child.type !== "html") walkMdast(child, visit);
+    // 替换过的节点（图表块 → Chart、角标 → span）不再往下走，
+    // 否则占位文本里的 [reference:N] 会被当成正文再替换一次，套成两层 span
+    if (child.type !== "html" && !child.skipWalk) walkMdast(child, visit);
   }
 }
 
@@ -360,13 +383,16 @@ function parseChartCaption(meta: string): string {
 }
 
 /**
- * 把 ```mermaid / ```echarts / … 的 code 节点换成一段占位 HTML。
+ * 把 ```mermaid / ```echarts / … 的 code 节点换成 `<Chart>` 组件节点。
  *
- * 结构（客户端 components/ArticleBody.tsx 依赖它，改这个结构就要同步改那边）：
+ * 组件本身（components/mdx/index.tsx）负责输出 ArticleBody 认识的那段结构：
  *   <figure class="chart-block" data-chart="mermaid" data-chart-language="mermaid">
  *     <div class="chart-canvas"></div>
- *     <pre class="chart-source" hidden>源码（已转义）</pre>
+ *     <pre class="chart-source" hidden>源码</pre>
  *   </figure>
+ *
+ * 这里直接生成 `mdxJsxFlowElement`，让 MDX 编译成真正的 React 元素；源码放在属性里，
+ * 不会在属性字符串中二次解析 Markdown。改结构时同时改组件与 ArticleBody。
  */
 function remarkChartBlocks() {
   return (tree: MdastNode): void => {
@@ -377,20 +403,25 @@ function remarkChartBlocks() {
 
       const source = node.value ?? "";
       const caption = parseChartCaption(node.meta ?? "");
-      const label = caption || `${language.label} 图表`;
-      const html = [
-        `<figure class="chart-block" data-chart="${language.kind}" data-chart-language="${escapeAttribute(
-          (node.lang ?? "").trim().toLowerCase(),
-        )}">`,
-        `<div class="chart-canvas" role="img" aria-label="${escapeAttribute(label)}"></div>`,
-        caption ? `<figcaption class="chart-caption">${escapeHtml(caption)}</figcaption>` : "",
-        `<pre class="chart-source" hidden>${escapeHtml(source)}</pre>`,
-        "</figure>",
-      ]
-        .filter(Boolean)
-        .join("");
+      const attributes: MdastAttribute[] = [
+        { type: "mdxJsxAttribute", name: "kind", value: language.kind },
+        {
+          type: "mdxJsxAttribute",
+          name: "language",
+          value: (node.lang ?? "").trim().toLowerCase(),
+        },
+        { type: "mdxJsxAttribute", name: "source", value: source },
+      ];
+      if (caption) {
+        attributes.push({ type: "mdxJsxAttribute", name: "title", value: caption });
+      }
 
-      parent.children?.splice(index, 1, { type: "html", value: html });
+      parent.children?.splice(index, 1, {
+        type: "mdxJsxFlowElement",
+        name: "Chart",
+        attributes,
+        children: [],
+      });
     });
   };
 }
@@ -433,10 +464,22 @@ function remarkCitations(options: CitationOptions) {
             `正文里的 [reference:${raw}] 在 frontmatter 的 references 里找不到对应 id`,
           );
           parts.push({
-            type: "html",
-            value: `<span class="cite cite-missing" title="frontmatter 的 references 里没有 id 为 ${escapeAttribute(
-              raw,
-            )} 的条目">[reference:${escapeHtml(raw)}]</span>`,
+            type: "mdxJsxTextElement",
+            name: "span",
+            attributes: [
+              {
+                type: "mdxJsxAttribute",
+                name: "className",
+                value: "cite cite-missing",
+              },
+              {
+                type: "mdxJsxAttribute",
+                name: "title",
+                value: `frontmatter 的 references 里没有 id 为 ${raw} 的条目`,
+              },
+            ],
+            skipWalk: true,
+            children: [{ type: "text", value: `[reference:${raw}]` }],
           });
         } else {
           const first = !options.cited.has(slot.slug);
@@ -731,6 +774,31 @@ export function renderReferenceList(slots: ReferenceSlot[], cited: Set<string>):
   ].join("");
 }
 
+/* ------------------------------ 错误文案 ------------------------------ */
+
+/** 把 MDX 解析 / 渲染错误压成一行，带上行号，构建日志里能直接定位 */
+function mdxErrorText(prefix: string, error: unknown): string {
+  const value = error as {
+    line?: unknown;
+    column?: unknown;
+    reason?: unknown;
+    message?: unknown;
+  };
+  const where = [
+    typeof value.line === "number" ? `第 ${value.line} 行` : "",
+    typeof value.column === "number" ? `第 ${value.column} 列` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const detail =
+    typeof value.reason === "string"
+      ? value.reason
+      : typeof value.message === "string"
+        ? value.message
+        : String(error);
+  return `${prefix}${where ? `（${where}）` : ""}：${detail}`;
+}
+
 /* ------------------------------ 主入口 ------------------------------ */
 
 /**
@@ -743,7 +811,7 @@ export function renderReferenceList(slots: ReferenceSlot[], cited: Set<string>):
  * ```
  *
  * 返回的 `html` 是正文，`referencesHtml` 单独给，方便文章页把它放在「上下篇」之前。
- * 每篇文章都会新建一个 processor：插件带着本次的引用表与警告收集器，不能复用。
+ * 每篇文章都会新建一次 compile / run：插件带着本次的引用表与警告收集器，不能复用。
  */
 export async function renderMarkdown(
   markdown: string,
@@ -781,42 +849,70 @@ export async function renderMarkdown(
           },
         };
 
-  const processor = unified()
-    .use(remarkParse)
-    .use(remarkGfm, { singleTilde: true })
+  const remarkPlugins: PluggableList = [
+    [remarkGfm, { singleTilde: true }],
     // 中文里的 `**` / `~~` 修正。顺序是插件要求的：必须先 GFM、再这两个（见文件头注释）
-    .use(remarkCjkFriendly)
-    .use(remarkCjkFriendlyGfmStrikethrough)
-    .use(remarkBreaks)
-    .use(remarkMath)
-    .use(remarkCjkTypography, typographyOptions)
-    .use(remarkChartBlocks)
-    .use(remarkCitations, { index, cited, warn })
-    .use(remarkRehype, { allowDangerousHtml: options.allowRawHtml !== false })
-    .use(rehypeRaw)
-    .use(rehypePublicAssets)
-    .use(rehypeLinkCards)
-    .use(rehypeSlug)
-    .use(rehypeCollectHeadings, { collect: (heading: HeadingRecord) => headings.push(heading) })
-    .use(rehypeAutolinkHeadings, AUTOLINK_HEADING_OPTIONS)
-    .use(rehypeKatex, KATEX_OPTIONS)
-    .use(rehypeHighlight, { detect: false, ignoreMissing: true })
-    // 排在 highlight 之后：语言名读的是它写在 <code> 上的 `language-xxx` 类
-    .use(rehypeCodeBlocks)
-    // 表格也套一层滚动容器：宽表不该把整页撑宽（见上面那段注释）
-    .use(rehypeTableScroll)
-    .use(rehypeStringify, { allowDangerousHtml: true });
+    remarkCjkFriendly,
+    remarkCjkFriendlyGfmStrikethrough,
+    remarkBreaks,
+    remarkMath,
+    [remarkCjkTypography, typographyOptions],
+    remarkChartBlocks,
+    [remarkCitations, { index, cited, warn }],
+  ];
 
-  const file = await processor.process(markdown);
-  const html = String(file);
+  const rehypePlugins: PluggableList = [
+    rehypePublicAssets,
+    rehypeLinkCards,
+    rehypeSlug,
+    [rehypeCollectHeadings, { collect: (heading: HeadingRecord) => headings.push(heading) }],
+    [rehypeAutolinkHeadings, AUTOLINK_HEADING_OPTIONS],
+    [rehypeKatex, KATEX_OPTIONS],
+    [rehypeHighlight, { detect: false, ignoreMissing: true }],
+    // 排在 highlight 之后：语言名读的是它写在 <code> 上的 `language-xxx` 类
+    rehypeCodeBlocks,
+    // 表格也套一层滚动容器：宽表不该把整页撑宽（见上面那段注释）
+    rehypeTableScroll,
+  ];
+
+  let compiled: Awaited<ReturnType<typeof compile>>;
+  try {
+    compiled = await compile(markdown, {
+      format: "mdx",
+      // run() 要的是「函数体」而不是完整的 ESM 程序
+      outputFormat: "function-body",
+      remarkPlugins,
+      rehypePlugins,
+    });
+  } catch (error) {
+    throw new Error(mdxErrorText("MDX 编译失败", error));
+  }
+
+  const { default: Content } = await run(
+    compiled,
+    {
+      Fragment: jsxRuntime.Fragment,
+      jsx: jsxRuntime.jsx,
+      jsxs: jsxRuntime.jsxs,
+    } as Parameters<typeof run>[1],
+  ).catch((error: unknown) => {
+    throw new Error(mdxErrorText("MDX 渲染失败", error));
+  });
+
+  let html: string;
+  try {
+    html = renderToStaticMarkup(createElement(Content, { components: MDX_COMPONENTS }));
+  } catch (error) {
+    throw new Error(mdxErrorText("MDX 渲染失败", error));
+  }
 
   /**
    * 插件记在 vfile 上的消息（例如 rehype-katex 的「这条公式没渲染成功」）也收进 warnings：
    * 它们是给作者看的诊断信息，构建日志与开发态自检都会打印，不影响产物。
    */
-  for (const message of file.messages) {
+  for (const message of compiled.messages) {
     const where = typeof message.line === "number" ? `第 ${message.line} 行：` : "";
-    warn(`${message.source ?? "markdown"}：${where}${message.reason}`);
+    warn(`${message.source ?? "mdx"}：${where}${message.reason}`);
   }
 
   const referencesHtml =
