@@ -21,7 +21,8 @@
  *   rehype-highlight         highlight.js（monokai 主题在 globals.css 里）
  *   rehypeCodeBlocks         代码块套上工具头、印出语言名（上面那段）
  *   rehypeTableScroll        给每个表格套一层横向滚动容器（宽表不撑破版面）
- *   react-dom/server         React → HTML 字符串（renderToStaticMarkup）
+ *   react-dom/server.browser React → HTML 字符串（renderToStaticMarkup）
+ *                            （不能写 `react-dom/server`：Next 会把后者当成客户端渲染入口拦下）
  *
  * 正文是 **MDX**：Markdown 语法照旧，另可用 `<Columns>` / `<Figure>` 这些版面组件
  *（实现在 components/mdx/index.tsx，样式在 globals.css 的「7a」）。组件在构建期
@@ -61,7 +62,7 @@ import "katex/contrib/mhchem"; // 副作用导入：注册 \ce{} / \pu{}
 
 import { compile, run } from "@mdx-js/mdx";
 import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToStaticMarkup } from "react-dom/server.browser";
 import * as jsxRuntime from "react/jsx-runtime";
 import rehypeAutolinkHeadings, { type Options as AutolinkOptions } from "rehype-autolink-headings";
 import rehypeHighlight from "rehype-highlight";
