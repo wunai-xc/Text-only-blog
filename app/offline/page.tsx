@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+
+import { getPosts } from "@/lib/content";
+import { SITE } from "@/lib/site";
 
 /**
  * 离线兜底页（第 5 项：PWA）
@@ -9,9 +11,10 @@ import Link from "next/link";
  *
  * 这页必须是**纯静态、零依赖**的：断网时它能用的只有已缓存的东西，
  * 所以这里不放任何需要联网的元素（图片、外链字体、统计脚本……都不要）。
- * 第 6 项的蓝图背景层是纯 CSS，在离线状态下同样成立（它跟着样式表一起被缓存）。
  *
- * robots 里已把 /offline/ 排除，这里再加一层 noindex（双保险）。
+ * Service Worker 会把搜索索引里的全部文章页预缓存下来，所以这一页直接
+ * 列出默认语言的全部文章。链接刻意用原生 <a>：离线时整页导航才能命中
+ * 缓存的 HTML；<Link> 会去要 RSC 载荷（见 components/OfflineNav.tsx）。
  */
 export const metadata: Metadata = {
   title: "离线",
@@ -28,32 +31,52 @@ const CACHED_LINKS = [
 ];
 
 export default function OfflinePage() {
+  const posts = getPosts(SITE.defaultLang);
+
   return (
-    <main className="page flex flex-col items-center justify-center gap-4 text-center">
-      <p className="font-mono text-sm text-ink-subtle">offline</p>
-      <h1 className="text-2xl font-semibold tracking-tight">现在没有网络</h1>
-      <p className="text-sm text-ink-muted">
-        这一页是本地缓存下来的。已经打开过的文章通常还能看，没打开过的要等网络回来。
-      </p>
-      <p className="text-sm text-ink-muted">
-        标签 / 分类 / 归档 / 关于这几页是纯清单（由构建期的数据生成），网络回来之前打不开新的一份，
-        但文章地址一旦访问过就会进缓存 —— 断网时从地址栏直接敲文章地址往往也打得开。
-      </p>
-      <p className="text-sm text-ink-muted">
-        No network right now. This page is served from the cache.
-      </p>
+    <main className="page flex flex-col items-center gap-6 py-12 text-center">
+      <div className="flex flex-col items-center gap-4">
+        <p className="font-mono text-sm text-ink-subtle">offline</p>
+        <h1 className="text-2xl font-semibold tracking-tight">现在没有网络</h1>
+        <p className="text-sm text-ink-muted">
+          这一页是本地缓存下来的。全部文章已经预存到这台设备上，
+          下面列出的每一篇都可以直接打开。
+        </p>
+        <p className="text-sm text-ink-muted">
+          No network right now. This page and every article listed below are
+          served from the cache.
+        </p>
+      </div>
 
       <ul className="panel flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm">
         {CACHED_LINKS.map((item) => (
           <li key={item.href}>
-            <Link className="text-accent underline underline-offset-2" href={item.href}>
+            <a className="text-accent underline underline-offset-2" href={item.href}>
               {item.label}
-            </Link>
+            </a>
           </li>
         ))}
       </ul>
 
-      {/* 编辑此处：离线页想多说两句就写在这里（这页不是文章，属于 UI 文案） */}
+      {posts.length > 0 ? (
+        <section className="panel w-full max-w-3xl text-left">
+          <p className="font-mono text-sm text-ink-subtle">
+            离线可读文章 · {posts.length}
+          </p>
+          <ul className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-2">
+            {posts.map((post) => (
+              <li key={post.slug}>
+                <a
+                  className="text-accent underline underline-offset-2"
+                  href={post.href}
+                >
+                  {post.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </main>
   );
 }

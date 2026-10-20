@@ -80,8 +80,8 @@ npm run preview      # = npx serve out -l 4173 → 打开 http://localhost:4173/
   `sitemap.xml`、`robots.txt`、`manifest.webmanifest`、`sw.js`、`_next/`；
 - **Service Worker 只在这里生效**：`npm run dev` 下不注册（热更新的产物被缓存住会看到上一版页面），
   直接 `file://` 打开 `out/index.html` 也不行 —— 必须经 HTTP，而且 `localhost` 之外要 HTTPS；
-- 顺手验一次离线：打开 `/zh/`（再点开一篇正文），DevTools → Application → Service Workers 应看到已注册、
-  勾上 Offline 刷新，首页与列表页仍能打开；
+- 顺手验一次离线：打开 `/zh/` 等 Service Worker 装好（DevTools → Application → Service Workers 应看到已注册），
+  勾上 Offline 刷新；首页、列表页与 `/offline/` 仍能打开，离线页会列出全部可读文章；
 - 构建期只有一处网络依赖：首页「更新日志」栏先试 GitHub API、失败退回 `git log`、都失败就留空
   （`lib/changelog.ts`）。**它不会让构建失败**，所以离线也能出完整站点，只是那一栏空着。
 
