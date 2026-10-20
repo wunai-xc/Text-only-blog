@@ -11,7 +11,7 @@
 export type Lang = "zh" | "en";
 
 /**
- * 站点支持的语言，顺序即语言切换器里的顺序。
+ * 站点支持的语言。
  * ⚠️ 加语言就改这一行（isLang 由它推导，不用再改第二处），
  * 另外记得在 content/ 下建同名目录、在 lib/site-strings.ts 的 I18N 里补一份文案。
  */
@@ -20,9 +20,4 @@ export const LANGS: Lang[] = ["zh", "en"];
 /** 是不是本站支持的语言（路径参数校验、语言探针都用它） */
 export function isLang(v: string): v is Lang {
   return (LANGS as string[]).includes(v);
-}
-
-/** 另一种语言（语言切换、hreflang 之类都用它） */
-export function otherLang(lang: Lang): Lang {
-  return lang === "zh" ? "en" : "zh";
 }

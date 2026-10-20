@@ -623,7 +623,6 @@ export interface ListText {
   timeYear: (year: number) => string;
   sortLabel: string;
   densityLabel: string;
-  languageLabel: string;
   aiLabel: string;
   aiOn: string;
   aiOff: string;
@@ -714,7 +713,6 @@ const ZH: ListText = {
   timeYear: (year) => `${year} 年`,
   sortLabel: "排序",
   densityLabel: "密度",
-  languageLabel: "语言",
   aiLabel: "AI 文章",
   aiOn: "已隐藏（默认）",
   aiOff: "已显示",
@@ -785,7 +783,6 @@ const EN: ListText = {
   timeYear: (year) => `${year}`,
   sortLabel: "Sort",
   densityLabel: "Density",
-  languageLabel: "Language",
   aiLabel: "AI posts",
   aiOn: "Hidden (default)",
   aiOff: "Shown",

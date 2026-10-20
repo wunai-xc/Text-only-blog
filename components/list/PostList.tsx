@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@iconify/react/offline";
 
 import PostCard from "./PostCard";
-import LangSwitcher from "@/components/LangSwitcher";
 import { icons, type IconName } from "@/lib/icons";
 import {
   DEFAULT_AUTO_FOLD,
@@ -573,17 +572,6 @@ export default function PostList({
               </button>
             </div>
             <p className="list-hint">{t.aiHint}</p>
-          </div>
-
-          {/* 语言：切到另一种语言的同一页（复用第 7 项的 LangSwitcher，路径自己算） */}
-          <div className="list-field">
-            <span className="list-field-label">
-              <Icon icon={icons["mdi:translate"]} width="1em" height="1em" />
-              {t.languageLabel}
-            </span>
-            <div className="list-chips">
-              <LangSwitcher lang={lang} className="list-chip" />
-            </div>
           </div>
 
           <div className="list-toolbar-foot">

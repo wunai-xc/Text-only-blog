@@ -2,7 +2,7 @@
  * lib/icons-data.ts —— 站点用到的 MDI 图标数据（第 7 项：框架 UI）
  *
  * ⚠️ 由脚本从 `@iconify/icons-mdi@1.2.48` 导出生成的内联副本，**不要手改**：
- * 只包含 lib/icons.ts 实际用到的 49 个图标，图标清单以 lib/icons.ts 为准。
+ * 只包含 lib/icons.ts 实际用到的 48 个图标，图标清单以 lib/icons.ts 为准。
  *
  * 为什么内联、而不是继续依赖 `@iconify/icons-mdi`：
  * 那个包整包 110MB / 27742 个文件，而 CI（Cloudflare Workers Builds）每次构建都要
@@ -63,8 +63,6 @@ export const mdiArrowExpandHorizontal: IconData = {"width":24,"height":24,"body"
 export const mdiFormatLineSpacing: IconData = {"width":24,"height":24,"body":"<path fill=\"currentColor\" d=\"M10 13h12v-2H10m0 8h12v-2H10m0-10h12V5H10M6 7h2.5L5 3.5L1.5 7H4v10H1.5L5 20.5L8.5 17H6V7Z\"/>"};
 /** mdi:format-indent-increase */
 export const mdiFormatIndentIncrease: IconData = {"width":24,"height":24,"body":"<path fill=\"currentColor\" d=\"M11 13h10v-2H11m0-2h10V7H11M3 3v2h18V3M11 17h10v-2H11M3 8v8l4-4m-4 9h18v-2H3v2Z\"/>"};
-/** mdi:translate */
-export const mdiTranslate: IconData = {"width":24,"height":24,"body":"<path fill=\"currentColor\" d=\"m12.87 15.07l-2.54-2.51l.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35C8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5l3.11 3.11l.76-2.04M18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12m-2.62 7l1.62-4.33L19.12 17h-3.24Z\"/>"};
 /** mdi:check */
 export const mdiCheck: IconData = {"width":24,"height":24,"body":"<path fill=\"currentColor\" d=\"M21 7L9 19l-5.5-5.5l1.41-1.41L9 16.17L19.59 5.59L21 7Z\"/>"};
 /** mdi:restore */

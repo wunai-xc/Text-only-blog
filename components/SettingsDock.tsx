@@ -30,10 +30,9 @@ export default function SettingsDock({ lang }: { lang: Lang }) {
   const drawerRef = useRef<HTMLDivElement>(null);
 
   /**
-   * 换页就关掉抽屉。抽屉里那颗「语言」是个 <Link>（/zh/x/ ↔ /en/x/），
-   * 点完如果抽屉还留着倒也不算错，但要紧的是：万一这个组件跨路由没被卸载，
+   * 换页就关掉抽屉。设置项里没有站内链接，但万一这个组件跨路由没被卸载，
    * 上面那段 effect 会把 body 的 overflow 一直锁着 —— 新页面就滚不动了。
-   * 一行保险，换语言、点任何链接都不会留下锁住的页面。
+   * 一行保险，点任何链接都不会留下锁住的页面。
    */
   useEffect(() => {
     setOpen(false);

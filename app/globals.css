@@ -732,8 +732,7 @@ html[data-reading="hidden"] {
   /* ==========================================================
      6b. 框架 UI（第 7 项；顶栏改版后重写过顶栏与页脚两节）
      顶栏三段（品牌 / 友链 / 图片位）与 wunai-blog 参考稿逐段对齐；
-     原先挂在顶栏的七项导航、语言切换与内容统计搬到了**页脚**（见 SiteFooter 的第一块）——
-     它们只是换了位置，一个入口都没少。
+     内容统计搬到了**页脚**（见 SiteFooter 的第一块）。
      页脚左下角常驻一颗齿轮，点开是设置抽屉。
      颜色一律走令牌（约定第 7 条：不写 dark: 变体、不写死色值）。
      ========================================================== */
@@ -1155,41 +1154,11 @@ html[data-reading="hidden"] {
     flex: 1 1 18rem;
   }
 
-  /* 站内导航（原先在顶栏第二段）：一整行独占，下面是联系方式与说明两栏。
-     顶栏按参考稿改成「品牌 / 友链 / 图片位」之后，七个页面入口搬到这里 ——
-     删掉这一块，标签 / 分类 / 归档 / 搜索四页就没有可达入口了。 */
+  /* 内容统计行：一整行独占，下面是联系方式与说明两栏。 */
   .site-footer-nav {
     flex: 1 1 100%;
     padding-bottom: 0.7rem;
     border-bottom: 1px solid var(--c-rule);
-  }
-
-  .site-footer-nav-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.3rem 0.2rem;
-    margin: 0.4rem 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  /* 导航项与语言切换共用同一种「小按钮」外观（原先这是顶栏的 .site-nav-entry） */
-  .site-footer-nav-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    padding: 0.22rem 0.5rem;
-    border: 1px solid transparent;
-    border-radius: var(--shape-radius);
-    color: var(--c-ink-muted);
-    font-size: 0.82rem;
-    text-decoration: none;
-  }
-
-  .site-footer-nav-link:hover {
-    border-color: var(--c-rule);
-    background-color: var(--c-surface);
-    color: var(--c-ink);
   }
 
   /* 内容统计（构建期数字）：原先印在顶栏右侧的图签区，那里让位给图片位之后搬来此处 */
@@ -2425,8 +2394,8 @@ html[data-reading="hidden"] {
     color: var(--c-danger);
   }
 
-  /* 选项片（标签 / 分类 / 年份 / 排序 / 密度 / AI / 语言共用）。
-     按钮与链接都穿这一件：LangSwitcher 是个 <a>，其余是 <button>。 */
+  /* 选项片（标签 / 分类 / 年份 / 排序 / 密度 / AI 共用）。
+     按钮与链接都穿这一件。 */
   .list-chips {
     display: flex;
     flex-wrap: wrap;
@@ -4907,7 +4876,7 @@ html[data-reading="hidden"] {
   }
 
   /* 第 7 项的框架件（2）：顶栏与页脚**整块不印** —— 顶栏是导航（纸上的链接点不动，
-     还平白占掉每页顶端）；页脚是语言切换 / 联系方式 / 统计 / 齿轮那一堆屏幕上的东西，
+     还平白占掉每页顶端）；页脚是联系方式 / 统计 / 齿轮那一堆屏幕上的东西，
      印出来全是噪音。纸上的「页眉 / 页脚」改由 `@page` 页边距盒统一负责
      （见本节开头的 `@top-*` / `@bottom-*`），不再额外渲染两条 DOM。 */
   .site-header,

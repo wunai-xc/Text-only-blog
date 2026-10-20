@@ -3,7 +3,6 @@
 import { useEffect, useState, type ChangeEvent } from "react";
 import { Icon } from "@iconify/react/offline";
 
-import LangSwitcher from "./LangSwitcher";
 import ReadingSlider from "./ReadingSlider";
 import { icons, type IconName } from "@/lib/icons";
 import type { Lang } from "@/lib/lang";
@@ -63,7 +62,7 @@ import {
 /**
  * 设置中心（第 7 项）
  *
- * 五块内容，全部只影响**读者自己的浏览器**（localStorage），站点是纯静态的，
+ * 四块内容，全部只影响**读者自己的浏览器**（localStorage），站点是纯静态的，
  * 这些偏好与内容无关、也不上传：
  *   1. 外观：跟随系统 / 纸 / 亮 / 暗 —— 直接调 lib/theme.ts 的 setThemeChoice()，
  *      不在这里碰 localStorage 与 data-theme（约定第 7 条）；
@@ -73,8 +72,7 @@ import {
  *      前三个是连续量，后者是「选哪一种」）；
  *   3. 列表 / 卡组：长卡组默认收起的档位（lib/list.ts 的 AUTO_FOLDS）—— 与密度同路数，
  *      存本机；列表页读同一条存储，所以它跟着变（订阅在 PostList 里）；
- *   4. 语言：中英切换（与页脚的导航栏共用 components/LangSwitcher.tsx）；
- *   5. 恢复默认：清掉偏好键 + 移除行内 CSS 变量。
+ *   4. 恢复默认：清掉偏好键 + 移除行内 CSS 变量。
  *
  * 首帧与主题按钮同理：先按默认值渲染（服务端与浏览器算出来的一样），挂载后再读真实值，
  * 否则 React 会报水合不一致。滑块的位置有个额外的坑：读者没拖过时它要显示的是
@@ -429,19 +427,7 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
         </div>
       </section>
 
-      {/* ④ 语言 */}
-      <section className="panel settings-group">
-        <p className="settings-group-label">
-          <Icon icon={icons["mdi:translate"]} width="1em" height="1em" />
-          {t.language}
-        </p>
-        <p className="settings-hint">{t.languageHint}</p>
-        <div className="settings-row">
-          <LangSwitcher lang={lang} className="settings-opt" />
-        </div>
-      </section>
-
-      {/* ⑤ 恢复默认 */}
+      {/* ④ 恢复默认 */}
       <section className="settings-group">
         <button type="button" className="settings-opt settings-reset" onClick={resetAll}>
           <Icon icon={icons["mdi:restore"]} width="1em" height="1em" />

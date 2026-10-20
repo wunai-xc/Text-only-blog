@@ -180,7 +180,7 @@ const ZH: PagesText = {
   settings: {
     kicker: "站点地图",
     title: "设置中心",
-    lead: "外观、正文宽度 / 字号 / 行距、语言切换都在这里 —— 与左下角那颗齿轮打开的是同一份设置，改完立刻生效。",
+    lead: "外观、正文宽度 / 字号 / 行距都在这里 —— 与左下角那颗齿轮打开的是同一份设置，改完立刻生效。",
   },
 };
 
@@ -248,7 +248,7 @@ const EN: PagesText = {
   settings: {
     kicker: "Site map",
     title: "Settings",
-    lead: "Appearance, body width / size / leading and the language switch all live here — the same settings the gear in the bottom-left corner opens, applied instantly.",
+    lead: "Appearance, body width / size / leading all live here — the same settings the gear in the bottom-left corner opens, applied instantly.",
   },
 };
 

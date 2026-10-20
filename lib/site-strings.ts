@@ -35,8 +35,6 @@ export interface SiteStrings {
   allPosts: string;
   /** 顶栏图片位空着时格子里显示的字（作者把图放进 public/ 后填 HEADER_IMAGE.src） */
   headerImage: string;
-  langName: string;
-  langTitle: (name: string) => string;
   statsPosts: (count: number) => string;
   statsWords: (count: number) => string;
   statsUpdated: (date: string) => string;
@@ -70,8 +68,6 @@ export interface SiteStrings {
   listPrefsHint: string;
   autoFoldLabel: string;
   autoFoldHint: string;
-  language: string;
-  languageHint: string;
   reset: string;
   resetHint: string;
   /* 设置中心：「自定义」字体（读者自己上传字体文件） */
@@ -106,8 +102,6 @@ export const I18N: Record<Lang, SiteStrings> = {
     brandAbout: "About……",
     allPosts: "全部文章 →",
     headerImage: "图片位 · 编辑此处",
-    langName: "English",
-    langTitle: (name) => `切换到 ${name}`,
     statsPosts: (count) => `${count} 篇`,
     statsWords: (count) => `${count} 字`,
     statsUpdated: (date) => `更新于 ${date}`,
@@ -142,8 +136,6 @@ export const I18N: Record<Lang, SiteStrings> = {
     autoFoldLabel: "长卡组默认收起",
     autoFoldHint:
       "组内文章超过这个篇数时，列表页默认把这一组收起来（点组头右侧的箭头就能展开）。它只定「打开时的默认形态」，你在这几组里手动点开的会保持你点的样子。",
-    language: "语言",
-    languageHint: "中英文各有一份内容，切换语言不会丢掉这里的设置。",
     reset: "恢复默认",
     resetHint: "把外观、阅读偏好与列表卡组设置都还原成默认值（文章内容不受影响）。",
     localFontUpload: "上传字体文件",
@@ -176,8 +168,6 @@ export const I18N: Record<Lang, SiteStrings> = {
     brandAbout: "About…",
     allPosts: "All posts →",
     headerImage: "Image · edit here",
-    langName: "中文",
-    langTitle: (name) => `Switch to ${name}`,
     statsPosts: (count) => `${count} post${count === 1 ? "" : "s"}`,
     statsWords: (count) => `${count} words`,
     statsUpdated: (date) => `updated ${date}`,
@@ -213,8 +203,6 @@ export const I18N: Record<Lang, SiteStrings> = {
     autoFoldLabel: "Fold long groups",
     autoFoldHint:
       "Groups with more posts than this start folded on the list page (click the arrow next to a group name to expand it). It only sets the opening state — any group you open by hand stays as you left it.",
-    language: "Language",
-    languageHint: "Each language has its own content; switching keeps your settings here.",
     reset: "Reset to defaults",
     resetHint: "Restores appearance, reading preferences and list/card-group settings (your posts are untouched).",
     localFontUpload: "Upload a font file",

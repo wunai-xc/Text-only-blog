@@ -14,7 +14,7 @@
  *   - 加图标时顺手按用途分组、写一行注释说明用在哪。
  */
 
-/* 图标数据在 lib/icons-data.ts（只内联用到的 49 个，原因见那个文件的说明）。
+/* 图标数据在 lib/icons-data.ts（只内联用到的 48 个，原因见那个文件的说明）。
    分组注释保留在下面的图标表里 —— 加图标时先在 icons-data.ts 补数据，再来这里登记。 */
 import {
   mdiAccountMultipleOutline,
@@ -60,7 +60,6 @@ import {
   mdiTagMultipleOutline,
   mdiTextBoxOutline,
   mdiThemeLightDark,
-  mdiTranslate,
   mdiUpload,
   mdiViewAgendaOutline,
   mdiViewCompactOutline,
@@ -91,7 +90,6 @@ export const icons = {
   "mdi:arrow-expand-horizontal": mdiArrowExpandHorizontal,
   "mdi:format-line-spacing": mdiFormatLineSpacing,
   "mdi:format-indent-increase": mdiFormatIndentIncrease,
-  "mdi:translate": mdiTranslate,
   "mdi:check": mdiCheck,
   "mdi:restore": mdiRestore,
   "mdi:close": mdiClose,
