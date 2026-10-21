@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "模板.md",
+                "file": "content/zh/posts/minecraft_notes/红石笔记2.md",
                 "mode": "source",
                 "source": true
               },
               "icon": "lucide-file",
-              "title": "模板"
+              "title": "红石笔记2"
             }
           }
         ]
@@ -183,8 +183,8 @@
   },
   "active": "1d368ead76692386",
   "lastOpenFiles": [
-    "模板 1.md",
     "模板.md",
+    "模板 1.md",
     "content/zh/posts/minecraft_notes/红石笔记3.md",
     "content/zh/posts/minecraft_notes/红石笔记1.md",
     "content/zh/posts/diary/2026-10-21.md",
