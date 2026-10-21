@@ -5,188 +5,260 @@ date = 1945-08-12T00:00:00
 typography = false
 +++
 
-### THE IMMEDIATE QUESTIONS
+### THE IMMEDIATE QUESTIONS 当务之急
 
 4.1. In [Chapter II](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_ii.html) the general problems involved in producing a chain reaction for military purposes were described. Early in the summer of 1940 the questions of most immediate importance were:
+在[第二章](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_ii.html)中，叙述了为军事目的实现链式反应所涉及的一般问题。1940年初夏，最为紧迫的问题是：
 
 (1) Could any circumstances be found under which the chain reaction would go?
+（1）能否找到使链式反应得以进行的任何条件？
 
 (2) Could the isotope U-235 be separated on a large scale?
+（2）能否大规模分离铀-235同位素？
 
 (3) Could moderator and other materials be obtained in sufficient purity and quantity?
+（3）能否获得足够纯度和数量的慢化剂及其他材料？
 
 Although there were many subsidiary problems, as will appear in the account of the progress made in the succeeding eighteen months, these three questions determined the course of the work.
+尽管还存在许多次要问题——在随后十八个月的进展记述中将会看到——但这三个问题决定了工作的方向。
 
-### THE CHAIN REACTION
+### THE CHAIN REACTION 链式反应
 
-#### PROGRAM PROPOSED JUNE 15, 1940
+#### PROGRAM PROPOSED JUNE 15, 1940 1940年6月15日提出的计划
 
 4.2. In June 1940, nearly all work on the chain reaction was concentrated at Columbia under the general leadership of Pegram, with Fermi and Szilard in immediate charge. It had been concluded that the most easily produced chain reaction was probably that depending on thermal neutron fission in a heterogeneous mixture of graphite and uranium. In the spring of 1940 Fermi, Szilard and H. L. Anderson had improved the accuracy of measurements of the capture cross section of carbon for neutrons, of the resonance (intermediate-speed) absorption of neutrons by U-238, and of the slowing down of neutrons in carbon.
+1940年6月，几乎全部链式反应研究工作都集中在哥伦比亚大学，由佩格拉姆（Pegram）总负责，费米（Fermi）和西拉德（Szilard）直接主持。当时已经得出结论：最容易实现的链式反应，可能是在石墨与铀的不均匀混合物中依靠热中子裂变进行的反应。1940年春季，费米、西拉德和H. L. 安德森（Anderson）提高了以下测量的精度：碳对中子的俘获截面、铀-238对中子的共振（中速）吸收，以及中子在该石墨中的慢化。
 
 4.3. Pegram, in a memorandum to Briggs on August 14, 1940, wrote, ”It is not very easy to measure these quantities with accuracy without the use of large quantities of material. The net results of these experiments in the spring of 1940 were that the possibility of the chain reaction was not definitely proven, while it was still further from being definitely disproven. On the whole, the indications were more favorable than any conclusions that could fairly have been claimed from previous results.”
+佩格拉姆在1940年8月14日致布里格斯（Briggs）的备忘录中写道：“若不使用大量材料，这些量很难精确测量。1940年春季这些实验的净结果是，链式反应的可能性既未被明确证实，也远未被明确否定。总体而言，各种迹象比根据先前结果所能合理宣称的任何结论都更为有利。”
 
 4.4. At a meeting on June 15 (see [Chapter III](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_iii.html)) these results were discussed and it was recommended that (A) further measurements be made on nuclear constants, and (B) experiments be made on lattices of uranium and carbon containing amounts of uranium from one fifth to one quarter the estimated critical amounts.
+在6月15日的一次会议上（见[第三章](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_iii.html)），讨论了这些结果，并建议：(A) 进一步测量核常数；(B) 在铀与碳的栅格上进行实验，其中铀的用量为估计临界量的五分之一至四分之一。
 
-### PROGRESS UP TO FEBRUARY 15, 1941
+### PROGRESS UP TO FEBRUARY 15, 1941 截至1941年2月15日的进展
 
 4.5. Pegram’s report of February 15, 1941 shows that most of the work done up to that time was on (A), while (B), the so-called intermediate experiment, was delayed by lack of materials.
+佩格拉姆1941年2月15日的报告表明，截至那时的大部分工作都集中在(A)项，而(B)项即所谓的中间实验，则因材料缺乏而推迟。
 
 4.6. Paraphrasing Pegram’s report, the main progress was as follows:
+借用佩格拉姆报告中的说法，主要进展如下：
 
 (a) *The slowing down of neutrons* in graphite was investigated by studying the intensity of activation of various detectors (rhodium, indium, iodine) placed at various positions inside a rectangular graphite column of dimensions 3 X 3 X 8 feet when a source of neutrons was placed therein. By suitable choice of cadmium screens the effects of [resonance](https://www.atomicarchive.com/resources/documents/smyth-report/#resonance) and thermal neutrons were investigated separately. A mathematical analysis, based on diffusion theory, of the experimental data made it possible to predict the results to be expected in various other arrangements. These results, coupled with theoretical studies of the diffusion of thermal neutrons, laid a basis for future calculations of the number of thermal and resonance neutrons to be found at any point in a graphite mass of given shape when a given neutron source is placed at a specified position within or near the graphite.
+(a) *中子在石墨中的慢化*。将中子源置于尺寸为3×3×8英尺的矩形石墨柱内，通过研究置于柱内不同位置的各种探测器（铑、铟、碘）的激活强度，对中子在石墨中的慢化进行了考察。通过适当选择镉屏，分别研究了[共振](https://www.atomicarchive.com/resources/documents/smyth-report/#resonance)中子和热中子的效应。基于扩散理论对实验数据所作的数学分析，使得预测其他各种布置中可望出现的结果成为可能。这些结果与热中子扩散的理论研究相结合，为今后计算如下情形奠定了基础：当某一给定中子源置于给定形状石墨体内部或附近的指定位置时，该石墨体中任意一点将会出现多少热中子和共振中子。
 
 (b) *The number of neutrons emitted in fission*. The experiments on slowing down neutrons showed that high-energy (high-speed) neutrons such as those from fission were practically all reduced to thermal energies (low speeds) after passing through 40 centimeters or more of graphite. A piece of uranium placed in a region where thermal neutrons are present absorbs the thermal neutrons and -fission occurs- re-emits fast neutrons, which are easily distinguished from the thermal neutrons. By a series of measurements with and without uranium present and with various detectors and absorbers, it is possible to get a value for the constant η, the number of neutrons emitted per thermal neutron absorbed by uranium. This is not the number of neutrons emitted per fission, but is somewhat smaller than that number since not every absorption causes fission.
+(b) *裂变中发射的中子数*。关于中子慢化的实验表明，裂变产生的高能（高速）中子，在穿过40厘米或更厚的石墨后，几乎全部降低到热能（低速）。将一块铀置于存在热中子的区域，它会吸收热中子并——发生裂变——重新发射快中子，这些快中子易于与热中子区分。通过在有铀和无铀条件下使用各种探测器和吸收体进行一系列测量，可以得到常数η的值，即铀每吸收一个热中子所发射的中子数。这并不是每次裂变所发射的中子数，而是略小于该数目，因为并非每次吸收都引起裂变。
 
 (c) *Lattice theory*. Extensive calculations were made on the probable number of neutrons escaping from lattices of various designs and sizes. This was fundamental for the so-called intermediate experiment, mentioned above as item (B).
+(c) *栅格理论*。对各种设计和尺寸的栅格中可能逃逸的中子数进行了大量计算。这对上文(B)项所述的所谓中间实验具有根本意义。
 
 The presence of neutrons can be detected by ionization chambers or counters or by the artificial radioactivity induced in various metal foils. (See [Appendix 1](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_appendix_1.html).) The response of each of these detectors depends on the particular characteristics of the detector and on the speed of the neutrons (e.g., neutrons of about 1.5 volts energy are particularly effective in activating indium). Furthermore, certain materials have very large absorption cross sections for neutrons of particular ranges of speed (e.g., cadmium for thermal neutrons). Thus measurements with different detectors with or without various absorbers give some indication of both the number of neutrons present and their energy distribution. However, the state of the art of such measurements is rather crude.
+中子的存在可通过电离室、计数器或各种金属箔中诱发的感生放射性来探测。（见[附录1](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_appendix_1.html)。）每种探测器的响应取决于该探测器的具体特性以及中子的速度（例如，能量约为1.5伏特的中子对激活铟特别有效）。此外，某些材料对特定速度范围的中子具有很大的吸收截面（例如镉对热中子）。因此，使用不同探测器并在有或无各种吸收体的条件下进行测量，可以在一定程度上同时指示出中子的数量及其能量分布。然而，此类测量的技术水平还相当粗糙。
 
-### INITIATION OF NEW PROGRAMS
+### INITIATION OF NEW PROGRAMS 新计划的启动
 
 4.7. Early in 1941 interest in the general chain-reaction problem by individuals at Princeton, Chicago, and California led to the approval of certain projects at those institutions. Thereafter the work of these groups was coordinated with the work at Columbia, forming parts of a single large program.
+1941年初，普林斯顿、芝加哥和加利福尼亚的研究人员对一般链式反应问题的兴趣，促使这些机构中的某些项目获得批准。此后，这些小组的工作与哥伦比亚大学的工作相协调，构成一个单一大型计划的组成部分。
 
-### WORK ON RESONANCE ABSORPTION
+### WORK ON RESONANCE ABSORPTION 共振吸收研究
 
 4.8. In [Chapter II](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_ii.html) it is stated that there were advantages in a lattice structure or ”pile” with uranium concentrated in lumps regularly distributed in a matrix of moderator. This was the system on which the Columbia group was working. As is so often the case, the fundamental idea is a simple one. If the uranium and the moderator are mixed homogeneously, the neutrons on the average will lose energy in small steps between passages through the uranium so that in the course of their reduction to thermal velocity the chance of their passing through uranium at any given velocity, e.g., at a velocity corresponding to resonance absorption, is great. But, if the uranium is in large lumps spaced at large intervals in the moderator, the amounts of energy lost by neutrons between passages from one lump of uranium to another will be large and the chance of their reaching a uranium lump with energy just equal to the energy of resonance absorption is relatively small. Thus the chance of absorption by U-238 to produce U-239, compared to the chance of absorption as thermal neutrons to cause fission, may be reduced sufficiently to allow a chain reaction to take place. If one knew the exact values of the cross sections of each uranium isotope for each type of absorption and every range of neutron speed, and had similar knowledge for the moderator, one could calculate the ”optimum lattice,” i.e., the best size, shape and spacing for the lumps of uranium in the matrix of moderator. Since such data were only partially known, a direct experimental approach appeared to be in order. Consequently it was proposed that the absorption of neutrons by uranium should be measured under conditions similar to those expected in a chain-reacting pile employing graphite as moderator.
+在[第二章](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_ii.html)中指出，采用栅格结构或“堆”，将铀集中在规则分布于慢化剂基体中的块状物内，具有若干优点。这正是哥伦比亚小组所研究的系统。正如常见的情形那样，基本思想很简单。如果铀与慢化剂均匀混合，中子在各次穿过铀之间平均只能损失很小的能量，因此在它们降到热速度的过程中，以任何给定速度（例如对应于共振吸收的速度）穿过铀的机会很大。但是，如果铀制成大块并以较大间隔分布在慢化剂中，中子从一块铀到另一块铀之间所损失的能量将会很大，它们以恰好等于共振吸收能量的能量到达铀块的机会则相对较小。于是，铀-238吸收中子生成铀-239的机会，相对于作为热中子被吸收而引起裂变的机会，可以被充分降低，从而使链式反应得以发生。如果人们知道每种铀同位素对各类吸收和各个中子速度范围的截面的精确值，并对慢化剂具有同样的知识，就可以计算出“最佳栅格”，即慢化剂基体中铀块的最佳尺寸、形状和间距。由于这类数据只部分已知，直接进行实验的途径看来是合适的。因此建议，在与采用石墨作慢化剂的链式反应堆所预期条件相似的情况下，测量铀对中子的吸收。
 
 The term ”resonance absorption” is used to describe the very strong absorption of neutrons by U-238 when the neutron energies are in certain definite portions of the energy region from 0 to 1,000 electron volts. Such resonance absorption demonstrates the existence of nuclear energy levels at corresponding energies. On some occasions the term resonance absorption is used to refer to the whole energy region in the neighborhood of such levels.
+“共振吸收”一词用来描述当中子能量处于0至1,000电子伏特能量区间的某些特定部分时，铀-238对中子的极强吸收。这种共振吸收表明在相应能量处存在核能级。有时，“共振吸收”一词也用来指此类能级附近的整个能量区域。
 
 4.9. Experiments of this type were initiated at Columbia, and were continued at Princeton in February 1941. Essentially the experiment consisted of studying the absorption of neutrons in the energy range extending from a few thousand electron volts down to a fraction of an electron volt (thermal energies), the absorption taking place in different layers of uranium or uranium oxide spheres embedded in a pile of graphite.
+这类实验在哥伦比亚大学开始，并于1941年2月在普林斯顿继续进行。实验的实质是研究能量范围从几千电子伏特直到一电子伏特以下（热能）的中子吸收，吸收发生在嵌入石墨堆中的不同层数的铀或氧化铀球内。
 
 4.10. In these experiments, a source of neutrons was provided by a mean of protons (accelerated by a cyclotron) impinging on a beryllium target. (The resulting yield of neutrons was equivalent to the yield from a radium-beryllium source of about 3,500 curies strength.) The neutrons thus produced had a wide, continuous, velocity distribution. They proceeded from this source into a large block of graphite. By placing the various uranium or uranium-oxide spheres inside the graphite block at various positions representing increasing distances from the source, absorption of neutrons of decreasing average speeds down to thermal speeds was studied. It was found that the total absorption of neutrons by such spheres could be expressed in terms of a ”surface” effect and a ”mass” effect.
+在这些实验中，中子源由回旋加速器加速的质子轰击铍靶提供。（所得中子产额相当于强度约为3,500居里的镭-铍源的产额。）这样产生的中子具有宽而连续的速度分布。它们从该源进入一大块石墨。通过将各种铀球或氧化铀球置于石墨块内距离源渐增的不同位置，研究了平均速度递减直至热速度的中子的吸收。结果发现，这类球体对中子的总吸收可以用“表面”效应和“质量”效应来表示。
 
 4.11. These experiments, involving a variety of sphere sizes, densities, and positions were continued until the spring of 1942, when most of the group was moved to Chicago. Similar experiments performed at a later date at the University of Indiana by A. C. G. Mitchell and his co-workers have verified and in some cases corrected the Princeton data, but the Princeton data were sufficiently accurate by the summer of 1941 to be used in planning the intermediate-pile experiments and the subsequent experiments on operating piles.
+这些涉及多种球体尺寸、密度和位置的实验一直持续到1942年春季，此时小组的大部分人员迁往芝加哥。后来，A. C. G. 米切尔（Mitchell）及其合作者在印第安纳大学进行的类似实验验证了普林斯顿的数据，并在某些情况下作了修正，但到1941年夏季，普林斯顿的数据已足够准确，可用于规划中间堆实验及随后的运行堆实验。
 
 4.12. The experimental work on resonance absorption at Princeton was done by R. R. Wilson, E. C. Creutz, and their collaborators, under the general leadership of H. D. Smyth; they benefited from the constant help of Wigner and Wheeler and frequent conferences with the Columbia group.
+普林斯顿的共振吸收实验工作由R. R. 威尔逊（Wilson）、E. C. 克罗伊茨（Creutz）及其合作者在H. D. 史密斯（Smyth）的总领导下完成；他们得到了维格纳（Wigner）和惠勒（Wheeler）的持续帮助，并与哥伦比亚小组频繁举行会议。
 
-### THE FIRST INTERMEDIATE EXPERIMENTS
+### THE FIRST INTERMEDIATE EXPERIMENTS 最初的中间实验
 
 4.13. About July 1941 the first lattice structure of graphite and uranium was set up at Columbia. It was a graphite cube about 8 feet on an edge, and contained about 7 tons of uranium oxide in iron containers distributed at equal intervals throughout the graphite. A preliminary set of measurements was made on this structure in August 1941. Similar structures of somewhat larger size were set up and investigated during September and October, and the so-called exponential method (described below) of determining the multiplication factor was developed and first applied. This work was done by Fermi and his assistants, H. L. Anderson, B. Feld, G. Weil, and W. H. Zinno
+大约在1941年7月，第一个石墨与铀的栅格结构在哥伦比亚大学建成。这是一个边长约8英尺的石墨立方体，内含约7吨装在铁容器中的氧化铀，均匀分布于整个石墨中。1941年8月对该结构进行了一组初步测量。9月和10月间又建成并研究了若干尺寸稍大的类似结构，并开发并首次应用了所谓指数方法（见下文）来测定倍增系数。这项工作由费米及其助手H. L. 安德森、B. 费尔德（Feld）、G. 魏尔（Weil）和W. H. 津恩（Zinn）完成。
 
 4.14. The multiplication-factor experiment is rather similar to that already outlined for the determination of η, the number of neutrons produced per thermal neutron absorbed. A radium-beryllium neutron source is placed near the bottom of the lattice structure and the number of neutrons is measured at various points throughout the lattice. These numbers are then compared with the corresponding numbers determined when no uranium is present in the graphite mass. Evidently the absorption of neutrons by U-238 to produce U-239 tends to reduce the number of neutrons, while the fissions tend to increase the number. The question is: Which predominates? or, more precisely, Does the fission production of neutrons predominate over all neutron-removal processes other than escape? Interpretation of the experimental data on this crucial question involves many corrections, calculations, and approximations, but all reduce in the end to a single number, the multiplication factor k.
+倍增系数实验与前面概述的测定η（铀每吸收一个热中子所产生的中子数）的实验颇为相似。将镭-铍中子源置于栅格结构底部附近，并测量整个栅格中各点的中子数。然后把这些数值与石墨体中不含铀时测得的相应数值进行比较。显然，铀-238吸收中子生成铀-239会减少中子数，而裂变则会增加中子数。问题在于：哪一种占优势？或者更准确地说，裂变产生的中子是否超过除逃逸以外的一切中子移出过程？对这一关键问题的实验数据作解释，涉及许多修正、计算和近似，但最终都归结为一个数，即倍增系数k。
 
-### THE MULTIPLICATION FACTOR K
+### THE MULTIPLICATION FACTOR K 倍增系数K
 
 4.15. The whole success or failure of the uranium project depended on the multiplication factor k, sometimes called the reproduction factor. If k could be made greater than 1 in a practical system, the project would succeed; if not, the chain reaction would never be more than a dream. This is clear from the following discussion, which applies to any system containing fissionable material. Suppose that there is a certain number of free neutrons present in the system at a given time. Some of these neutrons will themselves initiate fissions and will thus directly produce new neutrons. The multiplication factor k is the ratio of the number of these new neutrons to the number of free neutrons originally present. Thus, if in a given pile comprising uranium, carbon, impurities, containers, etc., 100 neutrons are produced by fission, some will escape, some will be absorbed in the uranium without causing fission, some will be absorbed in the carbon, in the containers or in impurities, and some will cause fission, thereby producing more neutrons ([See drawing](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_ii.html#chainreaction)). If the fissions are sufficiently numerous and sufficiently effective individually, more than 100 new neutrons will be produced and the system is chain reacting. If the number of new neutrons is 105, k = 1.05. But if the number of new neutrons per 100 initial ones is 99, k = .99 and no chain reaction can maintain itself.
+铀计划的全部成败取决于倍增系数k，有时也称为增殖系数。如果能在实际系统中使k大于1，计划就会成功；否则，链式反应将始终只是一个梦想。下面的讨论说明了这一点，该讨论适用于任何含可裂变材料的系统。假设在某一给定时刻系统内存在一定数量的自由中子。其中一些中子本身将引发裂变，从而直接产生新的中子。倍增系数k就是这些新中子数与原有自由中子数之比。因此，如果在某一包含铀、碳、杂质、容器等的堆中，裂变产生100个中子，其中一些将逃逸，一些将在铀中被吸收而不引起裂变，一些将在碳、容器或杂质中被吸收，还有一些将引起裂变，从而产生更多中子（[见图](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_ii.html#chainreaction)）。如果裂变足够多且每次裂变本身足够有效，就会产生多于100个新中子，该系统即处于链式反应状态。如果新中子数为105，则k = 1.05。但如果每100个初始中子对应的新中子数为99，则k = .99，任何链式反应都无法自行维持。
 
 4.16. Recognizing that the intermediate or ”exponential” experiment described above was too small to be chain reacting, we see that it was a matter of great interest whether any larger pile of the same lattice structure would be chain reacting. This could be determined by calculating what the value of k would be for an infinitely large lattice of this same type. In other words, the problem was to calculate what the value of k would be if no neutrons leaked away through the sides of the pile. Actually it is found that, once a chain-reacting system is well above the critical size - say two or three times as great - and is surrounded by what is called a reflector, the effective value of k differs very little from that for infinite size provided that k is near 1.00. Consequently, it has become customary to characterize the chain-reaction potentialities of different mixtures of metal and moderator by the value of k<sub>∞</sub> the multiplication constant obtained by assuming infinite size of pile.
+我们认识到，上文所述的中间实验或“指数”实验规模太小，不可能发生链式反应，因此，同样栅格结构的更大堆是否会发生链式反应，便成为一个极有价值的问题。这可以通过计算同类型无限大栅格的k值来确定。换言之，问题在于计算在没有中子从堆侧泄漏的情况下k值将是多少。实际上可以发现，一旦链式反应系统远高于临界尺寸——比如说达到其两三倍——并被所谓的反射层所包围，只要k接近1.00，其有效k值与无限大尺寸的k值差别很小。因此，人们习惯于用k<sub>∞</sub>（假定堆为无限大时得到的倍增常数）的值来表征不同金属与慢化剂混合物的链式反应潜力。
 
 4.17. The value of k<sub>∞</sub> as reported by Fermi to the Uranium Section in the fall of 1941 was about 0.87. This was based on results from the second Columbia intermediate experiment. All agreed that the multiplication factor could be increased by greater purity of materials, different lattice arrangements, etc. None could say with certainty that it could be made greater than one.
+费米于1941年秋向铀委员会报告的k<sub>∞</sub>值约为0.87。这是根据第二次哥伦比亚中间实验的结果得出的。大家一致认为，通过提高材料纯度、改变栅格布置等，可以提高倍增系数。但没有人能肯定地说它可以提高到大于1。
 
-### EXPERIMENTS ON BERYLLIUM
+### EXPERIMENTS ON BERYLLIUM 铍的实验
 
 4.18. At about the same time that the work on resonance; absorption was started at Princeton, S. K. Allison, at the suggestion of A. H. Compton, began work at Chicago under a contract running from January 1, 1941 to August 1, 1941. The stated objectives of the work were to investigate (a) the increase in neutron production when the pile is enclosed in a beryllium envelope or ”reflector,” and (b) the cross sections of beryllium. A new contract was authorized on July 18, 1941, to run to June 30, 1942. This stated the somewhat broader objective of investigating uranium-beryllium-carbon systems generally. The appropriations involved were modest: \$9,500 for the first contract, and \$30,000 for the second contract.
+大约在普林斯顿开始共振吸收工作的同时，S. K. 艾利森（Allison）在A. H. 康普顿（Compton）的建议下，开始在芝加哥开展工作，合同期为1941年1月1日至1941年8月1日。所述工作目标是研究：(a) 当堆被包围在铍外壳或“反射层”中时中子产额的增加；(b) 铍的截面。1941年7月18日批准了一份新合同，有效期至1942年6月30日。该合同规定了范围稍广的目标，即总体研究铀-铍-碳系统。所涉拨款数额不大：第一份合同为9,500美元，第二份合同为30,000美元。
 
 4.19. As has already been pointed out in [Chapter II](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_ii.html), beryllium has desirable qualities as a moderator because of its low atomic weight and low neutron-absorption cross section; there was also the possibility that a contribution to the number of neutrons would be realized from the (n, 2n) reaction in beryllium. The value of the cross section was not precisely known; furthermore it was far from certain that any large amount of pure beryllium could be obtained. Allison’s problem was essentially similar to the Columbia problem, except for the use of beryllium in place of graphite. Because of the scarcity of beryllium it was suggested that it might be used in conjunction with graphite or some other moderator, possibly as a reflector.
+正如[第二章](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_ii.html)中已经指出的，铍由于其原子量低和中子吸收截面小而具有作为慢化剂的优良品质；此外，还有可能从铍中的(n, 2n)反应获得对中子数的贡献。其截面的值并不精确已知；而且，能否获得大量纯铍也远无把握。艾利森的问题与哥伦比亚的问题本质上相似，只是用铍代替石墨。由于铍的稀缺，有人建议它可以与石墨或某种其他慢化剂结合使用，或许可作为反射层。
 
 4.20. In the Chicago experiments, neutrons produced with the aid of a cyclotron were caused to enter a pile of graphite and beryllium. Allison made a number of measurements on the slowing down and absorption by graphite which were valuable checks on similar experiments at Columbia. He finally was able to obtain enough beryllium to make significant measurements which showed that beryllium was a possible moderator comparable to graphite. However, beryllium was not in fact used at all extensively in view of the great difficulty of producing it in quantity in the required structural forms.
+在芝加哥的实验中，借助回旋加速器产生的中子被引入石墨与铍构成的堆中。艾利森对石墨的慢化和吸收作了若干测量，这些测量对哥伦比亚的类似实验是有价值的校验。他最终获得了足够的铍，得以进行有意义的测量，结果表明铍是一种可与石墨相比的可行慢化剂。然而，鉴于以所需结构形式大量生产铍极为困难，铍实际上并未得到广泛使用。
 
 4.21. This Chicago project as described above became part of the Metallurgical Laboratory project established at the University of Chicago early in 1942.
+上述芝加哥项目后来成为1942年初在芝加哥大学建立的冶金实验室计划的一部分。
 
-### THEORETICAL WORK
+### THEORETICAL WORK 理论工作
 
 4.22. Both the intermediate experiments at Columbia and the continued resonance-absorption work at Princeton required skillful theoretical interpretation. Fermi worked out the theory of the ”exponential” pile and Wigner the theory of resonance absorption; both these men were constantly conferring and contributing to many problems. Wheeler of Princeton, Breit of Wisconsin, and Eckart of Chicago - to mention only a few-also made contributions to general pile theory and related topics. Altogether one can say that by the end of 1941 the general theory of the chain reaction for slow neutrons was almost completely understood. It was the numerical constants and technological possibilities that were still uncertain.
+哥伦比亚的中间实验和普林斯顿持续的共振吸收工作，都需要熟练的理论解释。费米提出了“指数”堆的理论，维格纳提出了共振吸收的理论；两人经常磋商，并对许多问题作出贡献。普林斯顿的惠勒、威斯康星的布雷特（Breit）和芝加哥的埃卡特（Eckart）——这里仅举数例——也对一般堆理论及有关课题作出了贡献。总之可以说，到1941年底，慢中子链式反应的一般理论已几乎完全弄清。尚不确定的是数值常数和技术上的可能性。
 
 4.23. On the theory of a fast-neutron reaction in U-235 a good deal of progress had also been made. In particular, new estimates of the critical size were made, and it was predicted that possibly 10 per cent of the total energy might be released explosively. On this basis one kilogram of U-235 would be equivalent to 2,000 tons of TNT. The conclusions are reviewed below in connection with the National Academy Report. It is to be remembered that there are two factors involved: (1) how large a fraction of the available fission energy will be released before the reaction stops; (2) how destructive such a highly concentrated explosion will be.
+在铀-235快中子反应的理论方面也取得了相当大的进展。特别是对临界尺寸作出了新的估计，并预测可能有10%的总能量以爆炸方式释放。据此，一公斤铀-235将相当于2,000吨TNT。这些结论将在下文结合国家科学院报告加以评述。应当记住其中涉及两个因素：(1) 在反应停止之前，可利用的裂变能中有多大比例会被释放；(2) 这种高度集中的爆炸具有多大的破坏性。
 
-### WORK ON PLUTONIUM
+### WORK ON PLUTONIUM 钚的研究
 
 4.24. In [Chapter I](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_i-a.html) mention is made of the suggestion that the element 94, later christened plutonium, would be formed by beta-ray disintegrations of U-239 resulting from neutron absorption by U-238 and that plutonium would probably be an alpha-particle emitter of long half-life and would undergo fission when bombarded by neutrons. In the summer of 1940 the nuclear physics group at the University of California in Berkeley was urged to use neutrons from its powerful cyclotron for the production of plutonium, and to separate it from uranium and investigate its fission properties. Various pertinent experiments were performed by E. Segré, G. T. Seaborg, J. W. Kennedy, and A. C. Wahl at Berkeley prior to 1941 and were reported by E. O. Lawrence to the National Academy Committee (see below) in May 1941 and also in a memorandum that was incorporated in the Committee’s second report dated July 11,1941. It will be seen that this memorandum includes one important idea not specifically emphasized by others (paragraph 1.58), namely, the production of large quantities of plutonium for use in a bomb.
+在[第一章](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_i-a.html)中提到过这样一种设想：94号元素（后来命名为钚）会由铀-238吸收中子后生成的铀-239经β射线衰变而形成，并且钚可能是一种长半衰期的α粒子发射体，在受到中子轰击时会发生裂变。1940年夏，伯克利加利福尼亚大学的核物理小组被敦促利用其强回旋加速器产生的中子来生产钚，并将其与铀分离，研究其裂变性质。1941年之前，E. 塞格雷（Segrè）、G. T. 西博格（Seaborg）、J. W. 肯尼迪（Kennedy）和A. C. 沃尔（Wahl）在伯克利进行了各种相关实验，并由E. O. 劳伦斯（Lawrence）于1941年5月向国家科学院委员会（见下文）报告，同时也写入一份备忘录，该备忘录被收入委员会1941年7月11日的第二份报告。可以看出，这份备忘录包含了一个他人未曾特别强调的重要想法（第1.58段），即为用于炸弹而生产大量钚。
 
 4.25. We quote from Lawrence’s memorandum as follows: ”Since the first report of the National Academy of Sciences Committee on Atomic Fission, an extremely important new possibility has been opened for the exploitation of the chain reaction with unseparated isotopes of uranium. Experiments in the Radiation Laboratory of the University of California have indicated (a) that element 94 is formed as a result of capture of a neutron by uranium 238 followed by two successive beta-transformations, and furthermore (b) that this transuranic element undergoes slow neutron fission and therefore presumably behaves like uranium 235.
+我们引用劳伦斯备忘录中的话如下：“自国家科学院原子裂变委员会第一份报告以来，为利用未分离铀同位素的链式反应开辟了一个极其重要的新可能性。加利福尼亚大学辐射实验室的实验表明：(a) 94号元素是由铀238俘获一个中子后接连发生两次β转变而形成的；此外，(b) 这种超铀元素会发生慢中子裂变，因此推测其行为类似于铀235。
 
 “It appears accordingly that, if a chain reaction with unseparated isotopes is achieved, it may be allowed to proceed violently for a period of time for the express purpose of manufacturing element 94 in substantial amounts. This material could be extracted by ordinary chemistry and would presumably be the equivalent of uranium 235 for chain reaction purposes.
+“因此看来，如果实现了未分离同位素的链式反应，就可以让其在某一时期内剧烈进行，专门用于大量制造94号元素。这种材料可以用普通化学方法提取，并且在链式反应用途上推测与铀235相当。
 
 “If this is so, the following three outstanding important possibilities are opened:
+“如果确实如此，就开辟了以下三个突出的重要可能性：
 
 “1. Uranium 238 would be available for energy production, thus increasing about one hundred fold the total atomic energy obtainable from a given quantity of uranium.
+“1. 铀238将可用于能量生产，从而使给定数量铀所能获得的总原子能增加约一百倍。
 
 “2. Using element 94 one may envisage preparation of small chain reaction units for power purposes weighing perhaps a hundred pounds instead of a hundred tons as probably would be necessary for units using natural uranium.
+“2. 利用94号元素，可以设想制备用于动力目的的小型链式反应装置，其重量也许只有一百磅，而使用天然铀的装置可能必需一百吨。
 
 “3. If large amounts of element 94 were available it is likely that a chain reaction with fast neutrons could be produced. In such a reaction the energy would be released at an explosive rate which might be described as ’super bomb.' ”
+“3. 如果能够获得大量94号元素，很可能可以产生快中子链式反应。在这种反应中，能量将以爆炸速率释放，或可称之为‘超级炸弹’。”
 
-### RADIOACTIVE POISONS
+### RADIOACTIVE POISONS 放射性毒物
 
 4.26. As previously stated, the fragments resulting from fission are in most cases unstable nuclei, that is, artificially radioactive materials. It is common knowledge that the radiations from radioactive materials have deadly effects akin to the effects of X-rays.
+如前所述，裂变产生的碎片在大多数情况下是不稳定的原子核，即人造放射性物质。众所周知，放射性物质发出的辐射具有类似X射线效应的致命作用。
 
 4.27. In a chain-reacting pile these radioactive fission products build up as the reaction proceeds. (They have, in practice, turned out to be the most troublesome feature of a reacting pile.) Since they differ chemically from the uranium, it should be possible to extract them and use them like a particularly vicious form of poison gas. This idea was mentioned in the National Academy report (see paragraph 4.48) and was developed in a report written December 10, 1941, by E. Wigner and H. D. Smyth, who concluded that the fission products produced in one day’s run of a 100,000 kw chain-reacting pile might be sufficient to make a large area uninhabitable.
+在链式反应堆中，这些放射性裂变产物随反应进行而积累。（在实践中，它们已成为反应堆最麻烦的特征。）由于它们在化学性质上不同于铀，应当可以将它们提取出来，并像一种特别恶毒的毒气那样加以使用。这一想法在国家科学院报告中提及（见第4.48段），并在E. 维格纳和H. D. 史密斯1941年12月10日撰写的一份报告中得到展开，该报告得出结论：一座100,000千瓦链式反应堆运行一天所产生的裂变产物，可能足以使大片地区无法居住。
 
 4.28. Wigner and Smyth did not recommend the use of radioactive poisons nor has such use been seriously proposed since by the responsible authorities, but serious consideration was given to the possibility that the Germans might make surprise use of radioactive poisons, and accordingly defensive measures were planned.
+维格纳和史密斯并未建议使用放射性毒物，此后负责当局也从未认真提出过这种使用，但曾认真考虑过德国人可能突袭使用放射性毒物的可能性，并据此筹划了防御措施。
 
-### ISOTOPE SEPARATION
+### ISOTOPE SEPARATION 同位素分离
 
-#### SMALL-SCALE SEPARATION BY THE MASS SPECTROGRAPH
+#### SMALL-SCALE SEPARATION BY THE MASS SPECTROGRAPH 用质谱仪进行小规模分离
 
 4.29. In [Chapter I](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_i-a.html) the attribution of thermal-neutron fission of uranium to the U-235 isotope was mentioned as being experimentally established. This was done by partly separating minute quantities of the uranium isotopes in A. O. Nier’s mass spectrograph and then studying the nuclear properties of the samples. Additional small samples were furnished by Nier in the summer of 1941 and studied by N. P. Heydenburg and others at M. A. Tuve’s laboratory at the Department of Terrestrial Magnetism of the Carnegie Institution of Washington. But results of such experiments were still preliminary, and it was evident that further study of larger and more completely separated samples was desirable.
+在[第一章](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_i-a.html)中提到，将铀的热中子裂变归因于铀-235同位素，已由实验确立。这是通过用A. O. 尼尔（Nier）的质谱仪部分分离微量铀同位素，然后研究样品的核性质而实现的。1941年夏，尼尔又提供了若干小样品，由N. P. 海登堡（Heydenburg）等人在M. A. 图夫（Tuve）位于华盛顿卡内基研究所地磁部的实验室进行了研究。但此类实验的结果仍属初步，显然有必要对更大、分离更完全的样品作进一步研究。
 
 4.30. The need of larger samples of U-235 stimulated E. O. Lawrence at Berkeley to work on electromagnetic separation. He was remarkably successful and by December 6, 1941 reported that he could deposit in one hour one microgram of U-235 from which a large proportion of the U-238 had been removed.
+对较大铀-235样品的需求促使伯克利的E. O. 劳伦斯研究电磁分离。他取得了显著成功，并于1941年12月6日报告说，他一小时可沉积一微克铀-235，其中大部分铀-238已被去除。
 
 4.31. Previously, at a meeting of the Uranium Committee, Smyth of Princeton had raised the question of possible large-scale separation of isotopes by electromagnetic means but had been told that it had been investigated and was considered impossible. Nevertheless, Smyth and Lawrence at a chance meeting in October 1941 discussed the problem and agreed that it might yet be possible. Smyth again raised the question at a meeting of the Uranium Committee on December 6 and at the next meeting (December 18, 1941) there was a general discussion of large-scale electromagnetic methods in connection with Lawrence’s report of his results already mentioned. The consequences of this discussion are reported in [Chapter XI](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_xi.html).
+此前，在铀委员会的一次会议上，普林斯顿的史密斯曾提出以电磁方法大规模分离同位素的可能性，但被告知该问题已经研究过并被认为不可能。尽管如此，史密斯和劳伦斯在1941年10月的一次偶然会面中讨论了这一问题，并一致认为仍有可能实现。史密斯在1941年12月6日的铀委员会会议上再次提出该问题，在下一次会议（1941年12月18日）上，结合劳伦斯已提到的结果报告，对大规模电磁方法进行了普遍讨论。这次讨论的后果见[第十一章](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_xi.html)。
 
-### THE CENTRIFUGE AND GASEOUS DIFFUSION METHODS
+### THE CENTRIFUGE AND GASEOUS DIFFUSION METHODS 离心机法与气体扩散法
 
 4.32. Though we have made it clear that the separation of U-235 from U-238 might be fundamental to the whole success of the project, little has been said about work in this field. Such work had been going on since the summer of 1940 under the general direction of H. C. Urey at Columbia. Since this part of the uranium work was not very much affected by the reorganization in December 1941, a detailed account of the work is reserved for [Chapters IX](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_ix-a.html) and [X](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_x.html). Only a summary is presented here.
+尽管我们已经说明，将铀-235与铀-238分离可能对整个计划的成功具有根本意义，但关于这一领域的工作却谈得很少。此类工作自1940年夏起就在哥伦比亚大学由H. C. 尤里（Urey）总领导下进行。由于铀工作的这一部分受1941年12月改组的影响不大，详细记述留待[第九章](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_ix-a.html)和[第十章](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_x.html)。这里只作概述。
 
 4.33. After careful review and a considerable amount of experimenting on other methods, it had been concluded that the two most promising methods of separating large quantities of U-235 from U-238 were by the use of centrifuges and by the use of diffusion through porous barriers. In the centrifuge, the forces acting on the two isotopes are slightly different because of their differences in mass. In the diffusion through barriers, the rates of diffusion are slightly different for the two isotopes, again because of their differences in mass. Each method required the uranium to be in gaseous form, which was an immediate and serious limitation since the only suitable gaseous compound of uranium then known was uranium hexafluoride. In each method the amount of enrichment to be expected in a single production unit or ”stage” was very small; this indicated that many successive stages would be necessary if a high degree of enrichment was to be attained.
+经过仔细审查和对其他方法的大量实验后，得出的结论是：大规模分离铀-235与铀-238最有希望的两种方法是使用离心机以及利用通过多孔屏障的扩散。在离心机中，由于两种同位素质量不同，作用其上的力略有差异。在通过屏障的扩散中，同样由于质量差异，两种同位素的扩散速率略有不同。每种方法都要求铀呈气态，这是一个直接而严重的限制，因为当时已知唯一合适的铀气态化合物是六氟化铀。在每种方法中，单个生产单元或“级”所能期望的浓缩量都很小；这表明若要达到高度浓缩，必须采用许多相继的级。
 
 4.34. By the end of 1941 each method had been experimentally demonstrated in principle; that is, single-stage separators had effected the enrichment of the U-235 on a laboratory scale to about the degree predicted theoretically. K. Cohen of Columbia and others had developed the theory for the single units and for the series or ”cascade” of units that would be needed. Thus it was possible to estimate that about 5,000 stages would be necessary for one type of diffusion system and that a total area of many acres of diffusion barrier would be required in a plant separating a kilogram of U-235 each day. Corresponding cost estimates were tens of millions of dollars. For the centrifuge the number of stages would be smaller, but it was predicted that a similar production by centrifuges would require 22,000 separately driven, extremely high-speed centrifuges, each three feet in length at a comparable cost.
+到1941年底，每种方法都已在原理上得到实验验证；也就是说，单级分离器已在实验室规模上使铀-235浓缩到大致与理论预测相当的程度。哥伦比亚的K. 科恩（Cohen）等人发展了单个单元以及所需单元系列或“级联”的理论。因此可以估计，某类扩散系统约需5,000级，而一座每天分离一公斤铀-235的工厂需要许多英亩总面积的多孔扩散屏障。相应的成本估计为数千万美元。对于离心机，级数会少一些，但据预测，用离心机达到类似产量需要22,000台分别驱动、转速极高的离心机，每台长三英尺，成本相当。
 
 4.35. Of course, the cost estimates could not be made accurately since the technological problems were almost completely unsolved, but these estimates as to size and cost of plant did serve to emphasize the magnitude of the undertaking.
+当然，由于技术问题几乎完全没有解决，成本估计无法做到准确，但这些关于工厂规模和成本的估计确实有助于强调这项事业的规模。
 
-### THERMAL DIFFUSION IN LIQUIDS
+### THERMAL DIFFUSION IN LIQUIDS 液体中的热扩散
 
 4.36. In September 1940, P. H. Abelson submitted to Briggs a 17 -page memorandum suggesting the possibility of separating the isotopes of uranium by thermal diffusion in liquid uranium hexafluoride. R. Gunn of the Naval Research Laboratory was also much interested in the uranium problem and was appointed a member of the Uranium Committee when it was reorganized under the NDRC in the summer of 1940. As a result of Abelson’s suggestion and Gunn’s interest, work was started on thermal diffusion at the National Bureau of Standards. This work was financed by funds from the Navy Department and in 1940 was transferred to the Naval Research Laboratory, still under the direction of Abelson, where it was continued.
+1940年9月，P. H. 阿贝尔森（Abelson）向布里格斯提交了一份17页的备忘录，提出通过液态六氟化铀中的热扩散分离铀同位素的可能性。海军研究实验室的R. 冈恩（Gunn）也对铀问题甚感兴趣，并在1940年夏铀委员会于NDRC下改组时被任命为委员。由于阿贝尔森的建议和冈恩的兴趣，国家标准局开始了热扩散工作。这项工作由海军部提供经费，并于1940年转至海军研究实验室，仍由阿贝尔森指导，在那里继续进行。
 
 4.37. We shall discuss the thermal-diffusion work further in a later chapter, but we may mention here that significant results had already been obtained by the end of 1941 and that in January 1942, using a single separation column, a separation factor had been obtained which was comparable or superior to the one obtained up to that time in preliminary tests on the diffusion and centrifuge methods.
+我们将在后面一章进一步讨论热扩散工作，但这里可以提到，到1941年底已取得重要结果，并且1942年1月使用单一分离柱所获得的分离因子，与当时扩散法和离心机法初步试验中所获得的分离因子相当或更优。
 
-### THE PRODUCTION OF HEAVY WATER
+### THE PRODUCTION OF HEAVY WATER 重水的生产
 
 4.38. It was pointed out in [Chapter II](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_ii.html) that deuterium appeared very promising as a moderator because of its low absorption and good slowing-down property but unpromising because of its scarcity. Interest in a deuterium moderator was stimulated by experimental results obtained in Berkeley demonstrating that the deuterium absorption cross section for neutrons was, in fact, almost zero. Since oxygen has a very low absorption coefficient for neutrons, it was usually assumed that the deuterium would be used combined with oxygen, that is, in the very convenient material: heavy water. Work at Columbia on possible methods of large-scale concentration of heavy water was initiated in February 1941 under the direction of H. C. Urey (under an OSRD contract). Early in 1941, R. H. Fowler of England reported the interest of the British group in a moderator of deuterium in the form of heavy water and their conviction that a chain reaction would go in relatively small units of uranium and heavy water.
+在[第二章](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_ii.html)中指出，氘由于吸收低、慢化性能好而看来是很有希望的慢化剂，但由于稀缺而前景不佳。伯克利获得的实验结果表明，氘对中子的吸收截面实际上几乎为零，这激发了人们对氘慢化剂的兴趣。由于氧对中子的吸收系数很低，通常假定氘将与氧结合使用，即使用非常方便的材料：重水。哥伦比亚大学关于大规模浓缩重水可能方法的工作于1941年2月在H. C. 尤里指导下（根据OSRD合同）开始。1941年初，英国的R. H. 福勒（Fowler）报告说，英国小组对以重水形式存在的氘慢化剂感兴趣，并确信链式反应可在较小的铀与重水装置中发生。
 
 4.39. Urey and A. von Grosse had already been considering the concentration of heavy water by means of a catalytic exchange reaction between hydrogen gas and liquid water. This process depends on the fact that, when isotopic equilibrium is established between hydrogen gas and water, the water contains from three to four times as great a concentration of deuterium as does the hydrogen gas. During 1941, this exchange reaction between water and hydrogen was investigated at Columbia and in the Frick Chemical Laboratory at Princeton and extensive work was done toward developing large-scale methods of producing materials suitable for catalyzing the reaction.
+尤里和A. 冯·格罗斯（von Grosse）已经在考虑通过氢气与液态水之间的催化交换反应来浓缩重水。该过程依赖于这样一个事实：当氢气与水之间达到同位素平衡时，水中的氘浓度是氢气中的三至四倍。1941年间，在哥伦比亚大学和普林斯顿弗里克化学实验室研究了水与氢之间的这种交换反应，并为开发适于催化该反应的材料的大规模生产方法进行了大量工作。
 
 4.40. The further development of this work and of other methods of producing heavy water are discussed in [Chapter IX](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_ix-a.html). Like the other isotope-separation work at Columbia, this work was relatively unaffected by the reorganization in December 1941. It is mentioned in preliminary fashion here to indicate that all the principal lines of approach were under investigation in 1941.
+这项工作以及其他生产重水方法的进一步发展，在[第九章](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_ix-a.html)中讨论。与哥伦比亚大学的其他同位素分离工作一样，这项工作受1941年12月改组的影响相对较小。这里作初步提及，是为了说明1941年所有主要途径都在研究中。
 
-### PRODUCTION AND ANALYSIS OF MATERIALS
+### PRODUCTION AND ANALYSIS OF MATERIALS 材料的生产与分析
 
 4.41. By the end of 1941 not very much progress had been made in the production of materials for use in a chain-reacting system. The National Bureau of Standards and the Columbia group were in contact with the Metal Hydrides Company of Beverly, Massachusetts. This company was producing some uranium in powdered form, but efforts to increase its production and to melt the powdered metal into solid ingots had not been very successful.
+到1941年底，在为链式反应系统生产材料方面进展不大。国家标准局和哥伦比亚小组与马萨诸塞州贝弗利的金属氢化物公司保持联系。该公司生产一些粉末状铀，但为提高产量以及将粉末金属熔铸成实心锭所作的努力并不很成功。
 
 4.42. Similarly, no satisfactory arrangement had been made for obtaining large amounts of highly purified graphite. The graphite in use at Columbia had been obtained from the U. S. Graphite Company of Saginaw, Michigan. It was of high purity for a commercial product, but it did contain about one part in 500,000 of boron, which was undesirable.
+同样，在获得大量高纯石墨方面也尚未作出令人满意的安排。哥伦比亚使用的石墨购自密歇根州萨吉诺的美国石墨公司。作为商业产品，其纯度很高，但确实含有约五十万分之一的硼，这是不理想的。
 
 4.43. Largely through the interest of Allison the possibility of increasing the production of beryllium had been investigated to the extent of ascertaining that it would be difficult and expensive, but probably possible.
+主要由于艾利森的关注，对提高铍产量的可能性进行了调查，结果查明此事困难且昂贵，但可能是可行的。
 
 4.44. Though little progress had been made on procurement, much progress had been made on analysis. The development of sufficiently accurate methods of chemical analysis of the materials used has been a problem of the first magnitude throughout the history of the project, although sometimes overshadowed by the more spectacular problems encountered. During this period C. J. Rodden and others at the National Bureau of Standards were principally responsible for analyses; H. T. Beans of Columbia also cooperated. By 1942 several other groups had started analytical sections which have been continuously active ever since.
+尽管在采购方面进展甚微，但在分析方面却取得了很大进展。在整个计划的历史中，开发足够准确的材料化学分析方法一直是一个头等重大问题，尽管有时被所遇到的更引人注目的问题所掩盖。在此期间，国家标准局的C. J. 罗登（Rodden）等人主要负责分析工作；哥伦比亚的H. T. 比恩斯（Beans）也予以合作。到1942年，另外几个小组已设立分析部门，此后一直持续活跃。
 
 4.45. To summarize, by the end of 1941 there was no evidence that procurement of materials in sufficient quantity and purity was impossible, but the problems were far from solved.
+总之，到1941年底，没有证据表明不可能获得足够数量和纯度的材料，但这些问题远未解决。
 
-### EXCHANGE OF INFORMATION WITH THE BRITISH
+### EXCHANGE OF INFORMATION WITH THE BRITISH 与英国交换情报
 
 4.46. Prior to the autumn of 1941 there had been some exchange of reports with the British and some discussion with British scientific representatives who were here on other business. In September 1941, it was decided that Pegram and Urey should get first-hand information by a trip to England. They completed their trip in the first week of December 1941.
+1941年秋以前，曾与英国方面交换过一些报告，并与因其他事务来美的英国科学代表进行过一些讨论。1941年9月，决定由佩格拉姆和尤里赴英国实地了解情况。他们于1941年12月第一周结束行程。
 
 4.47. In general, work in England had been following much the same lines as in this country. As to the chain-reaction problem, their attention had focused on heavy water as a moderator rather than graphite; as to isotope separation, they had done extensive work on the diffusion process including the general theory of cascades. Actually the principal importance of this visit and other interchanges during the summer of 1941 lay not in accurate scientific data but in the general scientific impressions. The British, particularly J. Chadwick, were convinced that a U-235 chain reaction could be achieved. They knew that several kilograms of heavy water a day were being produced in Norway, and that Germany had ordered considerable quantities of paraffin to be made using heavy hydrogen; it was difficult to imagine a use for these materials other than in work on the uranium problem. They feared that if the Germans got atomic bombs before the Allies did, the war might be over in a few weeks. The sense of urgency which Pegram and Urey brought back with them was of great importance.
+总体而言，英国的工作路线与我国大致相同。就链式反应问题而言，他们的注意力集中于以重水而非石墨作为慢化剂；就同位素分离而言，他们在扩散过程包括级联的一般理论方面做了大量工作。实际上，这次访问以及1941年夏其他交流的主要意义，在于总的科学印象，而不在于精确的科学数据。英国人，特别是J. 查德威克（Chadwick），确信铀-235链式反应可以实现。他们知道挪威每天生产数公斤重水，并且德国已订购相当数量的用重氢制造的石蜡；很难想象这些材料除用于铀问题研究之外还有其他用途。他们担心，如果德国人先于盟国获得原子弹，战争可能在几周内结束。佩格拉姆和尤里带回的紧迫感极为重要。
 
-### THE NATIONAL ACADEMY COMMITTEE REPORT
+### THE NATIONAL ACADEMY COMMITTEE REPORT 国家科学院委员会的报告
 
 4.48. The appointment of a National Academy committee was mentioned in [Chapter III](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_iii.html). The committee’s first report in May 1941 mentioned (a) radioactive poisons, (b) atomic power, and (c) atomic bombs, but the emphasis was on power. The second report stressed the importance of the new results on plutonium, but was not specific about the military uses to which the fission process might be put. Both these reports urged that the project be pushed more vigorously.
+国家科学院委员会的任命在[第三章](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_iii.html)中提到。委员会1941年5月的第一份报告提到了(a)放射性毒物、(b)原子动力和(c)原子弹，但重点在于动力。第二份报告强调了关于钚的新结果的重要性，但未具体说明裂变过程可能的军事用途。这两份报告都敦促更加有力地推进该计划。
 
 4.49. The third report (November 6, 1941) was specifically concerned with the ”possibilities of an explosive fission reaction with U-235.” Although neither of the first two National Academy reports indicated that uranium would be likely to be of decisive importance in the present war, this possibility was emphasized in the third report. We can do no better than quote portions of this report.
+第三份报告（1941年11月6日）专门涉及“铀-235爆炸性裂变反应的可能性”。尽管国家科学院前两份报告都没有表明铀可能对当前战争具有决定性重要意义，但第三份报告强调了这一可能性。我们最好引用该报告的部分内容。
 
 “Since our last report, the progress toward separation of the isotopes of uranium has been such as to make urgent a consideration of (1) the probability of success in the attempt to produce a fission bomb, (2) the destructive effect to be expected from such a bomb, (3) the anticipated time before its development can be completed and production be underway, and (4) a preliminary estimate of the costs involved.”
+“自我们上份报告以来，铀同位素分离方面的进展已使对下列问题的考虑变得紧迫：(1) 制造裂变炸弹的尝试取得成功的可能性；(2) 这种炸弹预期具有的破坏效果；(3) 预计完成其研制并开始生产所需的时间；(4) 对所涉成本的初步估计。”
 
 “1. *Conditions for a fission bomb. A fission bomb of superlatively destructive power will result from bringing quickly together a sufficient mass of element U-235*. This seems to be as sure as any untried prediction based upon theory and experiment can be. Our calculations indicate further that the required masses can be brought together quickly enough for the reaction to become efficient...
+“1. *裂变炸弹的条件。将足够质量的铀-235迅速聚集在一起，就会产生具有极强破坏力的裂变炸弹*。这看来与任何基于理论和实验的未经检验的预测一样确定。我们的计算进一步表明，所需质量能够足够迅速地聚集在一起，使反应变得有效……
 
 “2. *Destructive effect of fission bombs*. (a) *Mass of the bomb. The mass oj U-235 required to produce explosive fission under appropriate conditions can hardly be less than 2 kilograms nor greater than 100 kilograms*. These wide limits reflect chiefly the experimental uncertainty in the capture cross section of U-235 for fast neutrons. . . (b) *Energy released by explosive fission*. Calculations for the case of masses properly located at the initial instant indicate that between 1 and 5 per cent of the fission energy of the uranium should be released at a fission explosion. This means from 2 to 10 × 10<sup>8</sup> kilocalories per kilograms of uranium 235. *The available explosive energy per kilograms of uranium is thus equivalent to about 300 tons of TNT*.
+“2. *裂变炸弹的破坏效果*。(a) *炸弹的质量。在适当条件下产生爆炸性裂变所需的铀-235质量，几乎不可能少于2公斤，也不可能多于100公斤*。这些宽泛的界限主要反映了铀-235对快中子俘获截面的实验不确定性。……(b) *爆炸性裂变释放的能量*。对在初始瞬间质量位置适当的情形所作的计算表明，在裂变爆炸中应释放出铀裂变能的1%至5%。这意味着每公斤铀235释放2至10 × 10<sup>8</sup>千卡。*因此，每公斤铀可用的爆炸能量约相当于300吨TNT*。
 
 “3. *Time required for development and production of the necessary U-235*. (a) *Amount of uranium needed*. Since the destructiveness of present bombs is already an important factor in warfare, it is evident that, if the destructiveness of the bombs is thus increased 10,000-fold, they should become of decisive importance. ”The amount of uranium required will, nevertheless, be large. If the estimate is correct that 500,000 tons of TNT bombs would be required to devastate Germany’s military and industrial objectives, *from 1 to 10 tons of U-235 will be required to do the same job*.
+“3. *研制和生产所需铀-235所需的时间*。(a) *所需铀的数量*。由于现有炸弹的破坏力已是战争中的一个重要因素，显然，如果炸弹的破坏力由此提高10,000倍，它们就应具有决定性重要意义。尽管如此，所需的铀数量仍将很大。如果关于需要500,000吨TNT炸弹才能摧毁德国军事和工业目标的估计是正确的，那么*完成同样任务将需要1至10吨铀-235*。
 
 “(b) *Separation of U-235. The separation of the isotopes of uranium can be done in the necessary amounts*. Several methods are under development, at least two of which seem definitely adequate, and are approaching the stage of practical test. These are the methods of the centrifuge and of diffusion through porous barriers. Other methods are being investigated or need study which may ultimately prove superior, but are now farther from the engineering stage.
+“(b) *铀-235的分离。铀同位素的分离可以按所需数量完成*。目前正在发展若干方法，其中至少两种看来肯定足够，并正在接近实际试验阶段。这就是离心机法和通过多孔屏障扩散法。其他方法正在研究或尚需研究，最终可能证明更优，但目前距离工程阶段较远。
 
 “(c) *Time required for production of fission bombs*. An estimate of time required for development, engineering and production of fission bombs can be made only very roughly at this time. ”If all possible effort is spent on the program, one might however expect fission bombs to be available in significant quantity within three or four years.
+“(c) *生产裂变炸弹所需的时间*。目前只能非常粗略地估计研制、工程化和生产裂变炸弹所需的时间。然而，*如果在该计划上投入一切可能的努力，可以指望在三到四年内获得数量可观的裂变炸弹*。
 
 “4. *Rough estimate of costs*. (The figures given in the Academy report under this heading were recognized as only rough estimates since the scientific and engineering data to make them more precise were not available. They showed only that the undertaking would be enormously expensive but still in line with other war expenditures.)”
+“4. *成本的粗略估计*。（科学院报告在这一标题下给出的数字被认为只是粗略估计，因为当时没有可使它们更为精确的科学和工程数据。它们只表明这项事业将耗资巨大，但仍与其他战争支出相当。）”
 
 4.50. The report then goes on to consider immediate requirements and desirable reorganization.
+报告随后接着考虑紧迫需求和理想的重组。
 
-### SUMMARY
+### SUMMARY 小结
 
 4.51. At the end of [Chapter I](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_i-a.html) we summarized the knowledge of nuclear fission as of June 1940, and in [Chapter II](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_ii.html) we stated the outstanding problems as of the same date. In the light of these statements we wish to review the eighteen months' progress that has just been recounted. The tangible progress was not great. No chain reaction had been achieved; no appreciable amount of U-235 had been separated from U-238; only minute amounts of Pu-239 had been produced; the production of large quantities of uranium metal, heavy water, beryllium, and pure graphite was still largely in the discussion stage. But there had been progress. Constants were better known; calculations had been checked and extended; guesses as to the existence and nuclear properties of Pu-239 had been verified. Some study had been made of engineering problems, process effectiveness, costs, and time schedules. Most important of all, the critical size of the bomb had been shown to be almost certainly within practical limits. Altogether the likelihood that the problems might be solved seemed greater in every case than it had in 1940. Perhaps more important than the actual change was the psychological change. Possibly Wigner, Szilard, and Fermi were no more thoroughly convinced that atomic bombs were possible than they had been in 1940, but many other people had become familiar with the idea and its possible consequences. Apparently, the British and the Germans, both grimly at war, thought the problem worth undertaking. Furthermore, the whole national psychology had changed. Although the attack at Pearl Harbor was yet to come, the impending threat of war was much more keenly felt than before, and expenditures of effort and money that would have seemed enormous in 1940 were considered obviously necessary precautions in December 1941. Thus it was not surprising that Bush and his associates felt it was time to push the uranium project vigorously. For this purpose, there was created an entirely, new administrative organization which will be described in the next chapter.
+在[第一章](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_i-a.html)末尾，我们总结了截至1940年6月关于核裂变的知识，并在[第二章](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_ii.html)中陈述了同一日期的突出问题。根据这些陈述，我们希望回顾刚刚叙述的十八个月的进展。有形的进展并不大。没有实现链式反应；没有从铀-238中分离出可观数量的铀-235；只生产了微量钚-239；大量铀金属、重水、铍和纯石墨的生产在很大程度上仍处于讨论阶段。但确实有进展。常数更加清楚；计算得到了校核和扩展；关于钚-239存在及其核性质的猜测得到了验证。对工程问题、工艺有效性、成本和时间安排作了一些研究。最重要的是，炸弹的临界尺寸已被证明几乎肯定在实践限度之内。总之，问题可能得到解决的可能性在每一方面看来都比1940年更大。也许比实际变化更重要的是心理上的变化。维格纳、西拉德和费米也许并不比1940年更确信原子弹可行，但许多其他人已经熟悉了这一想法及其可能后果。显然，英国人和德国人都在严峻地作战，都认为这个问题值得着手。此外，整个国民心理已经改变。虽然珍珠港袭击尚未发生，但迫在眉睫的战争威胁比以往感受得更加强烈，而在1940年看来巨大的努力和金钱支出，在1941年12月被认为是显然必要的预防措施。因此，布什及其同事觉得是时候大力推进铀计划了，这并不奇怪。为此，建立了一个全新的行政组织，将在下一章中描述。

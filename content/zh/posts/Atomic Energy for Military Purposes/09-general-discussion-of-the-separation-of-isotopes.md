@@ -5,55 +5,68 @@ date = 1945-08-12T00:00:00
 typography = false
 +++
 
-### INTRODUCTORY NOTE
+### INTRODUCTORY NOTE 引言
 
 9.1. The possibility of producing an atomic bomb of U-235 was recognized before plutonium was discovered. Because it was appreciated at an early date that the separation of the uranium isotopes would be a direct and major step toward making such a bomb, methods of separating uranium isotopes have been under scrutiny for at least six years. Nor was attention confined to uranium since it was realized that the separation of deuterium was also of great importance. In the present chapter the general problems of isotope separation will be discussed; later chapters will take up the specific application of various processes.
+早在钚被发现之前，人们就已认识到制造铀-235原子弹的可能性。由于很早就认识到铀同位素的分离将是制造这种原子弹的直接而重大的步骤，因此对铀同位素分离方法的研究至少已进行了六年。注意力也并未局限于铀，因为人们意识到氘的分离同样极为重要。本章将讨论同位素分离的一般问题；后续各章将论述各种方法的具体应用。
 
-### FACTORS AFFECTING THE SEPARATION OF ISOTOPES
+### FACTORS AFFECTING THE SEPARATION OF ISOTOPES 影响同位素分离的因素
 
 9.2. By definition, the isotopes of an element differ in mass but not in chemical properties. More precisely, although the nuclear masses and structures differ, the nuclear charges are identical and therefore the external electronic structures are practically identical. For most practical purposes, therefore, the isotopes of an element are separable only by processes depending on the nuclear mass.
+按定义，同一元素的同位素质量不同，但化学性质相同。更确切地说，尽管核质量与核结构不同，但核电荷相同，因而核外电子结构实际上相同。因此，在大多数实际应用中，元素的同位素只能通过取决于核质量的过程加以分离。
 
 9.3. It is well known that the molecules of a gas or liquid arc- in continual motion and that their average kinetic energy depends only on the temperature, not on the chemical properties of the molecules. Thus in a gas made up of a mixture of two isotopes the average kinetic energy of the light molecules and of the heavy ones is the same. Since the kinetic energy of a molecule is (½)mv<sup>2</sup>, where m is the mass and v the speed of the molecule, it is apparent that on the average the speed of a lighter molecule must be greater than that of a heavier molecule. Therefore, at least in principle any process depending on the average speed of molecules can be used to separate isotopes. Unfortunately, the average speed is inversely proportional to the *square root* of the mass so that the difference is very small for the gaseous compounds of the uranium isotopes. Also, although the *average* speeds differ, the ranges of speed show considerable overlap. In the case of the gas uranium hexafluoride, for example, over 49 per cent of the light molecules have speeds as low as those of 50 per cent of the heavy molecules.
+众所周知，气体或液体的分子处于不断运动之中，其平均动能只取决于温度，而与分子的化学性质无关。因此，在由两种同位素混合物组成的气体中，轻分子与重分子的平均动能相同。由于分子的动能为 (½)mv<sup>2</sup>，其中 m 为质量、v 为分子的速率，显然轻分子的平均速率必定大于重分子的平均速率。因此，至少在原则上，任何取决于分子平均速率的过程都可用来分离同位素。遗憾的是，平均速率与质量的*平方根*成反比，所以对于铀同位素的气态化合物而言，这一差异非常小。此外，尽管*平均*速率不同，但速率分布范围有相当大的重叠。例如，在六氟化铀气体中，超过49%的轻分子的速率低至与50%的重分子相同。
 
 9.4. Obviously there is no feasible way of applying mechanical forces directly to molecules individually; they cannot be poked with a stick or pulled with a string. But they are subject to gravitational fields and, if ionized, may be affected by electric and magnetic fields. Gravitational forces are, of course, proportional to the mass. In a very high vacuum U-235 atoms and U-238 atoms would fall with the same acceleration, but just as a feather and a stone fall at very different rates in air where there are frictional forces resisting motion, there may be conditions under which a combination of gravitational and opposing intermolecular forces will tend to move heavy atoms differently from light ones. Electric and magnetic fields are more easily controlled than gravitational fields or ”pseudogravitational” fields (i.e., centrifugal-force fields) and are very effective in separating ions of differing masses.
+显然，不存在对单个分子直接施加机械力的可行办法；人们无法用棍子戳它们，也无法用绳子拉它们。但它们受引力场作用，而且若被电离，还可能受电场和磁场影响。当然，引力与质量成正比。在极高真空中，铀-235原子与铀-238原子会以相同的加速度下落；但正如羽毛与石块在存在摩擦阻力阻碍运动的空气中以极不相同的速率下落一样，在某些条件下，引力与反向分子间力的共同作用会使重原子与轻原子的运动方式不同。电场和磁场比引力场或“伪引力”场（即离心力场）更容易控制，而且在分离质量不同的离子方面非常有效。
 
 9.5. Besides gravitational or electromagnetic forces, there are, of course, interatomic and intermolecular forces. These forces govern the interaction of molecules and thus affect the rates of chemical reactions, evaporation processes, etc. In general, such forces will depend on the outer electrons of the molecules and not on the nuclear masses. However, whenever the forces between separated atoms or molecules lead to the formation of new molecules, a mass effect (usually very small) does appear. In accordance with quantum-mechanical laws, the energy levels of the molecules are slightly altered, and differently for each isotope. Such effects do slightly alter the behavior of two isotopes in certain chemical reactions, as we shall see, although the difference in behavior is far smaller than the familiar differences of chemical behavior between one element and another.
+除引力或电磁力之外，当然还存在原子间力和分子间力。这些力支配分子间的相互作用，从而影响化学反应速率、蒸发过程等。一般来说，这类力取决于分子的外层电子，而与核质量无关。然而，当分离的原子或分子之间的力导致新分子形成时，确实会出现质量效应（通常非常小）。按照量子力学定律，分子的能级会略有改变，且每种同位素的改变方式不同。正如我们将看到的，这类效应确实会略微改变两种同位素在某些化学反应中的行为，尽管这种行为差异远小于人们所熟悉的元素之间化学性质的差异。
 
 9.6. These, then, are the principal factors that may have to be considered in devising a separation process: equality of average thermal kinetic energy of molecules at a given temperature, gravitational or centrifugal effects proportional to the molecular masses, electric or magnetic forces affecting ionized molecules, and interatomic or intermolecular forces. In some isotope- separation processes only one of these effects is involved and the overall rate of separation can be predicted. In other isotope- separation processes a number of these effects occur simultaneously so that prediction becomes difficult.
+因此，在设计分离过程时可能需要考虑的主要因素就是这些：给定温度下分子平均热动能的相等性、与分子质量成正比的引力或离心效应、影响电离分子的电力或磁力，以及原子间力或分子间力。在某些同位素分离过程中只涉及其中一种效应，因而总分离速率可以预测。在另一些同位素分离过程中，若干种效应同时出现，因而预测变得困难。
 
-### CRITERIA FOR APPRAISING A SEPARATION PROCESS
+### CRITERIA FOR APPRAISING A SEPARATION PROCESS 评价分离过程的标准
 
 9.7. Before discussing particular processes suitable for isotope separation, we should know what is wanted. The major criteria to be used in judging an isotope-separation process are as follows.
+在讨论适用于同位素分离的具体方法之前，我们应当知道需要达到什么目标。评判同位素分离过程的主要标准如下。
 
-### SEPARATION FACTOR
+### SEPARATION FACTOR 分离因子
 
 9.8. The separation factor, sometimes known as the enrichment or fractionating factor of a process, is the ratio of the relative concentration of the desired isotope after processing to its relative concentration before processing. Defined more precisely: if, before the processing, the numbers of atoms of the isotopes of mass number m<sub>1</sub> and m<sub>2</sub> are n<sub>1</sub> and n<sub>2</sub> respectively (per gram of the isotope mixture) and if, after the processing, the corresponding numbers are n<sub>1</sub>' and n<sub>2</sub>', then the separation factor is:
 
 <table> <tr> <td></td> <td> n<sub>1</sub>'/n<sub>2</sub>' </td> </tr> <tr> <td>r = </td> <td> --------------- </td> </tr> <tr> <td></td> <td> n<sub>1</sub>/n<sub>2</sub> </td> </tr> </table>
 
 This definition may be applied to one stage of a separation plant or to an entire plant consisting of many stages. We are usually interested either in the ”single stage” separation factor or in the ”overall” separation factor of the whole process. If r is only slightly greater than unity, as is often the case for a single stage, the number r-1 is sometimes more useful than r. The quantity r-1 is called the enrichment factor. In natural uranium m<sub>1</sub> = 235, m<sub>2</sub> = 238, and n<sub>1</sub>/n<sub>2</sub> = 1/140 approximately, but in 90 per cent U-235, n<sub>1</sub>/n<sub>2</sub> = 9/1. Consequently in a process producing 90 percent U-235 from natural uranium the overall value of r must be about 1,260.
+分离因子，有时也称为过程的浓缩因子或分馏因子，是处理后所需同位素的相对浓度与处理前相对浓度之比。更精确地定义：若处理前质量数为 m<sub>1</sub> 和 m<sub>2</sub> 的同位素原子数（每克同位素混合物中）分别为 n<sub>1</sub> 和 n<sub>2</sub>，处理后相应的原子数为 n<sub>1</sub>' 和 n<sub>2</sub>'，则分离因子为：这一定义可适用于分离工厂的单个级，也可适用于由许多级组成的整个工厂。我们通常关心的是“单级”分离因子或整个过程的“总”分离因子。若 r 仅略大于1，正如单级中常见的情形，则 r-1 有时比 r 更有用。量 r-1 称为浓缩因子。在天然铀中，m<sub>1</sub> = 235，m<sub>2</sub> = 238，n<sub>1</sub>/n<sub>2</sub> 约为1/140；但在90%的铀-235中，n<sub>1</sub>/n<sub>2</sub> = 9/1。因此，在由天然铀生产90%铀-235的过程中，r 的总值必须约为1,260。
 
-### YIELD
+### YIELD 产率
 
 9.9. In nearly every process a high separation factor means a low yield, a fact that calls for continual compromise. Unless indication is given to the contrary, we shall state yields in terms of U-235. Thus a separation device with a separation factor of 2 - that is, n'<sub>1</sub>/n<sub>2</sub>'= 1/70 - and a yield of one gram a day is one that, starting from natural uranium, produces, in one day, material consisting of 1 gram of U-235 mixed with 70 grams of U-238.
+在几乎每一种过程中，高分离因子都意味着低产率，这一事实要求不断作出折衷。除另有说明外，我们将以铀-235的量来表示产率。因此，分离因子为2——即 n'<sub>1</sub>/n<sub>2</sub>'= 1/70——且日产量为1克的分离装置，是指以天然铀为原料，在一天内生产出由1克铀-235与70克铀-238混合而成的物料。
 
-### HOLD-UP
+### HOLD-UP 滞留量
 
 9.10. The total amount of material tied up in a separation plant is called the ”hold-up.” The hold-up may be very large in a plant consisting of many stages.
+分离工厂中滞留的物料总量称为“滞留量”。在由许多级组成的工厂中，滞留量可能非常大。
 
-### START-UP TIME
+### START-UP TIME 启动时间
 
 9.11. In a separation plant having large hold-up, a long time perhaps weeks or months is needed for steady operating conditions to be attained. In estimating time schedules this ”startup” or ”equilibrium” time must be added to the time of construction of the plant.
+在滞留量很大的分离工厂中，达到稳定运行状态需要很长时间，也许数周或数月。在估计时间进度时，必须把这一“启动”时间或“平衡”时间加到工厂建设时间之上。
 
-### EFFICIENCY
+### EFFICIENCY 效率
 
 9.12. If a certain quantity of raw material is fed into a separation plant, some of the material will be enriched, some impoverished, some unchanged. Parts of each of these three fractions will be lost and parts recovered. The importance of highly efficient recovery of the enriched material is obvious. In certain processes the amount of unchanged material is negligible, but in others, notably in the electromanetic method to be described below it is the largest fraction and consequently the efficiency with which it can be recovered for recycling is very important. The importance of recovery of impoverished material varies widely, depending very much on the degree of impoverishment. Thus in general there are many different efficiencies to be considered.
+若将一定数量的原料送入分离工厂，则一部分物料将被浓缩，一部分被贫化，一部分保持不变。这三种物料中的每一部分都会有一部分损失、一部分回收。高效回收浓缩物料的重要性显而易见。在某些过程中，未变化物料的量可以忽略不计，但在另一些过程中，尤其是下文将要描述的电磁方法中，它所占比例最大，因此能够回收再循环的效率非常重要。贫化物料回收的重要性差别很大，主要取决于贫化程度。因此，一般来说需要考虑许多种不同的效率。
 
 9.13. As in all parts of the uranium project, cost in time was more important than cost in money. Consequently a number of large-scale separation plants for U-235 and deuterium were built at costs greater than would have been required if construction could have been delayed for several months or years until more ideal processes were worked out.
+与铀项目的所有部分一样，时间成本比金钱成本更为重要。因此，人们建造了一批用于生产铀-235和氘的大型分离工厂，其费用高于下列情况下所需的费用：如果能把建设推迟数月或数年，直到研究出更理想的方法再行建设。
 
-## SOME SEPARATION PROCESSES
+## SOME SEPARATION PROCESSES 若干分离方法
 
-### GASEOUS DIFFUSION
+### GASEOUS DIFFUSION 气体扩散
 
 9.14. As long ago as 1896 Lord Rayleigh showed that a mixture of two gases of different atomic weight could be partly separated by allowing some of it to diffuse through a porous barrier into an evacuated space. Because of their higher average speed the molecules of the light gas diffuse through the barrier faster so that the gas which has passed through the barrier (i.e., the ”diffusate”) is enriched in the lighter constituent and the residual gas which has not passed through the barrier is impoverished in the lighter constituent. The gas most highly enriched in the lighter constituent is the so-called ”instantaneous diffusate” ; it is the part that diffuses before the impoverishment of the residue has become appreciable. If the diffusion process is continued until nearly all the gas has passed through the barrier, the average enrichment of the diffusate naturally diminishes. In the next chapter we shall consider these phenomena more fully. Here we shall merely point out that, on the assumption that the diffusion rates are inversely proportional to the square roots of the molecular weights the separation factor for the instantaneous diffusate, called the ”ideal separation factor” , is given by
 
@@ -64,99 +77,131 @@ where M<sub>1</sub> is the molecular weight of the lighter gas and M<sub>2</sub>
 α = Sqrt\[352/349\] = 1.0043
 
 which is a long way from the 1,260 required (see [paragraph 9.8](https://www.atomicarchive.com/resources/documents/smyth-report/#9.8).)
+早在1896年，瑞利勋爵（Lord Rayleigh）就表明，两种原子量不同的气体的混合物，可以通过让其中一部分气体经多孔隔膜扩散到抽空空间而得到部分分离。由于轻气体分子的平均速率较高，它们通过隔膜的扩散更快，因此通过隔膜的气体（即“扩散物”）中较轻组分得到浓缩，而未通过隔膜的残余气体中较轻组分则贫化。较轻组分浓缩程度最高的气体是所谓的“瞬时扩散物”；它是在残余气体贫化变得显著之前扩散出来的那部分。若扩散过程持续到几乎所有气体都通过隔膜，则扩散物的平均浓缩程度自然会降低。下一章我们将更全面地讨论这些现象。这里我们只需指出，在假定扩散速率与分子量的平方根成反比的条件下，瞬时扩散物的分离因子——称为“理想分离因子”——由下式给出；式中 M<sub>1</sub> 为较轻气体的分子量，M<sub>2</sub> 为较重气体的分子量。将此公式应用于铀的情形，可以说明分离问题的规模。由于铀本身不是气体，必须使用某种铀的气态化合物。唯一明显适用的是六氟化铀 UF<sub>6</sub>，其在56摄氏度时的蒸气压为一个大气压。由于氟只有一种同位素，两种重要的六氟化铀是 U<sub>235</sub>F<sub>6</sub> 和 U<sub>238</sub>F<sub>6</sub>；它们的分子量分别为349和352。因此，若让少量六氟化铀通过多孔隔膜扩散，则扩散物中 U<sub>235</sub>F<sub>6</sub> 的浓缩倍数为 1.0043，这与所需的1,260相去甚远（见[第9.8段](https://www.atomicarchive.com/resources/documents/smyth-report/#9.8)。）
 
 9.15. Such calculations might make it seem hopeless to separate isotopes (except, perhaps, the isotopes of hydrogen) by diffusion processes. Actually, however, such methods may be used successfully - even for uranium. It was the gaseous diffusion method that F. W. Aston used in the first partial separation of isotopes (actually the isotopes of neon). Later G. Hertz and others, by operating multi-stage recycling diffusion units, were able to get practically complete separation of the neon isotopes. Since the multiple-stage recycling system is necessary for nearly all separation methods, it will be described in some detail immediately following introductory remarks on the various methods to which it is pertinent.
+这样的计算似乎会使人们认为，用扩散法分离同位素（也许氢的同位素除外）是没有希望的。然而，这类方法实际上可以成功使用——甚至对铀也是如此。正是气体扩散法被 F. W. 阿斯顿（F. W. Aston）用于首次部分分离同位素（实际上是氖的同位素）。后来，G. 赫兹（G. Hertz）等人通过操作多级循环扩散装置，得以几乎完全分离氖的同位素。由于多级循环系统对几乎所有分离方法都是必需的，因此在简要介绍与之相关的各种方法之后，我们将立即对之作较为详细的描述。
 
-### FRACTIONAL DISTILLATION
+### FRACTIONAL DISTILLATION 分馏
 
 9.16. The separation of compounds of different boiling points, i .e., different vapor pressures, by distillation is a familiar industrial process. The separation of alcohol and water (between which the difference in boiling point is in the neighborhood of 20 deg C.) is commonly carried out in a simple still using but a single evaporator and condenser. The condensed material (condensate) may be collected and redistilled a number of times if necessary. For the separation of compounds of very nearly the same boiling point it would be too laborious to carry out the necessary number of successive evaporations and condensations as separate operations. Instead, a continuous separation is carried out in a fractionating tower. Essentially the purpose of a fractionating tower is to produce an upward-directed stream of vapor and a downward-directed stream of liquid, the two streams being in intimate contact and constantly exchanging molecules. The molecules of the fraction having the lower boiling point have a relatively greater tendency to get into the vapor stream and vice versa. Such counter-current distillation methods can be applied to the separation of light and heavy water, which differ in boiling point by 1.4 deg C.
+通过蒸馏分离沸点不同（即蒸气压不同）的化合物，是一种常见的工业过程。酒精与水的分离（二者沸点相差约20摄氏度）通常在一个仅使用单个蒸发器和冷凝器的简单蒸馏器中进行。冷凝所得的物料（冷凝液）可以收集起来，必要时可重新蒸馏若干次。对于沸点非常接近的化合物的分离，若把所需次数的连续蒸发和冷凝作为彼此独立的操作来进行，则过于繁重。人们改在分馏塔中进行连续分离。分馏塔的实质目的在于产生一股向上的蒸气流和一股向下的液流，两股物流密切接触并不断交换分子。沸点较低那部分物料的分子相对更倾向于进入蒸气流，反之亦然。这种逆流蒸馏方法可用于分离轻水与重水，二者沸点相差1.4摄氏度。
 
-### GENERAL APPLICATION OF COUNTERCURRENT FLOW
+### GENERAL APPLICATION OF COUNTERCURRENT FLOW 逆流的普遍应用
 
 9.17. The method of countercurrent flow is useful not only in two-phase (liquid-gas) distillation processes, but also in other separation processes such as those involving diffusion resulting from temperature variations (gradients) within one-phase systems or from centrifugal forces. The countercurrents may consist of two gases, two liquids, or one gas and one liquid.
+逆流方法不仅适用于两相（液-气）蒸馏过程，也适用于其他分离过程，例如由单相系统内的温度变化（梯度）或离心力所引起的扩散过程。逆流可以是两股气体、两股液体，或一股气体与一股液体。
 
-### THE CENTRIFUGE
+### THE CENTRIFUGE 离心机
 
 9.18. We have pointed out that gravitational separation of two isotopes might occur since the gravitational forces tending to move the molecules downward are proportional to the molecular weights, and the intermolecular forces tending to resist the downward motion depend on the electronic configuration, not on the molecular weights. Since the centrifuge is essentially a method of applying pseudogravitational forces of large magnitude, it was early considered as a method for separating isotopes. However, the first experiments with centrifuges failed. Later development of the high speed centrifuge by J. W. Beams and others led to success. H. C. Urey suggested the use of tall cylindrical centrifuges with countercurrent flow; such centrifuges have been developed successfully.
+我们已经指出，两种同位素的引力分离可能发生，因为促使分子向下运动的引力与分子量成正比，而阻碍向下运动的分子间力取决于电子构型，与分子量无关。由于离心机本质上是一种施加巨大伪引力的方法，它很早就被认为是分离同位素的一种方法。然而，最初的离心机实验失败了。后来，J. W. 比姆斯（J. W. Beams）等人对高速离心机的发展取得了成功。H. C. 尤里（H. C. Urey）建议使用带逆流的高圆柱形离心机；这类离心机已被成功研制出来。
 
 9.19. In such a countercurrent centrifuge there is a downward flow of vapor in the outer part of the rotating cylinder and an upward flow of vapor in the central or axial region. Across the interface region between the two currents there is a constant diffusion of both types of molecules from one current to the other, but the radial force field of the centrifuge acts more strongly on the heavy molecules than on the light ones so that the concentration of heavy ones increases in the peripheral region and decreases in the axial region, and vice versa for the lighter molecules.
+在这种逆流离心机中，旋转圆筒外部区域有一股向下的蒸气流，中心或轴向区域有一股向上的蒸气流。在两股气流之间的界面区域，两类分子不断从一股气流扩散到另一股气流，但离心机的径向力场对重分子的作用强于对轻分子的作用，因此重分子的浓度在周边区域增高、在轴向区域降低，轻分子则相反。
 
 9.20. The great appeal of the centrifuge in the separation of heavy isotopes like uranium is that the separation factor depends on the difference between the masses of the two isotopes, not on the square root of the ratio of the masses as in diffusion methods.
+离心机在分离铀这类重同位素方面的巨大吸引力在于，其分离因子取决于两种同位素的质量差，而扩散法中分离因子取决于质量比的平方根。
 
-### THERMAL DIFFUSION METHOD
+### THERMAL DIFFUSION METHOD 热扩散法
 
 9.21. The kinetic theory of gases predicts the extent of the differences in the rates of diffusion of gases of different molecular weights. The possibility of accomplishing practical separation of isotopes by thermal diffusion was first suggested by theoretical studies of the details of molecular collisions and of the forces between molecules. Such studies made by Enskog and by Chapman before 1920 suggested that if there were a temperature gradient in a mixed gas there would be a tendency for one type of molecule to concentrate in the cold region and the other in the hot region. This tendency depends not only on the molecular weights but also on the forces between the molecules. If the gas is a mixture of two isotopes, the heavier isotope may accumulate at the hot region or the cold region or not at all, depending on the nature of the intermolecular forces. In fact, the direction of separation may reverse as the temperature or relative concentration is changed.
+气体动理论可以预测不同分子量气体扩散速率差异的大小。通过热扩散实现同位素实际分离的可能性，最初是由关于分子碰撞细节和分子间力的理论研究提出的。恩斯库格（Enskog）和查普曼（Chapman）在1920年以前所做的这类研究表明，若混合气体中存在温度梯度，则一种分子会倾向于在冷区聚集，另一种分子则倾向于在热区聚集。这种倾向不仅取决于分子量，还取决于分子间的力。若气体是两种同位素的混合物，则较重的同位素可能聚集在热区或冷区，也可能完全不聚集，这取决于分子间力的性质。事实上，随着温度或相对浓度的变化，分离方向可能反转。
 
 9.22. Such thermal diffusion effects were first used to separate isotopes by H. Clusius and G. Dickel in Germany in 1938. They built a vertical tube containing a heated wire stretched along the axis of the tube and producing a temperature difference of about 600 deg C. between the axis and the periphery. The effect was twofold. In the first place, the heavy isotopes (in the substances they studied) became concentrated near the cool outer wall, and in the second place, the cool gas on the outside tended to sink while the hot gas at the axis tended to rise. Thus thermal convection set up a countercurrent flow, and thermal diffusion caused the preferential flow of the heavy molecules outward across the interface between the two currents.
+1938年，德国的 H. 克卢修斯（H. Clusius）和 G. 迪克尔（G. Dickel）首次利用这种热扩散效应分离同位素。他们建造了一根竖直管，管内沿轴线张紧一根加热丝，在轴线与周边之间产生约600摄氏度的温差。其效应是双重的。首先，重同位素（在他们所研究的物质中）聚集在较冷的外壁附近；其次，外侧的冷气体趋于下沉，而轴线的热气体趋于上升。于是热对流形成了逆流，热扩散则使重分子优先向外穿过两股气流之间的界面。
 
 9.23. The theory of thermal diffusion in gases is intricate enough; that of thermal diffusion in liquids is practically impossible. A separation effect does exist, however, and has been used successfully to separate the light and heavy uranium hexafluorides
+气体中热扩散的理论已相当复杂；液体中热扩散的理论则几乎无法建立。然而，分离效应确实存在，并已被成功用于分离轻六氟化铀与重六氟化铀。
 
-### CHEMICAL EXCHANGE METHOD
+### CHEMICAL EXCHANGE METHOD 化学交换法
 
 9.24. In the introduction to this chapter we pointed out that there was some reason to hope that isotope separation might be accomplished by ordinary chemical reactions. It has in fact been found that in simple exchange reactions between compounds of two different isotopes the so-called equilibrium constant is not exactly one, and thus that in reactions of this type separation can occur. For example, in the catalytic exchange of hydrogen atoms between hydrogen gas and water, the water contains between three and four times as great a concentration of deuterium as the hydrogen gas in equilibrium with it. With hydrogen and water vapor the effect is of the same general type but equilibrium is more rapidly established. It is possible to adapt this method to a continuous countercurrent flow arrangement like that used in distillation, and such arrangements are actually in use for production of heavy water. The general method is well understood, and the separation effects are known to decrease in general with increasing molecular weight, so that there is but a small chance of applying this method successfully to heavy isotopes like uranium.
+在本章的引言中我们指出，有理由希望同位素分离可以通过普通化学反应来实现。事实上已经发现，在两种不同同位素的化合物之间的简单交换反应中，所谓平衡常数并不恰好等于1，因此在这类反应中可以发生分离。例如，在氢气与水的氢原子催化交换中，水中的氘浓度是与水平衡的氢气中氘浓度的三到四倍。对于氢与水蒸气，效应属于同一大类，但平衡建立得更快。可以把这种方法改造为类似蒸馏中所用的连续逆流装置，而且这种装置实际上已用于生产重水。一般方法已为人们所充分理解，并且已知分离效应通常随分子量增加而减小，因此将这种方法成功应用于铀这类重同位素的机会很小。
 
-### ELECTROLYSIS METHOD
+### ELECTROLYSIS METHOD 电解法
 
 9.25. The electrolysis method of separating isotopes resulted from the discovery that the water contained in electrolytic cells used in the regular commercial production of hydrogen and oxygen has an increased concentration of heavy water molecules A full explanation of the effect has not yet been worked out. Before the war practically the entire production of heavy hydrogen was by the electrolysis method. By far the greatest production was in Norway, but enough for many experimental purposes had boen made in the United States.
+分离同位素的电解法源于以下发现：在常规商业制氢和制氧所使用的电解槽中，水所含重水分子的浓度有所增加。该效应的完整解释尚未研究出来。战前几乎全部重氢的生产都采用电解法。产量远居首位的是挪威，但美国也已制得足够供许多实验之用的重氢。
 
-### STATISTICAL METHODS IN GENERAL
+### STATISTICAL METHODS IN GENERAL 统计方法概述
 
 9.26. The six methods of isotope separation we have described so far (diffusion, distillation, centrifugation, thermal diffusion, exchange reactions, and electrolysis) have all been tried with some degree of success on either uranium or hydrogen or both. Each of these methods depends on small differences in the *average* behavior of the molecules of different isotopes. Because an average is by definition a statistical matter, all such methods depending basically on average behavior are called statistical methods.
+到目前为止我们描述的六种同位素分离方法（扩散、蒸馏、离心、热扩散、交换反应和电解）都已在铀或氢或二者上试行过，并取得了一定程度的成功。这些方法中的每一种都依赖于不同同位素分子在*平均*行为上的微小差异。由于平均值按定义是一个统计问题，所有基本上依赖平均行为的方法都称为统计方法。
 
 9.27. With respect to the criteria set up for judging separation processes the six statistical methods are rather similar. In every case the separation factor is small so that many successive stages of separation are required. In most cases relatively large quantities of material can be handled in plants of moderate size. The hold- up and starting-time values vary considerably but are usually high. The similarity of the six methods renders it inadvisable to make final choice of method without first studying in detail the particular isotope, production rate, etc., wanted. Exchange reaction and electrolysis methods are probably unsuitable in the case of uranium, and no distillation scheme for uranium has survived. AIl of the other three methods have been developed with varying degrees of success for uranium, but are not used for hydrogen.
+就为评判分离过程而设定的标准而言，这六种统计方法相当相似。在每一种情况下，分离因子都很小，因此需要许多连续的分离级。在大多数情况下，中等规模的工厂即可处理相对大量的物料。滞留量和启动时间的数值差别很大，但通常都较高。这六种方法的相似性使得人们不宜在未详细研究所需的具体同位素、生产速率等之前就最终选定方法。交换反应法和电解法可能不适用于铀，而且没有任何针对铀的蒸馏方案保留下来。其他三种方法都已针对铀加以发展，并取得不同程度的成功，但都不用于氢。
 
-### THE ELECTROMAGNETIC METHOD AND ITS LIMITATIONS
+### THE ELECTROMAGNETIC METHOD AND ITS LIMITATIONS 电磁方法及其局限
 
 9.28. The existence of non-radioactive isotopes was first demonstrated during the study of the behavior of ionized gas molecules moving through electric and magnetic fields. It is just such fields that form the basis of the so-called mass spectrographic or electromagnetic method of separating isotopes.
 
 <Figure src="/public/smyth-report/ion.jpg" alt="Electromagnetic method of separating isotopes" />
 
 This method is the best available for determining the relative abundance of many types of isotope. The method is used constantly in checking the results of the uranium isotope separation methods we have already described. The reason the method is so valuable is that it can readily effect almost complete separation of the isotopes very rapidly and with small hold-up and short start-up time. If this is so, it may well be asked why any other method of separation is considered. The answer is that an ordinary mass spectrograph can handle only very minute quantities of material, usually of the order of fractions of a microgram per hour.
+非放射性同位素的存在，最初是在研究电离气体分子通过电场和磁场的行为时得到证明的。正是这类场构成了所谓质谱法或电磁法分离同位素的基础。这种方法是在测定多种同位素相对丰度方面可用的最佳方法。该方法不断用于检验我们上文所述铀同位素分离方法的结果。这种方法之所以如此有价值，是因为它能够迅速、便捷地实现同位素的几乎完全分离，且滞留量小、启动时间短。既然如此，人们自然会问，为什么还要考虑其他任何分离方法。答案是：普通质谱仪只能处理极其微量的物料，通常约为每小时几分之一微克。
 
 9.29. To understand the reasons for this limitation in the yield, we shall outline the principle of operation of a simple type of mass spectrograph first used by A. J. Dempster in 1918. Such an instrument is illustrated schematically in the drawing on [p. 164](https://www.atomicarchive.com/resources/documents/smyth-report/#ion). The gaseous compound to be separated is introduced in the ion source, where some of its molecules are ionized in an electric discharge. Some of these ions go through the slit s1. Between s1 and s2 they are accelerated by an electric field which gives them all practically the same kinetic energy, thousands of times greater than their average thermal energy. Since they now all have practically the same kinetic energy, the lighter ions must have less momenta than the heavy ones. Entering the magnetic field at the slit s2 all the ions will move perpendicular to the magnetic field in semi-circular paths of radii proportional to their momenta. Therefore the light ions will move in smaller semicircles than the heavy, and with proper positioning of the collector, only the light ions will be collected.
+为了理解产率受到这一限制的原因，我们将概述 A. J. 登普斯特（A. J. Dempster）于1918年首次使用的一种简单质谱仪的工作原理。这种仪器示意性地表示在[第164页](https://www.atomicarchive.com/resources/documents/smyth-report/#ion)的图中。待分离的气态化合物被引入离子源，其中部分分子在放电中被电离。其中一些离子通过狭缝 s1。在 s1 与 s2 之间，它们被电场加速，该电场使它们实际上获得相同的动能，比其平均热能大数千倍。由于它们现在实际上具有相同的动能，较轻的离子动量必定小于较重的离子。所有离子在狭缝 s2 处进入磁场后，都将垂直于磁场沿半圆形路径运动，其半径与动量成正比。因此，轻离子将沿较小的半圆运动，而重离子沿较大的半圆运动；只要收集器位置适当，就只有轻离子会被收集。
 
 9.30. Postponing detailed discussion of such a separation device, we may point out the principal considerations that limit the amount of material that passes through it. They are threefold: First, it is difficult to produce large quantities of gaseous ions. Second, a sharply limited ion beam is usually employed (as in the case shown) so that only a fraction of the ions produced are used. Third, too great densities of ions in a beam can cause space-charge effects which interfere with the separating action. Electromagnetic methods developed before 1941 had very high separation factors but very low yields and efficiencies. These were the reasons which - before the summer of 1941 - led the Uranium Committee to exclude such methods for large-scale separation of U-235. (See [Paragraph 4:31](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_iv.html#4_31).) Since that time it has been shown that the limitations are not insuperable. In fact, the first appreciable-size samples of pure U-235 were produced by an electromagnetic separator, as will be described in a later chapter.
+在推迟详细讨论这种分离装置之前，我们可以指出限制通过该装置的物料量的主要因素。共有三个方面：第一，难以产生大量气态离子。第二，通常采用严格受限的离子束（如所示情形），因此所产生的离子中只有一部分被利用。第三，束中离子密度过大会引起空间电荷效应，干扰分离作用。1941年以前发展的电磁方法具有很高的分离因子，但产率和效率很低。正是这些原因，使铀委员会在1941年夏天之前将这类方法排除在铀-235的大规模分离之外。（见[第4.31段](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_iv.html#4_31)。）自那时以来，人们已证明这些限制并非不可克服。事实上，最初可观的纯铀-235样品正是由电磁分离器生产的，这将在后面一章中描述。
 
-### OTHER ISOTOPE-SEPARATION METHODS
+### OTHER ISOTOPE-SEPARATION METHODS 其他同位素分离方法
 
 9.31. In addition to the isotope-separation methods described above, several other methods have been tried. These include the ionic mobility method, which, as the name implies, depends on the following fact: In an electrolytic solution two ions which are chemically identical but of different mass progress through the solution at different rates under the action of an electric field. However, the difference of mobility will be small and easily obscured by disturbing effects. A. K. Brewer of the Bureau of Standards reported that he was able to separate the isotopes of potassium by this method. Brewer also obtained some interesting results with an evaporation method. Two novel electromagnetic methods, the isotron and the ionic centrifuge, are described in [Chapter XI](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_xi.html). The isotron produced a number of fair-size samples of partly separated uranium. The ionic centrifuge also produced some uranium samples showing separation, but its action was erratic.
+除上述同位素分离方法之外，还尝试过若干其他方法。其中包括离子迁移率法；顾名思义，它依赖于以下事实：在电解溶液中，两种化学性质相同但质量不同的离子在电场作用下以不同速率通过溶液。然而，迁移率的差异将很小，且容易被干扰效应所掩盖。标准局的 A. K. 布鲁尔（A. K. Brewer）报告说，他能够用这种方法分离钾的同位素。布鲁尔还用一种蒸发法取得了一些有趣的结果。两种新颖的电磁方法，即同位素分离器（isotron）和离子离心机，在[第十一章](https://www.atomicarchive.com/resources/documents/smyth-report/smyth_xi.html)中描述。同位素分离器生产了若干份中等大小的部分分离铀样品。离子离心机也生产了一些显示出分离的铀样品，但其作用不稳定。
 
-### CASCADES AND COMBINED PROCESSES
+### CASCADES AND COMBINED PROCESSES 级联与联合流程
 
 9.32. In all the statistical methods of separating isotopes many successive stages of separation are necessary to get material than is 90 per cent or more U-235 or deuterium. Such a series of successive separating stages is called a cascade if the flow is continuous from one stage to the next. (A fractionating tower of separate plates such as has been described is an example of a simple cascade of separating units.) A complete analysis of the problems of a cascade might be presented in general terms. Actually it has been worked out by R. P. Feynman of Princeton and others for a certain type of electromagnetic separator and by K. Cohen and I. Kaplan of Columbia, by M. Benedict and A. M. Squires of the Kellex Corporation and others for diffusion processes. At present we shall make only two points about multiple- stage or ”cascade” plants.
+在所有统计式同位素分离方法中，要获得90%或更高铀-235或氘的物料，都需要许多连续的分离级。若物流从一级连续流到下一级，这样一系列连续的分离级就称为级联。（前文所述由各分离板组成的分馏塔就是简单级联分离装置的一例。）级联问题的完整分析可以用一般性术语来表述。实际上，普林斯顿的 R. P. 费曼（R. P. Feynman）等人已针对某一类电磁分离器完成了这一分析，哥伦比亚的 K. 科恩（K. Cohen）和 I. 卡普兰（I. Kaplan）、凯莱克斯公司的 M. 本尼迪克特（M. Benedict）和 A. M. 斯夸尔斯（A. M. Squires）等人已针对扩散过程完成了这一分析。目前我们只就多级或“级联”工厂说明两点。
 
 9.33. The first point is that there must be recycling. Considering a U-235 separation plant, the material fed into any stage above the first has already been enriched in U-235. Part of this feed material may be further enriched in passing through the stage under consideration. The remainder will typically become impoverished but not so much impoverished as to be valueless. It must be returned to an earlier stage and recycled. Even the impoverished material from the first (least enriched) stage may be worth recycling; some of the U-235 it still contains may be recovered (stripped).
+第一点是必须有再循环。考虑一座铀-235分离工厂，送入第一级以上任何一级的物料已经浓缩了铀-235。这部分进料在通过所考虑的该级时，可能有一部分被进一步浓缩。其余部分通常会变得贫化，但贫化程度尚不至于毫无价值。必须把它送回较早的级进行再循环。甚至第一级（浓缩程度最低）出来的贫化物料也可能值得再循环；其中仍含有的一些铀-235可以回收（剥离）。
 
 9.34. The second point is that the recycling problem changes greatly at the higher (more enriched) stages. Assuming steady stage operation, we see that the net flow of uranium through the first stage must be at least 140 times as great as through the last stage. The net flow in any given stage is proportional to the relative concentration of U-238 and thus decreases with the number of stages passed. Since any given sample of material is recycled many times, the amount of material processed in any stage is far greater than the net flow through that stage but is proportional to it.
+第二点是，再循环问题在较高（浓缩程度较高）的级会发生很大变化。假定各级稳定运行，我们可以看到，通过第一级的铀净流量必须至少是通过最后一级净流量的140倍。任何给定级中的净流量与铀-238的相对浓度成正比，因而随所经过的级数增加而减小。由于任何给定物料样品都要再循环许多次，任一级中处理的物料量远大于通过该级的净流量，但与净流量成正比。
 
 9.35. We mention these points to illustrate a phase of the separation problem that is not always obvious, namely, that the separation process which is best for an early stage of separation is not necessarily best for a later stage. Factors such as those we have mentioned differ not only from stage to stage but from process to process. For example, recycling is far simpler in a diffusion plant than in an electromagnetic plant. A plant combining two or more processes may well be the best to accomplish the overall separation required. In the lower (larger) stages the size of the equipment and the power required for it may determine the choice of process. In the higher (smaller) stages these factors are outweighed by convenience of operation and hold-up time, which may point to a different process.
+我们提到这些点，是为了说明分离问题中一个并非总是显而易见的方面，即：最适合早期分离阶段的分离过程未必最适合后期阶段。我们提到的那些因素不仅随级而异，也随方法而异。例如，扩散工厂中的再循环远比电磁工厂简单。把两种或更多种方法结合起来的工厂，很可能最适合完成所需的总体分离。在较低（较大）的级中，设备规模和所需动力可能决定方法的选择。在较高（较小）的级中，这些因素的重要性不及操作便利性和滞留时间，而后者可能指向另一种方法。
 
-### THE HEAVY WATER PLANTS; THE CENTRIFUGE PILOT PLANT
+### THE HEAVY WATER PLANTS; THE CENTRIFUGE PILOT PLANT 重水工厂；离心机中间工厂
 
 9.36. The next two chapters are devoted to descriptions of the three methods used for large-scale separation of the uranium isotopes. These are the only isotope-separation plants that have turned out to be of major importance to the project up to the present lime. At an earlier stage it seemed likely that the centrifuge might be the best method for separating the uranium isotopes and that heavy water would be needed as a moderator. We shall describe briefly the centrifuge pilot plant and the heavy water production plants.
+接下来两章专门描述用于大规模分离铀同位素的三种方法。这些是迄今为止对项目具有重大意义的唯一几类同位素分离工厂。在较早阶段，离心机似乎可能是分离铀同位素的最佳方法，而且可能需要重水作为慢化剂。我们将简要描述离心机中间工厂和重水生产工厂。
 
-### THE HEAVY WATER PLANTS
+### THE HEAVY WATER PLANTS 重水工厂
 
 9.37. Two methods were used for the concentration of deuterium. These were the fractional distillation of water and the hydrogen-water exchange reaction method.
+采用了两种方法浓缩氘。这两种方法是水的分馏和氢-水交换反应法。
 
 9.38. The first of these follows well established fractional distillation methods except that very extensive distillation is required because of the slight difference in boiling point of light and heavy water. Also, because of this same small difference, the amount of steam required is very large. The method is very expensive because of these factors, but plants could be constructed with a minimum of development work. Plants were started by du Pont in January 1943, and were put into operation about January 1944.
+第一种方法沿用成熟的分馏方法，只是由于轻水与重水沸点差异很小，需要进行非常充分的蒸馏。同样由于这一微小差异，所需蒸汽量非常大。由于这些因素，该方法成本很高，但工厂可以在最少的研究发展工作下建成。杜邦公司于1943年1月开始建设这些工厂，并于1944年1月左右投入运行。
 
 9.39. The second method for the preparation of heavy water depends upon the catalytic exchange of deuterium between hydrogen gas and water. When such an exchange is established by catalysts, the concentration of the deuterium in the water is greater than that in the gas by a factor of about three as we have already seen.
+制备重水的第二种方法依赖于氘在氢气与水之间的催化交换。当这种交换由催化剂建立时，如我们已看到的，水中氘的浓度约为气体中氘浓度的三倍。
 
 9.40. In this process water is fed into a tower and flows countercurrently to hydrogen and steam in an intricate manner. At the bottom of the tower the water is converted to hydrogen gas and oxygen gas in electrolytic cells and the hydrogen is fed back to the bottom of the tower mixed with steam. This steam and hydrogen mixture passes through beds of catalyst and bubbles through the downflowing water. Essentially, part of the deuterium originally in the hydrogen concentrates in the steam and then is transferred to the downflowing water. The actual plant consists of a cascade of towers with the largest towers at the feed end and the smallest towers at the production end. Such a cascade follows the same general principle as those discussed above in connection with separation problems in general. This process required the securing of very active catalysts for the exchange reactions. The most effective catalyst of this type was discovered by H. S. Taylor at Princeton University, while a second, less active catalyst was discovered by A. von Grosse. In the development of these catalysts R. H. Crist of Columbia University made he necessary determinations of physical constants and H. R. Arnold of du Pont did the development work on one of the catalysts.
+在该过程中，水被送入塔内，并以复杂的方式与氢气和蒸汽逆流流动。在塔底，水在电解槽中转化为氢气和氧气，氢气与蒸汽混合后回送到塔底。这种蒸汽与氢气的混合物通过催化剂床层，并鼓泡穿过向下流动的水。实质上，原在氢气中的部分氘浓缩到蒸汽中，然后转移到向下流动的水中。实际工厂由一系列塔组成的级联构成，进料端为最大的塔，生产端为最小的塔。这样的级联遵循与上文在一般分离问题中讨论的那些级联相同的一般原理。该过程需要获得用于交换反应的活性很高的催化剂。这类催化剂中最有效的一种由普林斯顿大学的 H. S. 泰勒（H. S. Taylor）发现，第二种活性较低的催化剂由 A. 冯·格罗斯（A. von Grosse）发现。在这些催化剂的研制过程中，哥伦比亚大学的 R. H. 克里斯特（R. H. Crist）完成了必要的物理常数测定，杜邦公司的 H. R. 阿诺德（H. R. Arnold）完成了其中一种催化剂的研制工作。
 
 9.41. This process was economical in operation. The plant was placed at the works of the Consolidatcd Mining&amp; Smelting Co., at Trail, British Columbia, Canada, because of the necessity of using electrolytic hydrogen. The construction of the plant was under the direction of E. V. Murphree and F. T. Barr of the Standard Oil Development Co.
+该过程在运行上是经济的。由于必须使用电解氢，工厂设在加拿大不列颠哥伦比亚省特雷尔的联合采矿与冶炼公司（Consolidated Mining & Smelting Co.）厂区内。工厂建设由标准石油开发公司的 E. V. 墨菲（E. V. Murphree）和 F. T. 巴尔（F. T. Barr）指导。
 
-### THE CENTRIFUGE PILOT PLANT
+### THE CENTRIFUGE PILOT PLANT 离心机中间工厂
 
 9.42. For a long time in the early days of the project the gaseous diffusion method and the centrifuge method were considered the two separation methods most likely to succeed with uranium. Both were going to be difficult to realize on a large scale. After the reorganization in December 1941 research and development on the centrifuge method continued at the University of Virginia and at the Standard Oil Development Company’s laboratory at Bayway. To make large centrifuges capable of running at very high speeds was a major task undertaken by the Westinghouse Electric and Manufacturing Company of East Pittsburgh.
+在项目早期的很长一段时间里，气体扩散法和离心机法被认为是两种最有可能成功用于铀的分离方法。二者都难以在大规模上实现。1941年12月改组后，离心机法的研究与发展在弗吉尼亚大学和标准石油开发公司位于贝韦的实验室继续进行。制造能够以极高速度运行的大型离心机，是东匹兹堡的西屋电气与制造公司承担的一项重大任务。
 
 9.43. Because of the magnitude of the engineering problems involved, no large-scale production plant was ever authorized but a pilot plant was authorized and constructed at Bayway. It was operated successfully and gave approximately the degree of separation predicted by theory. This plant was later shut down and work on the centrifuge method was discontinued. For this reason no further discussion of the centrifuge method is given in this report.
+由于所涉及的工程问题规模巨大，始终未批准建设大规模生产工厂，但批准并在贝韦建造了一座中间工厂。该厂运行成功，并达到了理论所预测的分离程度。该厂后来关闭，离心机法的工作也随之停止。因此，本报告不再进一步讨论离心机法。
 
-### ISOTOPE SEPARATION COMPARED WITH PLUTONIUM PRODUCTION
+### ISOTOPE SEPARATION COMPARED WITH PLUTONIUM PRODUCTION 同位素分离与钚生产的比较
 
 9.44. The most important methods of isotope separation that have been described were known in principle and had been reduced to practice before the separation of uranium isotopes became of paramount importance. They had not been applied to uranium except for the separation of a few micrograms, and they had not been applied to any substance on a scale comparable to that now required. But the fundamental questions were of costs, efficiency, and time, not of principle; in other words, the problem was fundamentally technical, not scientific. The plutonium production problem did not reach a similar stage until after the first self-sustaining chain-reacting pile had operated and the first microgram amounts of plutonium had been separated. Even after this stage many of the experiments done on the plutonium project were of vital interest for the military use either of U-235 or plutonium and for the future development of nuclear power. As a consequence, the plutonium project has continued to have a more general interest than the isotope separation projects. Many special problems arose in the separation projects which were extremely interesting and required a high order of scientific ability for their solution but which must still be kept secret. It is for such reasons that the present non-technical report has given first emphasis to the plutonium project and will give less space to the separation projects. This is not to say that the separation problem was any easier to solve or that its solution was any less important.
+所描述的最重要的同位素分离方法，在铀同位素分离变得至关重要之前，其原理已为人所知并已付诸实践。除分离几微克之外，它们尚未应用于铀，也从未应用于任何物质而达到如今所需的规模。但根本问题在于成本、效率和时间，而不在于原理；换言之，问题本质上是技术性的，而非科学性的。钚生产问题直到第一个自持链式反应堆运行、并分离出最初几微克钚之后，才达到类似的阶段。甚至在这一阶段之后，钚项目上所进行的许多实验，对铀-235或钚的军事用途以及核动力的未来发展都具有重大意义。因此，与同位素分离项目相比，钚项目一直具有更为普遍的意义。分离项目中出现了许多特殊问题，这些问题极其引人入胜，需要很高水平的科学才能方能解决，但仍必须保密。正是由于这些原因，本非技术性报告首先强调钚项目，而对分离项目给予较少的篇幅。这并不是说分离问题更容易解决，也不是说其解决不那么重要。
 
-### SUMMARY
+### SUMMARY 小结
 
 9.45. Except in electromagnetic separators, isotope separation depends on small differences in the average behavior of molecules. Such effects are used in six ”statistical” separation methods- (1) gaseous diffusion, (2) distillation, (3) centrifugation, (4) thermal diffusion, (5) exchange reactions, (6) electrolysis. Probably only (1), (3), and (4) are suitable for uranium; (2), (5), and (6) are preferred for the separation of deuterium from hydrogen. In all these ”statistical” methods the separation factor is small so that many stages are required, but in the case of each method large amounts of material may be handled. All these methods had been tried with some success before 1940; however, none had been used on a large scale and none had been used for uranium. The scale of production by electromagnetic methods was even smaller but the separation factor was larger. There were apparent limitations of scale for the electromagnetic method. There were presumed to be advantages in combining two or more methods because of the differences in performance at different stages of separation. The problem of developing any or all of these separation methods was not a scientific one of principle but a technical one of scale and cost. These developments can therefore be reported more briefly than those of the plutonium project although they are no less important. A pilot plant was built using centrifuges and operated successfully. No large-scale plant was built. Plants were built for the production of heavy water by two different methods.
+除电磁分离器外，同位素分离依赖于分子平均行为的微小差异。这类效应用于六种“统计”分离方法——(1) 气体扩散，(2) 蒸馏，(3) 离心，(4) 热扩散，(5) 交换反应，(6) 电解。可能只有 (1)、(3) 和 (4) 适用于铀；(2)、(5) 和 (6) 则更适合用于从氢中分离氘。在所有这类“统计”方法中，分离因子都很小，因此需要许多级，但对每种方法而言都可以处理大量物料。所有这些方法在1940年以前都已试行并取得一定成功；然而，没有一种曾用于大规模生产，也没有一种曾用于铀。电磁方法的生产规模更小，但分离因子更大。电磁方法在规模上存在明显的限制。由于不同分离阶段的性能差异，人们推测把两种或更多种方法结合起来具有优势。发展这些分离方法中的任何一种或全部，都不是原理性的科学问题，而是规模与成本的技术问题。因此，这些进展可以比钚项目的进展更为简要地报告，尽管其重要性毫不逊色。曾建造一座使用离心机的中间工厂并成功运行。未建造大规模工厂。曾用两种不同方法建造重水生产工厂。
