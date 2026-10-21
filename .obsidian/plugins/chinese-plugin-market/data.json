@@ -1,0 +1,70 @@
+{
+  "useMyMemory": true,
+  "useTransmart": true,
+  "sourceFilter": "all",
+  "aiSearchEnabled": false,
+  "aiSearchModel": "deepseek-chat",
+  "aiSearchShowReason": false,
+  "querySamplingEnabled": false,
+  "querySamplingEndpoint": "",
+  "querySamplingRate": 0.1,
+  "embeddingSource": "keyword",
+  "embeddingModel": "text-embedding-3-small",
+  "embeddingLocalModel": "Xenova/multilingual-e5-small",
+  "embeddingLocalWasmPaths": "",
+  "embeddingRemoteHost": "",
+  "mirrorSource": "github",
+  "mirrorCustomBase": "",
+  "sortBy": "relevance",
+  "favoriteGroupNames": [],
+  "favoriteGroupOf": {},
+  "compare": [],
+  "tmFolder": "",
+  "reviewFolder": "",
+  "newWithinDays": null,
+  "updatedWithinDays": null,
+  "defaultNewWithinDays": null,
+  "defaultUpdatedWithinDays": null,
+  "showHealthBadge": true,
+  "demoteAtRisk": false,
+  "healthHealthyDays": 120,
+  "healthAgingDays": 365,
+  "trendSampling": true,
+  "trendIntervalMs": 21600000,
+  "trendKeepDays": 90,
+  "notifyInstalledUpdates": true,
+  "nameDisplay": "translated",
+  "profiles": [],
+  "translateSettingsEnabled": false,
+  "translateSettingsProvider": "free",
+  "translateSettingsBlacklist": "",
+  "settingsTranslateCache": {},
+  "manage": {
+    "enabled": true,
+    "pluginGroups": {
+      "all": "全部",
+      "other": "其他"
+    },
+    "pluginGroupColors": {},
+    "pluginMeta": {},
+    "filterState": {
+      "keyword": "",
+      "group": "all",
+      "status": "all"
+    },
+    "cssGroups": {
+      "all": "全部",
+      "other": "其他"
+    },
+    "cssGroupColors": {},
+    "cssMeta": {},
+    "cssFilterState": {
+      "keyword": "",
+      "group": "all",
+      "status": "all"
+    }
+  },
+  "betaPlugins": [],
+  "betaAutoUpdate": false,
+  "pluginVersionPins": {}
+}
