@@ -5,9 +5,10 @@
  * 只能在服务端 / 构建期使用：它直接读 content/ 目录，依赖 node:fs。
  *
  * 目录约定（写作规范见 content/README.md）：
- *   content/<lang>/posts/ 下所有 .md          文章；slug 由文件路径推导，可用 frontmatter 覆盖
- *   content/<lang>/posts/ 下 _index.md        该目录的「卡组」元数据（标题 / 描述 / 顺序 / 封面）
- *   content/<lang>/posts/ 下 README.md        写作规范，加载器显式跳过，不算文章
+ *   content/posts/ 下所有 .md          博客文章；slug 由文件路径推导，可用 frontmatter 覆盖
+ *   content/docs/ 下所有 .md           资料；与文章同一套管线，只是默认不进归档 / 标签 / 订阅源
+ *   content/<collection>/ 下 _index.md 该目录的「卡组」元数据（标题 / 描述 / 顺序 / 封面）
+ *   content/<collection>/ 下 README.md 写作规范，加载器显式跳过，不算文章
  *
  * 硬性要求：零文章、目录不存在、public/ 不存在时，所有查询都返回空数组 / null，
  * 站点必须仍能构建与浏览（空状态由第 9~13 项的 UI 负责）。
@@ -27,9 +28,13 @@ import {
   type ParsedDocument,
   type ReferenceEntry,
 } from "./frontmatter";
-import { LANGS, type Lang } from "./lang";
 
 export type { FrontmatterFormat, ReferenceEntry };
+
+/** 内容集合：博客文章与资料共用同一套读取 / 渲染管线，只是根目录不同 */
+export type Collection = "posts" | "docs";
+
+export const COLLECTIONS: Collection[] = ["posts", "docs"];
 
 /* ------------------------------- 常量 ------------------------------- */
 
@@ -59,7 +64,7 @@ export class ContentError extends Error {
 /* ------------------------------- 类型 ------------------------------- */
 
 export interface CardGroupMeta {
-  lang: Lang;
+  collection: Collection;
   /** 目录相对路径（"" 表示 posts 顶层） */
   slug: string;
   /** 卡组名：_index.md 的 title，没写时留空串由 UI 兜底 */
@@ -79,10 +84,10 @@ export interface CardGroupMeta {
 }
 
 export interface PostMeta {
-  lang: Lang;
+  collection: Collection;
   /** 路由 slug，可能含 "/"（对应嵌套目录） */
   slug: string;
-  /** 站内路径，形如 /zh/posts/hello/ */
+  /** 站内路径，形如 /posts/hello/ 或 /docs/atomic-energy-for-military-purposes/01-introduction/ */
   href: string;
   /** 源文件路径（相对仓库根），报错与排查用 */
   file: string;
@@ -156,7 +161,6 @@ export interface ArchiveYear {
 }
 
 export interface ContentStats {
-  lang: Lang | "all";
   posts: number;
   drafts: number;
   words: number;
@@ -202,12 +206,12 @@ function relativeToRoot(absolutePath: string): string {
   return path.relative(REPO_ROOT, absolutePath).split(path.sep).join("/");
 }
 
-function postsDir(lang: Lang): string {
-  return path.join(CONTENT_DIR, lang, "posts");
+function collectionDir(collection: Collection): string {
+  return path.join(CONTENT_DIR, collection);
 }
 
-function postsAbsolutePath(lang: Lang, rel: string): string {
-  return path.join(postsDir(lang), ...rel.split("/"));
+function collectionAbsolutePath(collection: Collection, rel: string): string {
+  return path.join(collectionDir(collection), ...rel.split("/"));
 }
 
 function posixDirname(rel: string): string {
@@ -236,17 +240,17 @@ function parseDocumentFor(absolutePath: string, source: string): ParsedDocument 
 /* ------------------------------ 目录扫描 ------------------------------ */
 
 interface ScanResult {
-  /** 文章（相对 content/<lang>/posts 的 posix 路径） */
+  /** 文章（相对 content/<collection> 的 posix 路径） */
   files: string[];
   /** 出现过的目录（含 ""，posix 路径） */
   directories: string[];
-  /** _index.md（相对 content/<lang>/posts 的 posix 路径） */
+  /** _index.md（相对 content/<collection> 的 posix 路径） */
   indexes: string[];
 }
 
-function scanPosts(lang: Lang): ScanResult {
+function scanCollection(collection: Collection): ScanResult {
   const result: ScanResult = { files: [], directories: [""], indexes: [] };
-  walk(postsDir(lang), "", result);
+  walk(collectionDir(collection), "", result);
   result.files.sort();
   result.indexes.sort();
   result.directories = [...new Set(result.directories)].sort();
@@ -293,14 +297,14 @@ function walk(dir: string, base: string, result: ScanResult): void {
 
 /* ------------------------------ 卡组 ------------------------------ */
 
-function buildGroups(lang: Lang, scan: ScanResult): Map<string, CardGroupMeta> {
+function buildGroups(collection: Collection, scan: ScanResult): Map<string, CardGroupMeta> {
   const groups = new Map<string, CardGroupMeta>();
 
   const ensure = (slug: string): CardGroupMeta => {
     const existing = groups.get(slug);
     if (existing) return existing;
     const created: CardGroupMeta = {
-      lang,
+      collection,
       slug,
       title: "",
       description: "",
@@ -319,7 +323,7 @@ function buildGroups(lang: Lang, scan: ScanResult): Map<string, CardGroupMeta> {
   for (const dir of scan.directories) ensure(dir);
 
   for (const rel of scan.indexes) {
-    const absolutePath = postsAbsolutePath(lang, rel);
+    const absolutePath = collectionAbsolutePath(collection, rel);
     const document = parseDocumentFor(absolutePath, readUtf8(absolutePath));
     const fm = document.data;
 
@@ -408,16 +412,14 @@ function normalizeCoverPath(value: string): string {
   return value.startsWith("/") ? value : `/${value}`;
 }
 
-/** 在 public/thumbnails、public/covers 下按 slug 找图（含语言子目录） */
-function findCoverInPublic(lang: Lang, slug: string): string | null {
+/** 在 public/thumbnails、public/covers 下按 slug 找图 */
+function findCoverInPublic(slug: string): string | null {
   const keys = [slug, slug.split("/").pop() ?? slug];
   for (const dir of COVER_DIRS) {
-    for (const prefix of [`${dir}/${lang}/`, `${dir}/`]) {
-      for (const key of keys) {
-        for (const extension of COVER_EXTENSIONS) {
-          const rel = `${prefix}${key}.${extension}`;
-          if (existsInPublic(rel)) return `/${rel}`;
-        }
+    for (const key of keys) {
+      for (const extension of COVER_EXTENSIONS) {
+        const rel = `${dir}/${key}.${extension}`;
+        if (existsInPublic(rel)) return `/${rel}`;
       }
     }
   }
@@ -499,11 +501,11 @@ interface BuiltPost {
 }
 
 function buildPost(
-  lang: Lang,
+  collection: Collection,
   rel: string,
   groups: Map<string, CardGroupMeta>,
 ): BuiltPost {
-  const absolutePath = postsAbsolutePath(lang, rel);
+  const absolutePath = collectionAbsolutePath(collection, rel);
   const source = readUtf8(absolutePath);
   const document = parseDocumentFor(absolutePath, source);
   const fm = document.data;
@@ -530,7 +532,7 @@ function buildPost(
     cover = normalizeCoverPath(frontmatterCover);
     coverSource = "frontmatter";
   } else {
-    const fromPublic = findCoverInPublic(lang, slug);
+    const fromPublic = findCoverInPublic(slug);
     if (fromPublic) {
       cover = fromPublic;
       coverSource = "public";
@@ -546,9 +548,9 @@ function buildPost(
   const wordCount = countWords(body);
 
   const meta: PostMeta = {
-    lang,
+    collection,
     slug,
-    href: `/${lang}/posts/${slug}/`,
+    href: `/${collection}/${slug}/`,
     file: relativeToRoot(absolutePath),
     format: document.format,
     title,
@@ -584,9 +586,9 @@ function buildPost(
   return { meta, body, source };
 }
 
-/* ------------------------------ 分语言缓存 ------------------------------ */
+/* ------------------------------ 集合缓存 ------------------------------ */
 
-interface LangCache {
+interface CollectionCache {
   posts: PostMeta[];
   groups: CardGroupMeta[];
   bodies: Map<string, string>;
@@ -594,30 +596,30 @@ interface LangCache {
   sources: Map<string, string>;
 }
 
-const cache = new Map<Lang, LangCache>();
+const cache = new Map<Collection, CollectionCache>();
 
 function isProduction(): boolean {
   return process.env.NODE_ENV === "production";
 }
 
-function loadLang(lang: Lang): LangCache {
-  const cached = cache.get(lang);
+function loadCollection(collection: Collection): CollectionCache {
+  const cached = cache.get(collection);
   if (cached && isProduction()) return cached;
 
-  const scan = scanPosts(lang);
-  const groups = buildGroups(lang, scan);
+  const scan = scanCollection(collection);
+  const groups = buildGroups(collection, scan);
   const posts: PostMeta[] = [];
   const bodies = new Map<string, string>();
   const sources = new Map<string, string>();
   const seen = new Map<string, string>();
 
   for (const rel of scan.files) {
-    const built = buildPost(lang, rel, groups);
+    const built = buildPost(collection, rel, groups);
 
     const previous = seen.get(built.meta.slug);
     if (previous && previous !== rel) {
       throw new ContentError(
-        `slug 冲突：content/${lang}/posts/${previous} 与 ${rel} 都解析成 "${built.meta.slug}"，` +
+        `slug 冲突：content/${collection}/${previous} 与 ${rel} 都解析成 "${built.meta.slug}"，` +
           "请在其中一个文件的 frontmatter 里写 slug 区分",
       );
     }
@@ -636,8 +638,8 @@ function loadLang(lang: Lang): LangCache {
     group.count = group.posts.length;
   }
 
-  const entry: LangCache = { posts, groups: sortGroups([...groups.values()]), bodies, sources };
-  cache.set(lang, entry);
+  const entry: CollectionCache = { posts, groups: sortGroups([...groups.values()]), bodies, sources };
+  cache.set(collection, entry);
   return entry;
 }
 
@@ -669,32 +671,36 @@ function isVisible(post: PostMeta, options: Required<ListOptions>): boolean {
 
 /* ------------------------------ 查询 API ------------------------------ */
 
-/** 某语言的全部文章，时间倒序 */
-export function getPosts(lang: Lang, options?: ListOptions): PostMeta[] {
+/** 某个集合的全部文章，时间倒序（默认博客文章） */
+export function getPosts(collection: Collection = "posts", options?: ListOptions): PostMeta[] {
   const resolved = resolveOptions(options);
-  return loadLang(lang)
+  return loadCollection(collection)
     .posts.filter((post) => isVisible(post, resolved))
     .slice()
     .sort(sortByDateDesc);
 }
 
 /** 取单篇（draft 在生产构建里取不到） */
-export function getPost(lang: Lang, slug: string, options?: ListOptions): PostMeta | null {
+export function getPost(
+  collection: Collection = "posts",
+  slug = "",
+  options?: ListOptions,
+): PostMeta | null {
   const resolved = resolveOptions(options);
-  const found = loadLang(lang).posts.find((post) => post.slug === slug) ?? null;
+  const found = loadCollection(collection).posts.find((post) => post.slug === slug) ?? null;
   if (!found) return null;
   return isVisible(found, resolved) ? found : null;
 }
 
 /** 取单篇 + 正文 Markdown（第 3 项渲染用） */
 export function getPostWithBody(
-  lang: Lang,
-  slug: string,
+  collection: Collection = "posts",
+  slug = "",
   options?: ListOptions,
 ): { meta: PostMeta; body: string } | null {
-  const meta = getPost(lang, slug, options);
+  const meta = getPost(collection, slug, options);
   if (!meta) return null;
-  const body = loadLang(lang).bodies.get(slug) ?? "";
+  const body = loadCollection(collection).bodies.get(slug) ?? "";
   return { meta, body };
 }
 
@@ -705,28 +711,32 @@ export function getPostWithBody(
  * 仓库里那一份，可以原样丢回 content/ 或喂给别的工具。取不到（草稿在生产的页面上、
  * slug 不存在）返回 null，调用方退回 body。
  */
-export function getPostSource(lang: Lang, slug: string, options?: ListOptions): string | null {
-  if (!getPost(lang, slug, options)) return null;
-  return loadLang(lang).sources.get(slug) ?? null;
+export function getPostSource(
+  collection: Collection = "posts",
+  slug = "",
+  options?: ListOptions,
+): string | null {
+  if (!getPost(collection, slug, options)) return null;
+  return loadCollection(collection).sources.get(slug) ?? null;
 }
 
 /** 首页列表：置顶在前，排除 hiddenInHomeList 与 about（about 是页面，不是文章） */
-export function getHomePosts(lang: Lang, options?: ListOptions): PostMeta[] {
-  const list = getPosts(lang, { includeHidden: false, includeAbout: false, ...options });
+export function getHomePosts(options?: ListOptions): PostMeta[] {
+  const list = getPosts("posts", { includeHidden: false, includeAbout: false, ...options });
   const pinned = list.filter((post) => post.pinned);
   const rest = list.filter((post) => !post.pinned);
   return [...pinned, ...rest];
 }
 
-/** 标签 / 分类汇总，按出现次数倒序 */
+/** 标签 / 分类汇总，按出现次数倒序（默认统计博客文章；资料页单独统计自己那一份） */
 export function getTaxonomy(
-  lang: Lang,
   kind: TaxonomyKind,
+  collection: Collection = "posts",
   options?: ListOptions,
 ): TaxonomyEntry[] {
   const map = new Map<string, TaxonomyEntry>();
 
-  for (const post of getPosts(lang, options)) {
+  for (const post of getPosts(collection, options)) {
     const names = kind === "tags" ? post.tags : post.categories;
     for (const name of names) {
       const key = name.toLowerCase();
@@ -758,10 +768,10 @@ export function slugifyTaxonomy(name: string): string {
 }
 
 /** 按年月归档 */
-export function getArchive(lang: Lang, options?: ListOptions): ArchiveYear[] {
+export function getArchive(options?: ListOptions): ArchiveYear[] {
   const years = new Map<number, Map<string, ArchiveMonth>>();
 
-  for (const post of getPosts(lang, options)) {
+  for (const post of getPosts("posts", options)) {
     const key = post.date.slice(0, 7); // ISO 8601 → "YYYY-MM"
     if (!/^\d{4}-\d{2}$/.test(key)) continue;
 
@@ -788,11 +798,14 @@ export function getArchive(lang: Lang, options?: ListOptions): ArchiveYear[] {
 }
 
 /** 卡组：由 _index.md 定义，或由「目录里真的有文章」推出 */
-export function getCardGroups(lang: Lang, options?: ListOptions): CardGroupMeta[] {
+export function getCardGroups(
+  collection: Collection = "posts",
+  options?: ListOptions,
+): CardGroupMeta[] {
   const resolved = resolveOptions(options);
   const groups: CardGroupMeta[] = [];
 
-  for (const group of loadLang(lang).groups) {
+  for (const group of loadCollection(collection).groups) {
     const posts = group.posts.filter((post) => isVisible(post, resolved));
     if (posts.length === 0) continue;
     // 卡组封面：_index.md 没写就退到组内第一篇文章的封面
@@ -807,13 +820,17 @@ export function getCardGroups(lang: Lang, options?: ListOptions): CardGroupMeta[
   return groups;
 }
 
-export function getCardGroup(lang: Lang, slug: string, options?: ListOptions): CardGroupMeta | null {
+export function getCardGroup(
+  collection: Collection = "posts",
+  slug = "",
+  options?: ListOptions,
+): CardGroupMeta | null {
   const key = slug.replace(/^\/+|\/+$/g, "");
-  return getCardGroups(lang, options).find((group) => group.slug === key) ?? null;
+  return getCardGroups(collection, options).find((group) => group.slug === key) ?? null;
 }
 
 /**
- * 卡组页（`/zh/posts/notes/`）的路由表 —— 文章页那个 catch-all 用它生成静态路径，
+ * 卡组页（`/posts/notes/`）的路由表 —— 文章页那个 catch-all 用它生成静态路径，
  * sitemap 也用同一份（两处不能各推一遍，否则会出现「页面在、但 sitemap 里没有」）。
  *
  * 两条排除规则：
@@ -822,27 +839,28 @@ export function getCardGroup(lang: Lang, slug: string, options?: ListOptions): C
  *      content/README.md 第 1 节说的「目录首页」），正文页优先 —— 那种情况下地址
  *      指向那一篇文章，而不是卡组页。
  */
-export function getCardGroupRoutes(lang: Lang, options?: ListOptions): CardGroupMeta[] {
-  const postSlugs = new Set(getPosts(lang, options).map((post) => post.slug));
-  return getCardGroups(lang, options).filter(
+export function getCardGroupRoutes(
+  collection: Collection = "posts",
+  options?: ListOptions,
+): CardGroupMeta[] {
+  const postSlugs = new Set(getPosts(collection, options).map((post) => post.slug));
+  return getCardGroups(collection, options).filter(
     (group) => group.slug !== "" && !postSlugs.has(group.slug),
   );
 }
 
 /** 「关于」文章：about: true 的最新一篇；没有就返回 null（UI 要出空状态） */
-export function getAboutPost(lang: Lang, options?: ListOptions): PostMeta | null {
-  return getPosts(lang, options).find((post) => post.about) ?? null;
+export function getAboutPost(options?: ListOptions): PostMeta | null {
+  return getPosts("posts", options).find((post) => post.about) ?? null;
 }
 
 /** 站点统计（首页 / 归档 / 构建期产物用；零文章时全是 0 与 null） */
-export function getContentStats(lang?: Lang): ContentStats {
-  const langs: Lang[] = lang ? [lang] : LANGS;
+export function getContentStats(collection: Collection = "posts"): ContentStats {
   const includeDrafts = defaultIncludeDrafts();
   const tagSet = new Set<string>();
   const categorySet = new Set<string>();
 
   const stats: ContentStats = {
-    lang: lang ?? "all",
     posts: 0,
     drafts: 0,
     words: 0,
@@ -856,8 +874,8 @@ export function getContentStats(lang?: Lang): ContentStats {
     last: null,
   };
 
-  for (const current of langs) {
-    const entry = loadLang(current);
+  {
+    const entry = loadCollection(collection);
     stats.groups += entry.groups.length;
 
     for (const post of entry.posts) {

@@ -3,9 +3,9 @@
 import { useEffect } from "react";
 import { Icon } from "@iconify/react/offline";
 
-import { ARTICLE_TEXT } from "@/lib/article";
+import { articleTextFor } from "@/lib/article";
+import type { Collection } from "@/lib/content";
 import { icons } from "@/lib/icons";
-import type { Lang } from "@/lib/lang";
 import { SITE } from "@/lib/site";
 
 /**
@@ -24,19 +24,19 @@ import { SITE } from "@/lib/site";
  * 按钮的排版交给 CSS（globals.css 6e 的 `.article-actions`），打印时整行不印。
  */
 export default function ArticleExport({
-  lang,
   markdown,
+  collection = "posts",
   filename,
   title,
 }: {
-  lang: Lang;
   markdown: string;
+  collection?: Collection;
   /** 下载后的文件名（*.md），由文章页从 slug 推出 */
   filename: string;
   /** 打印页脚要用的篇名（注入 CSS 变量，见下）；缺省时页脚那格留空 */
   title?: string;
 }) {
-  const t = ARTICLE_TEXT[lang];
+  const t = articleTextFor(collection);
 
   /**
    * 把打印页眉 / 页脚要用的动态文本注入成 CSS 自定义属性。

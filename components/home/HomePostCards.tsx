@@ -3,13 +3,12 @@ import PostCard from "@/components/list/PostCard";
 import type { PostMeta } from "@/lib/content";
 import { HOME_TEXT } from "@/lib/home";
 import { toListPost } from "@/lib/list";
-import type { Lang } from "@/lib/lang";
 
 /**
  * 第 2 栏：文章卡片（第 9 项建立，第 11 项换成共用的三档卡片）
  *
  * 列表来自第 2 项的 `getHomePosts`（置顶优先、时间倒序、排除 hiddenInHomeList 与 about），
- * 条数由 app/[lang]/page.tsx 的 HOME_POST_LIMIT 决定。
+ * 条数由 app/(site)/page.tsx 的 HOME_POST_LIMIT 决定。
  *
  * 卡片本身是 `components/list/PostCard.tsx`（第 11 项的三档密度），首页用的是**适中档**：
  * 与这一栏原来的样子一致（标题 / 日期 / 时长 / 摘要 / 标签）。也就是说「卡片长什么样」
@@ -23,18 +22,18 @@ import type { Lang } from "@/lib/lang";
  *
  * 零文章时显示空状态（约定第 4 条：所有页面要有空状态）。
  */
-export default function HomePostCards({ lang, posts }: { lang: Lang; posts: PostMeta[] }) {
-  const t = HOME_TEXT[lang].posts;
+export default function HomePostCards({ posts }: { posts: PostMeta[] }) {
+  const t = HOME_TEXT.posts;
 
   return (
     <>
-      <HomeBlockHead id="posts" lang={lang} />
+      <HomeBlockHead id="posts" />
       {posts.length > 0 ? (
         <>
           <p className="home-note">{t.count(posts.length)}</p>
           <div className="home-posts">
             {posts.map((post) => (
-              <PostCard key={post.slug} post={toListPost(post)} lang={lang} density="cozy" />
+              <PostCard key={post.slug} post={toListPost(post)} density="cozy" />
             ))}
           </div>
         </>

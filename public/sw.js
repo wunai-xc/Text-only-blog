@@ -29,7 +29,7 @@
  * 改了缓存策略或外壳清单，就把 CACHE_VERSION 往上加一位 —— 否则老客户端会一直用旧缓存。
  */
 
-const CACHE_VERSION = "4";
+const CACHE_VERSION = "5";
 const CACHE_PREFIX = "text-only-blog-";
 const CACHE_NAME = `${CACHE_PREFIX}v${CACHE_VERSION}`;
 
@@ -42,10 +42,8 @@ const PRECACHE_ARTICLES = true;
  */
 const SHELL = [
   "/",
-  "/zh/",
-  "/en/",
-  "/zh/posts/",
-  "/en/posts/",
+  "/posts/",
+  "/docs/",
   "/offline/",
   "/manifest.webmanifest",
   "/wunai_logo.png",

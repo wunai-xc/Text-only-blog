@@ -9,7 +9,7 @@ export default function NotFound() {
       <p className="text-sm text-ink-muted">编辑此处：这一页的说明文案</p>
       <Link
         className="text-sm text-accent underline underline-offset-2"
-        href="/zh/"
+        href="/"
       >
         返回首页
       </Link>

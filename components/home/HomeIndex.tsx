@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 
 import { HOME_ORDER, HOME_TEXT, homeNumber, type HomeBlockId } from "@/lib/home";
-import type { Lang } from "@/lib/lang";
 
 /**
  * 侧边指示器（第 9 项）：固定在右侧的一列锚点，当前所在的那一栏会亮起来。
@@ -21,8 +20,8 @@ import type { Lang } from "@/lib/lang";
  *
  * 层序：`z-index: 18` —— 低于顶栏（20）与设置抽屉（50），所以抽屉打开时它被盖住。
  */
-export default function HomeIndex({ lang }: { lang: Lang }) {
-  const text = HOME_TEXT[lang];
+export default function HomeIndex() {
+  const text = HOME_TEXT;
   const [active, setActive] = useState<HomeBlockId[]>([]);
   const visible = useRef<Set<HomeBlockId>>(new Set());
 

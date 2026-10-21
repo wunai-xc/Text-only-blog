@@ -11,7 +11,6 @@ import {
   commentsTerm,
 } from "@/lib/article";
 import { icons } from "@/lib/icons";
-import type { Lang } from "@/lib/lang";
 import { COMMENTS, commentsReady } from "@/lib/site";
 import { currentTheme, subscribeTheme, type Theme } from "@/lib/theme";
 
@@ -33,17 +32,15 @@ import { currentTheme, subscribeTheme, type Theme } from "@/lib/theme";
  * 中英版本、以及带 `?tag=` 之类查询串的地址，都会落到同一个讨论上（按 pathname 映射就没有这份保证）。
  */
 export default function GiscusComments({
-  lang,
   href,
   enabled,
 }: {
-  lang: Lang;
   /** 文章的站内路径（`meta.href`），用作 giscus 的 discussion term */
   href: string;
   /** frontmatter 的 `comments`（缺省 true）；false 表示这一篇不要评论区 */
   enabled: boolean;
 }) {
-  const t = ARTICLE_TEXT[lang];
+  const t = ARTICLE_TEXT;
   const ready = commentsReady();
   const hostRef = useRef<HTMLDivElement>(null);
   const [near, setNear] = useState(false);
@@ -101,7 +98,7 @@ export default function GiscusComments({
       emitMetadata: "0",
       inputPosition: "top",
       theme: GISCUS_THEMES[currentTheme()],
-      lang: lang === "zh" ? "zh-CN" : "en",
+      lang: "zh-CN",
       loading: "lazy",
     };
     for (const [key, value] of Object.entries(data)) script.dataset[key] = value;
@@ -122,7 +119,7 @@ export default function GiscusComments({
       watcher.disconnect();
       host.replaceChildren();
     };
-  }, [near, href, lang]);
+  }, [near, href]);
 
   /* ---- 换外观：通知 iframe 换配色（不重新加载评论区） ---- */
   useEffect(() => {

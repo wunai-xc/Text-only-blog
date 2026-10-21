@@ -1,14 +1,13 @@
 import { getTaxonomy, type TaxonomyKind } from "@/lib/content";
 import { decorate } from "@/lib/decor";
 import { PAGES_TEXT, categoryHref, facetWeight, tagHref } from "@/lib/pages";
-import type { Lang } from "@/lib/lang";
 
 /**
  * 标签页 / 分类页的**同一份实现**（第 13 项）
  *
  * 这两页除了「名字前后有没有 `#`」「文案」之外完全一样，所以只有一个组件、两个薄壳页面：
- *   `app/[lang]/tags/page.tsx`      → `<FacetIndex lang kind="tag" />`
- *   `app/[lang]/categories/page.tsx` → `<FacetIndex lang kind="category" />`
+ *   `app/(site)/tags/page.tsx`      → `<FacetIndex kind="tag" />`
+ *   `app/(site)/categories/page.tsx` → `<FacetIndex kind="category" />`
  * 区别集中在 `lib/pages.ts` 的 `PAGES_TEXT`（chipLabel / chipTitle）与下面这一处 kind 映射里。
  *
  * 三件事值得说明：
@@ -25,18 +24,16 @@ import type { Lang } from "@/lib/lang";
  * 不再各自长一套页头出来（那几个类在 globals.css 的「6d」一节点明是共用的）。
  */
 export default function FacetIndex({
-  lang,
   kind,
 }: {
-  lang: Lang;
-  /** tag = 标签页（`getTaxonomy(lang, "tags")`）；category = 分类页 */
+  /** tag = 标签页（`getTaxonomy("tags")`）；category = 分类页 */
   kind: "tag" | "category";
 }) {
   const facetKind: TaxonomyKind = kind === "tag" ? "tags" : "categories";
-  const text = kind === "tag" ? PAGES_TEXT[lang].tags : PAGES_TEXT[lang].categories;
-  const entries = getTaxonomy(lang, facetKind);
-  // 图纸编号与右下角图签同一个来源（第 8 项）：/zh/tags/ 是 04，/zh/categories/ 是 05
-  const decor = decorate(`/${lang}/${facetKind}/`);
+  const text = kind === "tag" ? PAGES_TEXT.tags : PAGES_TEXT.categories;
+  const entries = getTaxonomy(facetKind);
+  // 图纸编号与右下角图签同一个来源（第 8 项）：/tags/ 是 04，/categories/ 是 05
+  const decor = decorate(`/${facetKind}/`);
   const max = entries[0]?.count ?? 1;
 
   return (
@@ -61,7 +58,7 @@ export default function FacetIndex({
                   className="facet-chip"
                   data-kind={kind}
                   data-weight={facetWeight(entry.count, max)}
-                  href={kind === "tag" ? tagHref(lang, entry.name) : categoryHref(lang, entry.name)}
+                  href={kind === "tag" ? tagHref(entry.name) : categoryHref(entry.name)}
                   title={text.chipTitle(entry.name, entry.count)}
                 >
                   <span className="facet-name">{text.chipLabel(entry.name)}</span>

@@ -1,5 +1,4 @@
 import { HOME_TEXT, homeNumber, type HomeBlockId } from "@/lib/home";
-import type { Lang } from "@/lib/lang";
 
 /**
  * 栏头（第 9 项）：栏号 + 一句小字 + 栏名。
@@ -11,8 +10,8 @@ import type { Lang } from "@/lib/lang";
  *
  * 服务端组件：它只读文案表，没有任何交互，所以不进客户端包。
  */
-export default function HomeBlockHead({ id, lang }: { id: HomeBlockId; lang: Lang }) {
-  const block = HOME_TEXT[lang].blocks[id];
+export default function HomeBlockHead({ id }: { id: HomeBlockId }) {
+  const block = HOME_TEXT.blocks[id];
   return (
     <>
       <p className="home-kicker">

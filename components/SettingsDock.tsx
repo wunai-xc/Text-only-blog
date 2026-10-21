@@ -6,7 +6,6 @@ import { Icon } from "@iconify/react/offline";
 
 import SettingsCenter from "./SettingsCenter";
 import { icons } from "@/lib/icons";
-import type { Lang } from "@/lib/lang";
 import { SITE } from "@/lib/site";
 
 /**
@@ -21,10 +20,10 @@ import { SITE } from "@/lib/site";
  *     （约定第 5 条：动效必须尊重这个媒体查询）。
  *
  * 设置内容本身在 components/SettingsCenter.tsx（它不管容器，所以第 13 项的
- * /[lang]/settings/ 页面可以复用同一份内容）。
+ * /settings/ 页面可以复用同一份内容）。
  */
-export default function SettingsDock({ lang }: { lang: Lang }) {
-  const t = SITE.i18n[lang];
+export default function SettingsDock() {
+  const t = SITE.strings;
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -98,7 +97,7 @@ export default function SettingsDock({ lang }: { lang: Lang }) {
               </button>
             </div>
             <div className="settings-drawer-body">
-              <SettingsCenter lang={lang} />
+              <SettingsCenter />
             </div>
           </div>
         </>

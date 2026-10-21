@@ -24,7 +24,6 @@ import {
   type ReadingPrefs,
   type ReadingSliderKey,
 } from "@/lib/prefs";
-import type { Lang } from "@/lib/lang";
 import { SITE } from "@/lib/site";
 
 /**
@@ -53,9 +52,9 @@ const GROUP_ICON: Record<HomeReadingKey, IconName> = {
   leading: "mdi:format-line-spacing",
 };
 
-export default function HomeFonts({ lang }: { lang: Lang }) {
-  const t = HOME_TEXT[lang].fonts;
-  const site = SITE.i18n[lang];
+export default function HomeFonts() {
+  const t = HOME_TEXT.fonts;
+  const site = SITE.strings;
   const [prefs, setPrefs] = useState<ReadingPrefs | null>(null);
   // 滑块的当前数值（= 令牌实际生效的值）：读者拖过就是他的，没拖过就是按屏幕算出来的
   const [numbers, setNumbers] = useState<Record<ReadingSliderKey, number> | null>(null);
@@ -112,7 +111,7 @@ export default function HomeFonts({ lang }: { lang: Lang }) {
 
   return (
     <>
-      <HomeBlockHead id="fonts" lang={lang} />
+      <HomeBlockHead id="fonts" />
       <p className="home-note">{t.lead}</p>
 
       {groups.map(({ key, label }) => (
@@ -148,7 +147,7 @@ export default function HomeFonts({ lang }: { lang: Lang }) {
                   }}
                 >
                   <Icon icon={icons["mdi:check"]} className="opt-check" width="1em" height="1em" />
-                  <span>{option[lang]}</span>
+                  <span>{option.label}</span>
                   {/* 字体那一组不挂数值角标（字体栈太长），标签本身已经说清是哪一个 */}
                   {key === "font" ? null : <span className="settings-opt-value">{option.value}</span>}
                 </button>

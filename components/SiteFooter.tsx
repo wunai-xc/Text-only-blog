@@ -2,7 +2,6 @@ import { Icon } from "@iconify/react/offline";
 
 import SettingsDock from "./SettingsDock";
 import { getContentStats } from "@/lib/content";
-import type { Lang } from "@/lib/lang";
 import { CONTACT, SITE, feedHref } from "@/lib/site";
 import { icons, type IconName } from "@/lib/icons";
 
@@ -30,7 +29,7 @@ function shortUrl(url: string): string {
  *      没有文章时显示「还没有文章 —— 第一篇由你亲笔写」，而不是一串 0；
  *   2. 联系方式：邮箱 / GitHub / 本站源码 / RSS。**由 lib/site.ts 的 CONTACT 提供**，
  *      空着的条目只显示「编辑此处」，不会生成一个点不动的空链接；
- *      RSS 是第 5 项就有的真实地址（/{lang}/feed.xml），所以现在就能点；
+ *      RSS 是第 5 项就有的真实地址（/feed.xml），所以现在就能点；
  *   3. 一句话说明（t.footerNote，也在 lib/site.ts，同样是「编辑此处」）；
  *   4. 版权行（等宽小字，取构建时的年份 —— 静态站只能这样）。
  *
@@ -43,11 +42,11 @@ function shortUrl(url: string): string {
  *    若之后要恢复入口，记得把 `NAV.map` 那段加回来并补上
  *    `RouteLink`、`NAV`、`ROUTES` 的 import。
  */
-export default function SiteFooter({ lang }: { lang: Lang }) {
-  const t = SITE.i18n[lang];
+export default function SiteFooter() {
+  const t = SITE.strings;
   const year = new Date().getFullYear();
 
-  const stats = getContentStats(lang);
+  const stats = getContentStats();
   const statsLine =
     stats.posts > 0
       ? [
@@ -88,8 +87,8 @@ export default function SiteFooter({ lang }: { lang: Lang }) {
       id: "rss",
       icon: "mdi:rss",
       label: t.rss,
-      value: feedHref(lang),
-      href: feedHref(lang),
+      value: feedHref(),
+      href: feedHref(),
       external: false,
     },
   ];
@@ -149,7 +148,7 @@ export default function SiteFooter({ lang }: { lang: Lang }) {
         </p>
       </div>
 
-      <SettingsDock lang={lang} />
+      <SettingsDock />
     </footer>
   );
 }

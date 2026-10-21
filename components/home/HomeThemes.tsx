@@ -6,7 +6,6 @@ import { Icon } from "@iconify/react/offline";
 import HomeBlockHead from "./HomeBlockHead";
 import { icons } from "@/lib/icons";
 import { HOME_TEXT } from "@/lib/home";
-import type { Lang } from "@/lib/lang";
 import {
   DEFAULT_THEME_CHOICE,
   THEME_CHIP_DOTS,
@@ -31,8 +30,8 @@ import {
  * 下面那段示范文字走 `.home-demo`：它读 --reading-size / --reading-leading，
  * 所以第 8 栏改了字号行距，这里会一起变 —— 两栏本来就是同一件事的两面。
  */
-export default function HomeThemes({ lang }: { lang: Lang }) {
-  const t = HOME_TEXT[lang].themes;
+export default function HomeThemes() {
+  const t = HOME_TEXT.themes;
   const [choice, setChoice] = useState<ThemeChoice | null>(null);
 
   useEffect(() => {
@@ -44,7 +43,7 @@ export default function HomeThemes({ lang }: { lang: Lang }) {
 
   return (
     <>
-      <HomeBlockHead id="themes" lang={lang} />
+      <HomeBlockHead id="themes" />
       <p className="home-note">{t.lead}</p>
       <div className="settings-row">
         {THEME_CHOICES.map((value) => (
@@ -53,7 +52,7 @@ export default function HomeThemes({ lang }: { lang: Lang }) {
             type="button"
             className="settings-opt"
             aria-pressed={active === value}
-            title={THEME_LABELS[value].hint[lang]}
+            title={THEME_LABELS[value].hint}
             onClick={() => {
               setThemeChoice(value);
               setChoice(value);
@@ -65,11 +64,11 @@ export default function HomeThemes({ lang }: { lang: Lang }) {
                 <span key={index} />
               ))}
             </span>
-            <span>{THEME_LABELS[value][lang]}</span>
+            <span>{THEME_LABELS[value].label}</span>
           </button>
         ))}
       </div>
-      <p className="home-note">{THEME_LABELS[active].hint[lang]}</p>
+      <p className="home-note">{THEME_LABELS[active].hint}</p>
       <p className="home-demo">{t.demo}</p>
     </>
   );

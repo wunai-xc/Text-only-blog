@@ -5,7 +5,6 @@ import { Icon } from "@iconify/react/offline";
 
 import ReadingSlider from "./ReadingSlider";
 import { icons, type IconName } from "@/lib/icons";
-import type { Lang } from "@/lib/lang";
 import { SITE } from "@/lib/site";
 import {
   AUTO_FOLDS,
@@ -80,7 +79,7 @@ import {
  * （lib/prefs.ts 的 currentReadingNumbers）。
  *
  * 这个组件只负责**内容**，不管容器：抽屉在 components/SettingsDock.tsx，
- * 第 13 项的 /[lang]/settings/ 页面直接把它放进一个 .page 里即可，样式是同一套。
+ * 第 13 项的 /settings/ 页面直接把它放进一个 .page 里即可，样式是同一套。
  */
 
 type ReadingLabelKey =
@@ -102,8 +101,8 @@ const GROUP_META: Record<ReadingKey, { label: ReadingLabelKey; icon: IconName }>
 
 /* 外观预览色块的格数共用 lib/theme.ts 的 THEME_CHIP_DOTS（第 9 项起首页也用这一份） */
 
-export default function SettingsCenter({ lang }: { lang: Lang }) {
-  const t = SITE.i18n[lang];
+export default function SettingsCenter() {
+  const t = SITE.strings;
   const [choice, setChoice] = useState<ThemeChoice | null>(null);
   const [prefs, setPrefs] = useState<ReadingPrefs | null>(null);
   // 长卡组默认收起的档位（lib/list.ts；列表页与本机各读同一条 localStorage）
@@ -264,7 +263,7 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
                 className="settings-opt"
                 aria-pressed={active}
                 onClick={() => pickTheme(value)}
-                title={THEME_LABELS[value].hint[lang]}
+                title={THEME_LABELS[value].hint}
               >
                 <Icon
                   icon={icons["mdi:check"]}
@@ -277,12 +276,12 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
                     <span key={index} />
                   ))}
                 </span>
-                <span>{THEME_LABELS[value][lang]}</span>
+                <span>{THEME_LABELS[value].label}</span>
               </button>
             );
           })}
         </div>
-        <p className="settings-hint">{THEME_LABELS[activeChoice].hint[lang]}</p>
+        <p className="settings-hint">{THEME_LABELS[activeChoice].hint}</p>
       </section>
 
       {/* ② 阅读偏好 */}
@@ -327,7 +326,7 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
                         width="1em"
                         height="1em"
                       />
-                      <span>{option[lang]}</span>
+                      <span>{option.label}</span>
                       {/* 字体那一组不给数值角标：字体栈是一长串名字，而档位标签（黑体 / 宋体…）
                           已经说清是哪一个；**整个页面就是它的预览** —— 点一下全站文字立刻换字体 */}
                       {key === "font" ? null : (
@@ -419,7 +418,7 @@ export default function SettingsCenter({ lang }: { lang: Lang }) {
                   width="1em"
                   height="1em"
                 />
-                <span>{option[lang]}</span>
+                <span>{option.label}</span>
               </button>
             ))}
           </div>

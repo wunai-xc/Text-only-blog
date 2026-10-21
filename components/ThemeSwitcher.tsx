@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Icon } from "@iconify/react/offline";
 
 import { icons, type IconName } from "@/lib/icons";
-import type { Lang } from "@/lib/lang";
 import { SITE } from "@/lib/site";
 import {
   DEFAULT_THEME_CHOICE,
@@ -36,8 +35,8 @@ const CHOICE_ICONS: Record<ThemeChoice, IconName> = {
   dark: "mdi:weather-night",
 };
 
-export default function ThemeSwitcher({ lang }: { lang: Lang }) {
-  const t = SITE.i18n[lang];
+export default function ThemeSwitcher() {
+  const t = SITE.strings;
   const [choice, setChoice] = useState<ThemeChoice | null>(null);
 
   useEffect(() => {
@@ -47,7 +46,7 @@ export default function ThemeSwitcher({ lang }: { lang: Lang }) {
   }, []);
 
   const active = choice ?? DEFAULT_THEME_CHOICE;
-  const label = THEME_LABELS[active][lang];
+  const label = THEME_LABELS[active].label;
 
   function cycle() {
     const index = THEME_CHOICES.indexOf(active);
@@ -61,7 +60,7 @@ export default function ThemeSwitcher({ lang }: { lang: Lang }) {
       type="button"
       className="icon-button"
       onClick={cycle}
-      title={`${t.appearance}：${label} —— ${THEME_LABELS[active].hint[lang]}`}
+      title={`${t.appearance}：${label} —— ${THEME_LABELS[active].hint}`}
       aria-label={`${t.appearance}：${label}`}
     >
       <Icon icon={icons[CHOICE_ICONS[active]]} width="1.15em" height="1.15em" />

@@ -1,6 +1,5 @@
 import HomeBlockHead from "./HomeBlockHead";
 import { HOME_TEXT } from "@/lib/home";
-import type { Lang } from "@/lib/lang";
 import { transformCjkText } from "@/lib/typography";
 
 /**
@@ -14,13 +13,13 @@ import { transformCjkText } from "@/lib/typography";
  * 下面的规则清单与「已经做到的」清单都是文案（lib/home.ts），
  * 最后一条（悬浮目录与进度条）明确指着第 12 项，避免把没做的东西说成做了。
  */
-export default function HomeReading({ lang }: { lang: Lang }) {
-  const t = HOME_TEXT[lang].reading;
+export default function HomeReading() {
+  const t = HOME_TEXT.reading;
   const { text: fixed, counts } = transformCjkText(t.sample);
 
   return (
     <>
-      <HomeBlockHead id="reading" lang={lang} />
+      <HomeBlockHead id="reading" />
       <p className="home-note">{t.lead}</p>
       <div className="home-compare">
         <div className="home-compare-box">

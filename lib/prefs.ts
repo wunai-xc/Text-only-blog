@@ -30,8 +30,7 @@
  *   3. 与 lib/theme.ts 同构：一份首帧内联脚本（`READING_INIT_SCRIPT`）+ 一套浏览器端 API。
  *      脚本从上面的表**生成**（JSON.stringify），不手抄一份，避免两边漂移。
  *
- * 零依赖：服务端与浏览器都能 import（`Lang` 不从 lib/site.ts 引，文案跟着选项走，
- * 与 lib/theme.ts 的 THEME_LABELS 做法一致）。
+ * 零依赖：服务端与浏览器都能 import（文案跟着选项走，与 lib/theme.ts 的 THEME_LABELS 一致）。
  */
 
 export interface ReadingOption {
@@ -39,8 +38,7 @@ export interface ReadingOption {
   id: string;
   /** 写进 CSS 变量的值 */
   value: string;
-  zh: string;
-  en: string;
+  label: string;
 }
 
 export type ReadingOptionKey = "font" | "indent";
@@ -108,8 +106,8 @@ export const READING_SLIDER_BASE: Record<ReadingSliderKey, number> = {
  * 关掉是 `0`，不是一个只把规则关掉的 class：与另外几组一样，落点只有一个 CSS 变量。
  */
 export const READING_INDENTS: ReadingOption[] = [
-  { id: "off", value: "0", zh: "关闭", en: "Off" },
-  { id: "on", value: "2em", zh: "两格", en: "2 em" },
+  { id: "off", value: "0", label: "关闭" },
+  { id: "on", value: "2em", label: "两格" },
 ];
 
 /**
@@ -144,50 +142,42 @@ export const READING_FONTS: ReadingOption[] = [
   {
     id: "sans",
     value: "var(--font-sans)",
-    zh: "黑体",
-    en: "Sans",
+    label: "黑体",
   },
   {
     id: "song",
     value: '"Songti SC", "STSong", "SimSun", "Noto Serif CJK SC", var(--font-serif)',
-    zh: "宋体",
-    en: "Song",
+    label: "宋体",
   },
   {
     id: "kai",
     value: '"Kaiti SC", "STKaiti", "KaiTi", "AR PL UKai CN", var(--font-serif)',
-    zh: "楷体",
-    en: "Kai",
+    label: "楷体",
   },
   {
     id: "fangsong",
     value: '"FangSong", "STFangsong", "FangSong_GB2312", var(--font-serif)',
-    zh: "仿宋",
-    en: "FangSong",
+    label: "仿宋",
   },
   {
     id: "round",
     value: '"Yuanti SC", "YouYuan", "Hiragino Maru Gothic ProN", var(--font-sans)',
-    zh: "圆体",
-    en: "Round",
+    label: "圆体",
   },
   {
     id: "lishu",
     value: '"LiSu", "STLiti", "Baoli SC", var(--font-serif)',
-    zh: "隶书",
-    en: "Clerical",
+    label: "隶书",
   },
   {
     id: "mono",
     value: '"Sarasa Mono SC", "Noto Sans Mono CJK SC", "SFMono-Regular", var(--font-mono)',
-    zh: "等宽",
-    en: "Mono",
+    label: "等宽",
   },
   {
     id: "local",
     value: '"Text Local Upload", var(--font-sans)',
-    zh: "自定义",
-    en: "Custom",
+    label: "自定义",
   },
 ];
 

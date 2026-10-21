@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import { getPosts } from "@/lib/content";
-import { SITE } from "@/lib/site";
 
 /**
  * 离线兜底页（第 5 项：PWA）
@@ -13,7 +12,7 @@ import { SITE } from "@/lib/site";
  * 所以这里不放任何需要联网的元素（图片、外链字体、统计脚本……都不要）。
  *
  * Service Worker 会把搜索索引里的全部文章页预缓存下来，所以这一页直接
- * 列出默认语言的全部文章。链接刻意用原生 <a>：离线时整页导航才能命中
+ * 列出全部文章。链接刻意用原生 <a>：离线时整页导航才能命中
  * 缓存的 HTML；<Link> 会去要 RSC 载荷（见 components/OfflineNav.tsx）。
  */
 export const metadata: Metadata = {
@@ -21,17 +20,15 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/** 已缓存的页面可以直接打开：外壳里预缓存了两个语言的首页与文章列表（见 public/sw.js） */
+/** 已缓存的页面可以直接打开：外壳里预缓存了首页、文章列表与资料列表（见 public/sw.js） */
 const CACHED_LINKS = [
-  { href: "/zh/", label: "中文首页" },
-  { href: "/en/", label: "English home" },
-  { href: "/zh/posts/", label: "中文文章列表" },
-  { href: "/en/posts/", label: "English post list" },
-  { href: "/", label: "语言分流页 / start page" },
+  { href: "/", label: "首页" },
+  { href: "/posts/", label: "全部文章" },
+  { href: "/docs/", label: "资料" },
 ];
 
 export default function OfflinePage() {
-  const posts = getPosts(SITE.defaultLang);
+  const posts = getPosts();
 
   return (
     <main className="page flex flex-col items-center gap-6 py-12 text-center">
@@ -41,10 +38,6 @@ export default function OfflinePage() {
         <p className="text-sm text-ink-muted">
           这一页是本地缓存下来的。全部文章已经预存到这台设备上，
           下面列出的每一篇都可以直接打开。
-        </p>
-        <p className="text-sm text-ink-muted">
-          No network right now. This page and every article listed below are
-          served from the cache.
         </p>
       </div>
 

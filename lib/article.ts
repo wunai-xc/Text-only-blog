@@ -8,7 +8,7 @@
  *   3. `parseTypographyOption()`：把 frontmatter 的 `typography` 字段翻成
  *      `lib/markdown.ts` 的 `RenderOptions.typography`（第 4 项留给第 12 项的接口）；
  *   4. giscus 的常量与外观映射（评论是第三方 iframe，细节集中在这里）；
- *   5. 文案（中英各一份，缺一边 TypeScript 直接报错）。
+ *   5. 文案（博客文章与资料各一份，共用同一套版面）。
  *
  * **零运行时依赖**：对 `lib/markdown.ts` / `lib/typography.ts` / `lib/list.ts` / `lib/site.ts`
  * 一律只用 `import type` —— 编译后整条 import 被擦掉。原因是这个文件会被**客户端组件**引入
@@ -16,21 +16,21 @@
  * 就会被拉进浏览器包。要新的常量就在本文件里写，别把 lib/markdown.ts 的值搬进来。
  */
 
+import type { Collection } from "./content";
 import type { ListPost } from "./list";
 import type { TocEntry } from "./markdown";
-import type { Lang } from "./lang";
 import type { Theme } from "./theme";
 import type { TypographyOptions } from "./typography";
 
 /* ------------------------------ 常量 ------------------------------ */
 
 /**
- * 一篇文章都没有时用的**保留 slug**：`/<lang>/posts/__empty__/`。
+ * 一篇文章都没有时用的**保留 slug**：`/posts/__empty__/`。
  *
  * 为什么需要它：文章页是动态路由（`[...slug]`），而静态导出（`output: export`）里
  * **动态路由至少要生成一条路径**，`generateStaticParams()` 返回空数组会让构建直接失败：
  *
- *     Error: Page "/[lang]/posts/[...slug]" returned an empty array from "generateStaticParams()".
+ *     Error: Page "/posts/[...slug]" returned an empty array from "generateStaticParams()".
  *
  * 于是零文章时只生成这一条路径，它渲染的是「还没有文章」那一页（`emptyTitle` / `emptyLead`，
  * 正文那一句复用 `LIST_TEXT` 的空状态文案）—— 与约定第 4 条「零文章时站点必须仍能构建与浏览」
@@ -120,7 +120,7 @@ export interface ArticleNeighbors {
 /**
  * 上下篇。
  *
- * 传入的 `posts` 是 `getPosts(lang)` 的直接结果（**时间倒序**），所以「上/下」这件事
+ * 传入的 `posts` 是 `getPosts(collection)` 的直接结果（**时间倒序**），所以「上/下」这件事
  * 只在这个函数里解释一次，不在页面里再排一遍：
  *   - `older`（上一篇）= 列表里它后面那篇；
  *   - `newer`（下一篇）= 列表里它前面那篇。
@@ -128,7 +128,7 @@ export interface ArticleNeighbors {
  *
  * **卡组（目录）里的文章只在卡组内前后走**：拿全站序列把《微时序笔记》串到《医药学笔记》
  * 上去是错的，它们不是一套内容。走到卡组的两头（组里时间最早 / 最新的那一篇）时，
- * 那一头不再空着，而是换成 `kind: "all"` 的出口 ——「全部文章」→ 列表页 `/<lang>/posts/`：
+ * 那一头不再空着，而是换成 `kind: "all"` 的出口 ——「全部文章」→ 列表页 `/posts/`：
  * 读者累完一个卡组，想去的是那一整页，而不是另一个卡组的文章。
  * **未分组的文章同理，只在未分组的文章之间前后走**（`group === ""` 本身就算一个组）：
  * 它不属于任何卡组，所以既不该串进某个卡组里，也不该被卡组的文章串上。两头就是空（不留按钮）——
@@ -145,7 +145,7 @@ export function articleNeighbors(posts: ListPost[], slug: string): ArticleNeighb
   if (index < 0) return { newer: null, older: null };
 
   /** 卡组两头那个出口；地址与 EmptyArticlePage 里那个「全部文章」是同一个 */
-  const exit: PagerTarget = { kind: "all", href: `/${current.lang}/posts/` };
+  const exit: PagerTarget = { kind: "all", href: `/${current.collection}/` };
 
   const newer: PagerTarget | null =
     index > 0 ? { kind: "post", post: scope[index - 1] } : inGroup ? exit : null;
@@ -265,7 +265,7 @@ const ZH: ArticleText = {
   kicker: "正文",
   emptyTitle: "还没有文章",
   emptyLead:
-    "这是「一篇文章都没有」时的占位页：文章页是动态路由，静态导出要求它至少生成一条路径（空数组会让构建直接失败），所以这里暂时用这个保留地址顶着。写下第一篇、放进 content/zh/posts/ 之后，这个地址会自动消失。",
+    "这是「一篇文章都没有」时的占位页：文章页是动态路由，静态导出要求它至少生成一条路径（空数组会让构建直接失败），所以这里暂时用这个保留地址顶着。写下第一篇、放进 content/posts/ 之后，这个地址会自动消失。",
   updated: (date) => `改于 ${date}`,
   minutes: (n) => `${n} 分钟`,
   words: (n) => `${n} 字`,
@@ -307,54 +307,24 @@ const ZH: ArticleText = {
   commentsUnavailable: "评论没能加载（可能是网络或浏览器插件拦了第三方 iframe）；正文不受影响。",
 };
 
-const EN: ArticleText = {
-  kicker: "Article",
-  emptyTitle: "No posts yet",
+
+
+export const ARTICLE_TEXT: ArticleText = ZH;
+
+/** 资料阅读页：版面与文章页完全一致，只换「文章 / 资料」这层称谓 */
+export const DOCS_ARTICLE_TEXT: ArticleText = {
+  ...ZH,
+  kicker: "资料",
+  emptyTitle: "还没有资料",
   emptyLead:
-    "This is the placeholder for the zero-post case: the article route is dynamic, and a statically exported dynamic route must generate at least one path (an empty array fails the build), so this reserved URL stands in for now. It disappears on its own once the first post lands in content/en/posts/.",
-  updated: (date) => `updated ${date}`,
-  minutes: (n) => `${n} min`,
-  words: (n) => `${n} words`,
-  tagsLabel: "Tags",
-  categoriesLabel: "Topics",
-
-  tocLabel: "Contents",
-  tocNote: "Click to jump; the headings follow your reading width just like the body.",
-  tocEmpty: "This post has no section headings.",
-  tocExpand: "Show contents",
-  tocCollapse: "Hide contents",
-
-  progressLabel: "Reading progress",
-  progressHint: "Drag to jump anywhere (arrow keys work too)",
-  progressSections: "Jump to section",
-  backToTop: "Back to top",
-
-  pagerLabel: "Previous and next",
-  older: "Previous",
-  newer: "Next",
-  allPosts: "All posts",
-
-  downloadMd: "Download .md",
-  downloadHint: "Save this post's Markdown source (frontmatter included) to your device",
-  printArticle: "Print / PDF",
-  printHint: "Open the browser's print dialog; the layout is tuned for paper, ready to save as PDF",
-
-  codeCopy: "Copy",
-  codeCopied: "Copied",
-  codeCopyFailed: "Copy failed",
-  codeCopyHint: "Copy this code",
-
-  commentsTitle: "Comments",
-  commentsNote:
-    "Comments are powered by giscus (GitHub Discussions). The giscus.app iframe only loads when you scroll down to this section — if you never read the comments, nothing is fetched from there.",
-  commentsSetup:
-    "Edit here: comments are not wired up yet. Generate a config on giscus.app and fill appId / repoId / categoryId into COMMENTS in lib/site.ts; this section then becomes a GitHub Discussions thread.",
-  commentsLoading: "Loading comments…",
-  commentsUnavailable:
-    "Comments could not load (network, or an extension blocking third-party iframes). The article itself is unaffected.",
+    "这是「一篇资料都没有」时的占位页：资料页是动态路由，静态导出要求它至少生成一条路径（空数组会让构建直接失败），所以这里暂时用这个保留地址顶着。放进 content/docs/ 之后，这个地址会自动消失。",
+  allPosts: "全部资料",
 };
 
-export const ARTICLE_TEXT: Record<Lang, ArticleText> = { zh: ZH, en: EN };
+/** 按内容集合取阅读页文案（客户端组件只能收到可序列化的集合名，收不到函数） */
+export function articleTextFor(collection: Collection = "posts"): ArticleText {
+  return collection === "docs" ? DOCS_ARTICLE_TEXT : ARTICLE_TEXT;
+}
 
 /** 目录是嵌套的（`TocEntry` 自己套自己）；这个类型只是给组件签名用的别名 */
 export type ArticleToc = TocEntry[];

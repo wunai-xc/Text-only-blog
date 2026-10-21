@@ -12,19 +12,17 @@
  *   | 评论区（giscus） | 本文件 `COMMENTS` |
  *   | 订阅源地址（RSS） | 本文件 `feedHref` / `feedAlternatesTypes` |
  *   | **友链名单** | lib/links.ts |
- *   | **界面文案（中英文）** | lib/site-strings.ts |
+ *   | **界面文案** | lib/site-strings.ts |
  *   | **路由表 / 站内导航** | lib/routes.ts |
- *   | **语言（zh / en）** | lib/lang.ts |
  *
  * 零依赖（只 import 本站自己的模块），服务端组件与客户端组件都能直接用。
  *
- * 文案分两处维护：页面骨架的文案在 lib/site-strings.ts（挂在下面的 `SITE.i18n`）；
+ * 文案分两处维护：页面骨架的文案在 lib/site-strings.ts（挂在下面的 `SITE.strings`）；
  * 选项文案跟着选项走 —— 外观在 lib/theme.ts 的 `THEME_LABELS`，
  * 阅读偏好在 lib/prefs.ts 的 `READING_*` 表。
  */
 
-import type { Lang } from "./lang";
-import { I18N } from "./site-strings";
+import { SITE_STRINGS } from "./site-strings";
 
 /* ------------------------------ 站点与联系 ------------------------------ */
 
@@ -32,9 +30,8 @@ export const SITE = {
   title: "wunai's blog",
   author: "wunai",
   url: "https://blog.wunai.top",
-  defaultLang: "zh" as Lang,
   description: "wunai的数字文章笔记库",
-  i18n: I18N,
+  strings: SITE_STRINGS,
 };
 
 /**
@@ -104,25 +101,21 @@ export function commentsReady(): boolean {
 
 /* ------------------------------ 订阅源 ------------------------------ */
 
-/** 每语言的 RSS 地址（路由见 app/[lang]/feed.xml/route.ts） */
-export function feedHref(lang: Lang): string {
-  return `/${lang}/feed.xml`;
+/** RSS 地址（路由见 app/feed.xml/route.ts） */
+export function feedHref(): string {
+  return "/feed.xml";
 }
 
 /**
  * 「阅读器自动发现订阅源」用的 `alternates.types`（根布局与各页面共用一份）。
  *
- * ⚠️ Next 的 metadata 是**浅合并**：页面一旦自己写了 `alternates`（哪怕只写 canonical
- * 或 languages），根布局里这一份 `types` 就被整体覆盖掉。所以自己写 alternates 的页面
- * 要把它一起带上 —— 别在页面里手抄第二份地址：
+ * ⚠️ Next 的 metadata 是**浅合并**：页面一旦自己写了 `alternates`（哪怕只写 canonical），
+ * 根布局里这一份 `types` 就被整体覆盖掉。所以自己写 alternates 的页面要把它一起带上：
  *
- *   alternates: { canonical, languages, types: feedAlternatesTypes() }
+ *   alternates: { canonical, types: feedAlternatesTypes() }
  */
 export function feedAlternatesTypes(): Record<string, { url: string; title: string }[]> {
   return {
-    "application/rss+xml": [
-      { url: "/zh/feed.xml", title: `${SITE.title}（中文）` },
-      { url: "/en/feed.xml", title: `${SITE.title} (English)` },
-    ],
+    "application/rss+xml": [{ url: "/feed.xml", title: SITE.title }],
   };
 }

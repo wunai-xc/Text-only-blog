@@ -4,7 +4,6 @@ import HeaderIntro from "./HeaderIntro";
 import RouteLink from "./RouteLink";
 import ThemeSwitcher from "./ThemeSwitcher";
 import { icons } from "@/lib/icons";
-import type { Lang } from "@/lib/lang";
 import { HEADER_IMAGE, SITE } from "@/lib/site";
 
 /**
@@ -33,8 +32,8 @@ import { HEADER_IMAGE, SITE } from "@/lib/site";
  * 服务端组件：这里不再读内容统计（那件事搬去页脚了），但顶栏本就是每页都要的骨架，
  * 留在服务端可以让它的 HTML 直接进产物；入场动画与光标暂停交给 HeaderIntro（客户端）。
  */
-export default function SiteHeader({ lang }: { lang: Lang }) {
-  const t = SITE.i18n[lang];
+export default function SiteHeader() {
+  const t = SITE.strings;
   const decorative = HEADER_IMAGE.alt === "";
 
   return (
@@ -43,11 +42,11 @@ export default function SiteHeader({ lang }: { lang: Lang }) {
         {/* ① 品牌区 */}
         <li className="brand">
           <div className="brand-switch" data-fade>
-            <ThemeSwitcher lang={lang} />
+            <ThemeSwitcher />
           </div>
 
           <div className="brand-text" data-fade>
-            <RouteLink route="home" lang={lang} className="logo-link">
+            <RouteLink route="home" className="logo-link">
               <span className="logo">
                 {SITE.title}
                 <span className="cursor" aria-hidden="true" />
@@ -58,12 +57,15 @@ export default function SiteHeader({ lang }: { lang: Lang }) {
           <div className="tagline-row" data-fade>
             <span className="tagline">
               {t.brandTagline}{" "}
-              <RouteLink route="about" lang={lang} className="site-tagline-link">
+              <RouteLink route="about" className="site-tagline-link">
                 {t.brandAbout}
               </RouteLink>
             </span>
-            <RouteLink route="posts" lang={lang} className="all-posts">
+            <RouteLink route="posts" className="all-posts">
               {t.allPosts}
+            </RouteLink>
+            <RouteLink route="docs" className="site-tagline-link">
+              {t.nav.docs} →
             </RouteLink>
           </div>
         </li>
@@ -72,7 +74,7 @@ export default function SiteHeader({ lang }: { lang: Lang }) {
         <li className="friends" data-fade>
           <RouteLink
             route="links"
-            lang={lang}
+           
             className="friends-link"
             title={t.nav.links}
           >

@@ -10,6 +10,7 @@ import {
   DEFAULT_FILTERS,
   DENSITIES,
   INLINE_SEARCH_FIELDS,
+  DOCS_TEXT,
   LIST_TEXT,
   SEARCH_FIELD_WEIGHTS,
   SEARCH_INDEX_URL,
@@ -35,7 +36,7 @@ import {
   type ListPost,
   type ListSort,
 } from "@/lib/list";
-import type { Lang } from "@/lib/lang";
+import type { Collection } from "@/lib/content";
 import type { SearchIndex } from "@/lib/search-index";
 
 /**
@@ -118,14 +119,15 @@ async function loadSearchIndex(expectedVersion: number): Promise<SearchIndex | n
 }
 
 export default function PostList({
-  lang,
+  collection = "posts",
   posts,
   facets,
   groups,
   indexVersion,
   autoFocusSearch = false,
 }: {
-  lang: Lang;
+  /** 这一页是文章列表、资料列表，还是全站搜索（"all" 不过滤集合） */
+  collection?: Collection | "all";
   posts: ListPost[];
   facets: ListFacets;
   /**
@@ -143,7 +145,7 @@ export default function PostList({
    */
   autoFocusSearch?: boolean;
 }) {
-  const t = LIST_TEXT[lang];
+  const t = collection === "docs" ? DOCS_TEXT : LIST_TEXT;
   const [filters, setFilters] = useState<ListFilters>(DEFAULT_FILTERS);
   const [engine, setEngine] = useState<Engine | null>(null);
   const [searchStatus, setSearchStatus] = useState<"idle" | "loading" | "error">("idle");
@@ -248,8 +250,9 @@ export default function PostList({
 
     const remote = await loadSearchIndex(indexVersion);
     if (remote) {
-      // 索引是**全语言**的（第 5 项的设计），列表页只看当前语言这一份
-      const docs = remote.docs.filter((doc) => doc.lang === lang);
+      // 索引是**全站**的（文章 + 资料）；单列表页只看自己那一份，搜索页看全部
+      const docs =
+        collection === "all" ? remote.docs : remote.docs.filter((doc) => doc.collection === collection);
       const fields = remote.fields.length > 0 ? remote.fields : [...INLINE_SEARCH_FIELDS];
       const fuse = new Fuse(docs, fuseOptions(fields));
       return {
@@ -265,7 +268,7 @@ export default function PostList({
       mode: "inline",
       search: (query: string) => fuse.search(query).map((result) => result.item),
     };
-  }, [indexVersion, lang, posts]);
+  }, [indexVersion, collection, posts]);
 
   const ensureEngine = useCallback(async () => {
     if (engineRef.current || loadingRef.current) return;
@@ -353,7 +356,7 @@ export default function PostList({
   if (filters.hideAI !== DEFAULT_FILTERS.hideAI) activeNames.push(t.aiOn);
   if (filters.sort !== DEFAULT_FILTERS.sort) {
     const option = SORTS.find((item) => item.id === filters.sort);
-    if (option) activeNames.push(option[lang]);
+    if (option) activeNames.push(option.label);
   }
 
   /** 一列卡片（组内与未分组共用；密度的排版差异全在 CSS 的 `.post-card[data-density]`） */
@@ -361,7 +364,7 @@ export default function PostList({
     return (
       <div className="list-grid" data-density={filters.density}>
         {list.map((post) => (
-          <PostCard key={post.slug} post={post} lang={lang} density={filters.density} />
+          <PostCard key={post.slug} post={post} density={filters.density} />
         ))}
       </div>
     );
@@ -525,7 +528,7 @@ export default function PostList({
                   onClick={() => update({ sort: option.id })}
                 >
                   <Icon icon={icons[SORT_ICONS[option.id]]} width="1em" height="1em" />
-                  {option[lang]}
+                  {option.label}
                 </button>
               ))}
             </div>
@@ -544,11 +547,11 @@ export default function PostList({
                   type="button"
                   className="list-chip"
                   aria-pressed={filters.density === option.id}
-                  title={lang === "zh" ? option.hintZh : option.hintEn}
+                  title={option.hint}
                   onClick={() => update({ density: option.id })}
                 >
                   <Icon icon={icons[DENSITY_ICONS[option.id]]} width="1em" height="1em" />
-                  {option[lang]}
+                  {option.label}
                 </button>
               ))}
             </div>
@@ -627,8 +630,8 @@ export default function PostList({
                       {entry.group.explicit ? null : ` · ${entry.group.slug}/`}
                     </p>
                     <h2 className="list-group-title">
-                      {/* 组头链到卡组自己的页面（/zh/posts/notes/）—— 与 sitemap、卡组页同一份地址 */}
-                      <a href={groupHref(lang, entry.group.slug)}>{name}</a>
+                      {/* 组头链到卡组自己的页面（/posts/notes/）—— 与 sitemap、卡组页同一份地址 */}
+                      <a href={groupHref(entry.group.collection, entry.group.slug)}>{name}</a>
                     </h2>
                     <span className="list-group-count">
                       {t.groups.count(entry.posts.length)}

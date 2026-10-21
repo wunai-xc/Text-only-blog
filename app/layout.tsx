@@ -40,9 +40,8 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  /* <html lang> 由 app/[lang]/layout.tsx 里的客户端脚本按路由纠正 */
   return (
-    <html lang="zh" suppressHydrationWarning>
+    <html lang="zh-CN" suppressHydrationWarning>
       <body>
         {/* 必须是 body 第一个元素：在任何内容之前把 data-theme 写好，避免首帧闪白 */}
         <ThemeInit />

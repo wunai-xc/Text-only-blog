@@ -17,7 +17,6 @@
  * 约定：装饰层 `aria-hidden` + `pointer-events: none`，不得影响正文可读性、不引图片资源。
  */
 
-import { isLang, type Lang } from "./lang";
 import { isRouteId, type RouteId } from "./routes";
 import { SITE } from "./site";
 
@@ -98,8 +97,6 @@ export interface Decor {
   section: DecorSection;
   /** 图纸编号（实体注解上印的两位数字） */
   sheet: string;
-  /** 这张图纸的语言（`/offline/` 之类没有语言段时退回站点默认语言） */
-  lang: Lang;
   /** 这一页的几何实体（主实体 + 卫星），见 `FIGURES` 与 globals.css 第 5 节 */
   figure: FigurePair;
 }
@@ -117,6 +114,7 @@ const SHEETS: Record<DecorSection, string> = {
   about: "09",
   settings: "10",
   offline: "11",
+  docs: "12",
   unknown: "00",
 };
 
@@ -417,6 +415,32 @@ const FIGURES: Record<DecorSection, FigurePair> = {
       note: "tr",
     },
   },
+  /* 12 资料：左下角一块群青横板（像摊开的资料夹）+ 右上角一枚陶土十字 */
+  docs: {
+    main: {
+      shape: "rect",
+      x: 26,
+      y: 76,
+      w: 34,
+      h: 11,
+      rot: 6,
+      tint: 7,
+      sketch: { contour: true, construction: true, density: 1, hatch: true },
+      note: "br",
+    },
+    satellite: {
+      shape: "cross",
+      x: 84,
+      y: 28,
+      w: 17,
+      h: 17,
+      rot: 12,
+      tint: 3,
+      fade: 0.85,
+      sketch: { contour: true, construction: false, density: 1 },
+      note: "bl",
+    },
+  },
   /* 11 离线：纸面最干净 —— 只有上下两片很淡的实体 */
   offline: {
     main: {
@@ -472,7 +496,7 @@ const FIGURES: Record<DecorSection, FigurePair> = {
   },
 };
 
-/** 去掉查询串 / 哈希 / 尾斜杠（`/zh/` 与 `/zh` 是同一张图纸） */
+/** 去掉查询串 / 哈希 / 尾斜杠（`/posts/` 与 `/posts` 是同一张图纸） */
 function normalize(pathname: string): string {
   const cut = pathname.split(/[?#]/)[0] ?? "";
   const trimmed = cut.replace(/\/+$/, "");
@@ -483,29 +507,24 @@ function segments(pathname: string): string[] {
   return normalize(pathname).split("/").filter(Boolean);
 }
 
-/** 路径里的语言段；没有（`/offline/`、`/404.html`）就退回站点默认语言 */
-export function langFromPath(pathname: string): Lang {
-  const first = segments(pathname)[0];
-  return first && isLang(first) ? first : SITE.defaultLang;
-}
-
 /**
- * 路径 → 图纸。语言段先摘掉（静态导出下每页都在 `/{lang}/…` 下），再看第一段：
- *   `/zh/`              → home
- *   `/zh/posts/`        → posts（列表）
- *   `/zh/posts/<slug>/` → article（正文，列表以外的任何一层）
+ * 路径 → 图纸，看第一段：
+ *   `/`                 → home
+ *   `/posts/`           → posts（列表）
+ *   `/posts/<slug>/`    → article（正文，列表以外的任何一层）
+ *   `/docs/`            → docs（资料列表）
+ *   `/docs/<slug>/`     → article（资料正文，与文章页同一套阅读版式）
  *   `/offline/`         → offline
  *   其它                → unknown
  */
 export function sectionFromPath(pathname: string): DecorSection {
   const parts = segments(pathname);
-  if (parts.length > 0 && isLang(parts[0])) parts.shift();
   if (parts.length === 0) return "home";
 
   const [head, ...rest] = parts;
   if (head === "offline") return "offline";
   if (!isRouteId(head)) return "unknown";
-  if (head === "posts" && rest.length > 0) return "article";
+  if ((head === "posts" || head === "docs") && rest.length > 0) return "article";
   return head;
 }
 
@@ -514,21 +533,20 @@ export function decorate(pathname: string): Decor {
   return {
     section,
     sheet: SHEETS[section],
-    lang: langFromPath(pathname),
     figure: FIGURES[section],
   };
 }
 
-/** 实体注解上的编号，例如 `TOB-ZH-04`（TOB = Text-Only-Blog） */
+/** 实体注解上的编号，例如 `TOB-04`（TOB = Text-Only-Blog） */
 export function decorCode(decor: Decor): string {
-  return `TOB-${decor.lang.toUpperCase()}-${decor.sheet}`;
+  return `TOB-${decor.sheet}`;
 }
 
-/** 实体注解上的名字：RouteId 的图纸复用导航文案（`SITE.i18n.nav`，那一排入口现在在页脚），
-    其余三张在 `SITE.i18n.decor` 里 */
-export function decorLabel(section: DecorSection, lang: Lang): string {
-  const t = SITE.i18n[lang];
-  if (section === "article" || section === "offline" || section === "unknown") {
+/** 实体注解上的名字：RouteId 的图纸复用导航文案（`SITE.strings.nav`，那一排入口现在在页脚），
+    其余三张在 `SITE.strings.decor` 里 */
+export function decorLabel(section: DecorSection): string {
+  const t = SITE.strings;
+  if (section === "article" || section === "docs" || section === "offline" || section === "unknown") {
     return t.decor[section];
   }
   return t.nav[section];

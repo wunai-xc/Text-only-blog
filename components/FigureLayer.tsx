@@ -357,7 +357,7 @@ function FigureNodeFor({
       variant={variant}
       seedKey={pathname}
       code={decorCode(decor)}
-      label={decorLabel(decor.section, decor.lang)}
+      label={decorLabel(decor.section)}
     />
   );
 }

@@ -1,21 +1,19 @@
 /**
- * lib/site-strings.ts —— 页面骨架的中英文案（从 lib/site.ts 拆出）
+ * lib/site-strings.ts —— 页面骨架的中文文案（从 lib/site.ts 拆出）
  *
  * 这里的每一句都是「界面上的字」：顶栏、页脚、设置中心的标题与说明、上传字体的报错。
  * 它是全站改得最勤的一块内容（比站点域名、评论配置勤得多），所以单独一个文件 ——
  * 改文案不用在一堆配置里翻。
  *
- * 用法：`SITE.i18n[lang]`（SITE 在 lib/site.ts，把这张表挂了进去）。
+ * 用法：`SITE.strings`（SITE 在 lib/site.ts，把这张表挂了进去）。
  *
- * ⚠️ 中英各一份，`SiteStrings` 接口约束两边字段完全一致 —— 缺一边 TypeScript 直接报错
- * （约定第 3 条）。加一句话要**同时**给 zh 和 en 补上，否则这里编译不过。
+ * 站点已改为单语中文：这里只有一份 `SITE_STRINGS`，加一句话直接加。
  *
  * 另外两类文案不在这里，跟着各自的选项走（与阅读偏好的做法一致）：
  *   - 外观（跟随系统 / 纸 / 亮 / 暗）在 lib/theme.ts 的 `THEME_LABELS`；
  *   - 阅读偏好（字体 / 宽度 / 字号 / 行距 / 缩进）在 lib/prefs.ts 的 `READING_*` 表。
  */
 
-import type { Lang } from "./lang";
 import type { RouteId } from "./routes";
 
 export interface SiteStrings {
@@ -29,7 +27,7 @@ export interface SiteStrings {
    * 图签名字（右下角那张「图纸标题栏」）里 RouteId 之外的三张图纸。
    * RouteId 那几张直接复用上面的 nav，不另写一份。
    */
-  decor: Record<"article" | "offline" | "unknown", string>;
+  decor: Record<"article" | "docs" | "offline" | "unknown", string>;
   brandTagline: string;
   brandAbout: string;
   allPosts: string;
@@ -82,13 +80,13 @@ export interface SiteStrings {
   localFontErrStore: string;
 }
 
-export const I18N: Record<Lang, SiteStrings> = {
-  zh: {
+export const SITE_STRINGS: SiteStrings = {
     navLabel: "站点导航",
     navPending: (item) => `这一页还没做（第 ${item} 项落地），先点不进去`,
     nav: {
       home: "首页",
       posts: "文章",
+      docs: "资料",
       tags: "标签",
       categories: "分类",
       archives: "归档",
@@ -97,7 +95,7 @@ export const I18N: Record<Lang, SiteStrings> = {
       about: "关于",
       settings: "设置",
     },
-    decor: { article: "正文", offline: "离线", unknown: "未编号" },
+    decor: { article: "正文", docs: "资料", offline: "离线", unknown: "未编号" },
     brandTagline: "wunai 是谁？",
     brandAbout: "About……",
     allPosts: "全部文章 →",
@@ -148,72 +146,4 @@ export const I18N: Record<Lang, SiteStrings> = {
     localFontErrSize: "字体文件太大了（上限 30 MB）。",
     localFontErrRead: "这个文件里读不出有效字体，换一份试试。",
     localFontErrStore: "浏览器没能存下这份字体（隐私模式或存储空间不足）。",
-  },
-  en: {
-    navLabel: "Site navigation",
-    navPending: (item) => `Not built yet (lands in item ${item})`,
-    nav: {
-      home: "Home",
-      posts: "Posts",
-      tags: "Tags",
-      categories: "Categories",
-      archives: "Archive",
-      search: "Search",
-      links: "Links",
-      about: "About",
-      settings: "Settings",
-    },
-    decor: { article: "Article", offline: "Offline", unknown: "Unnumbered" },
-    brandTagline: "Who is wunai?",
-    brandAbout: "About…",
-    allPosts: "All posts →",
-    headerImage: "Image · edit here",
-    statsPosts: (count) => `${count} post${count === 1 ? "" : "s"}`,
-    statsWords: (count) => `${count} words`,
-    statsUpdated: (date) => `updated ${date}`,
-    statsEmpty: "No posts yet — the first one is yours to write",
-    contactTitle: "Contact",
-    contactBody:
-      "Reach me by email, through my blog, or add me on QQ to pester me: 3234319738",
-    email: "Email",
-    github: "GitHub",
-    repo: "Source",
-    rss: "RSS",
-    notFilled: "Edit here",
-    footerNote: "Thanks for reading. May we be friends and grow together.",
-    poweredBy: "Next.js + Cloudflare Workers static assets",
-    settingsTitle: "Settings",
-    settingsOpen: "Open settings",
-    settingsClose: "Close settings",
-    settingsIntro:
-      "Everything here is a preference in your own browser: stored locally (preferences in localStorage, an uploaded font file in IndexedDB), never uploaded, not shared between devices.",
-    appearance: "Appearance",
-    reading: "Reading",
-    readingHint:
-      "Changes the width / size / leading / first-line indent and font of the body text (the --reading-* tokens from item 6). Takes effect immediately, site-wide. Width, size and leading are sliders: until you drag one, its value is the default worked out from your screen size (a bigger screen gets a slightly wider column and larger type); once you drag it, yours wins, and “Reset” hands it back to the screen. The small ring on the rail marks that default value, and dragging snaps to the tick nodes. The seven font presets use fonts already installed on your device — nothing is downloaded; what you actually see depends on which of them your device has. The Custom preset uses a font file you upload yourself, kept in your browser only.",
-    readingFont: "Font",
-    readingWidth: "Width",
-    readingSize: "Font size",
-    readingLeading: "Line height",
-    readingIndent: "Paragraph indent",
-    readingCurrent: "Current values",
-    listPrefs: "Lists & card groups",
-    listPrefsHint:
-      "The list page groups posts by directory into card groups; this decides whether a group opens or starts folded. Takes effect immediately.",
-    autoFoldLabel: "Fold long groups",
-    autoFoldHint:
-      "Groups with more posts than this start folded on the list page (click the arrow next to a group name to expand it). It only sets the opening state — any group you open by hand stays as you left it.",
-    reset: "Reset to defaults",
-    resetHint: "Restores appearance, reading preferences and list/card-group settings (your posts are untouched).",
-    localFontUpload: "Upload a font file",
-    localFontReplace: "Replace",
-    localFontRemove: "Remove",
-    localFontEmpty: "No font file uploaded yet — upload one to read in your own font.",
-    localFontHint:
-      "Pick a font file from your device (woff2 / woff / ttf / otf, up to 30 MB). It is read and stored inside your browser only (IndexedDB) — never uploaded, and it does not follow your account.",
-    localFontErrType: "Only woff2 / woff / ttf / otf font files are supported.",
-    localFontErrSize: "That font file is too large (30 MB max).",
-    localFontErrRead: "No usable font could be read from that file — try another one.",
-    localFontErrStore: "Your browser could not store this font (private mode or no space).",
-  },
-};
+  };

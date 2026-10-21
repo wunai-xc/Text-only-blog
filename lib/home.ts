@@ -2,7 +2,7 @@
  * lib/home.ts —— 首页版面与文案（第 9 项：八栏吸附式首页）
  *
  * 首页的**唯一事实来源**：八栏的顺序、每栏的编号与文案都在这里。
- * 页面（app/[lang]/page.tsx）只把 `HOME_ORDER` 渲染成 <section>，不在页面里写死顺序 ——
+ * 页面（app/(site)/page.tsx）只把 `HOME_ORDER` 渲染成 <section>，不在页面里写死顺序 ——
  * 想换顺序就改下面那个数组，栏号会自动跟着变。
  *
  * 当前版面：**一栏一屏**，八栏从上到下依次占满一屏（滚动时一屏一栏地吸附）：
@@ -28,7 +28,6 @@
  * 零依赖（只 import 类型），服务端与浏览器都能用。
  */
 
-import type { Lang } from "./lang";
 import type { TypographyCounts } from "./typography";
 
 /* ------------------------------- 版面 ------------------------------- */
@@ -119,7 +118,7 @@ export interface HomeText {
     newTag: string;
   };
   inventory: {
-    labels: { posts: string; groups: string; tags: string; categories: string; langs: string };
+    labels: { posts: string; groups: string; tags: string; categories: string };
     note: string;
   };
   reading: {
@@ -185,9 +184,8 @@ const ZH: HomeText = {
       groups: "专题（笔记）",
       tags: "标签",
       categories: "题材（分类）",
-      langs: "语言",
     },
-    note: "「笔记」目前对应卡组：content/<lang>/posts/ 下带 _index.md 的目录（专题）。要真正的短笔记型内容，得另加一种目录类型，说一声即可。",
+    note: "「笔记」目前对应卡组：content/posts/ 下带 _index.md 的目录（专题）。要真正的短笔记型内容，得另加一种目录类型，说一声即可。",
   },
   reading: {
     lead: "中文排版在渲染时自动优化，四条规则都在 lib/typography.ts 里；代码、公式、链接地址一律跳过。",
@@ -225,93 +223,6 @@ const ZH: HomeText = {
   },
 };
 
-const EN: HomeText = {
-  indexLabel: "Home sections",
-  indexNote: "8 blocks",
-  blocks: {
-    intro: { title: "About this site", kicker: "Opening" },
-    posts: { title: "Posts", kicker: "Start here" },
-    stats: { title: "Statistics", kicker: "How much is written" },
-    changelog: { title: "Changelog", kicker: "Latest commits" },
-    inventory: { title: "What is inside", kicker: "Content types" },
-    reading: { title: "Reading comfort", kicker: "Tuned for Chinese" },
-    themes: { title: "Appearance", kicker: "Paper / light / dark" },
-    fonts: { title: "Text settings", kicker: "Font / width / size / leading" },
-  },
-  intro: {
-    body: "This site is my notebook, my database. It is mostly text, with very few images or videos; the posts are hand-written in Markdown, every one by the author.",
-    entries: "Start here",
-    rss: "RSS feed",
-    note: "Link availability has a single source of truth (ROUTES in lib/routes.ts): pages that do not exist yet render as non-clickable, so there are no dead links.",
-  },
-  posts: {
-    count: (n) => `Newest first, pinned on top — ${n} shown in this block`,
-    empty: "No posts yet — the first one is yours to write; cards appear here automatically.",
-  },
-  stats: {
-    note: "These numbers come from the build: they are recomputed on every deploy, so this is “how much text the repo holds right now”, not traffic.",
-    analytics:
-      "Edit here: to count visits, a static site needs an external service (Cloudflare Web Analytics, or a counter of your own) — drop its script into this block.",
-    labels: {
-      words: "Words",
-      reading: "Reading (min)",
-      first: "First post",
-      last: "Last update",
-      built: "This build",
-      drafts: "Drafts (unpublished)",
-    },
-  },
-  changelog: {
-    note: "Fetched once at build time: the GitHub API first, then the local git history (merges excluded). Each row opens that commit on GitHub — also evidence that the site is still growing.",
-    empty: "Neither source worked (no .git in the build, and the GitHub API unreachable) — this block stays empty and nothing else is affected.",
-    limit: (n) => `Latest ${n}`,
-    newTag: "New",
-  },
-  inventory: {
-    labels: {
-      posts: "Posts",
-      groups: "Groups (notes)",
-      tags: "Tags",
-      categories: "Topics",
-      langs: "Languages",
-    },
-    note: "“Notes” currently maps to card groups: directories under content/<lang>/posts/ with an _index.md. Real short-form notes would need another content type — just ask.",
-  },
-  reading: {
-    lead: "Chinese typography is optimised while rendering; the four rules live in lib/typography.ts and never touch code, math or link URLs.",
-    /* 这一段故意是中文：四条规则只作用于中文语境，换成英文就演示不出效果了 */
-    sample: "他在2024年写下第一篇笔记,saying that 42%的灵感来自...读书(大概)。",
-    before: "Before (as written)",
-    after: "After (rewritten while rendering)",
-    counts: (counts) =>
-      `${counts.spaces} space(s) inserted · ${counts.punctuation} punctuation mark(s) made full-width · ${counts.parentheses} parenthesis · ${counts.ellipses} ellipsis`,
-    rulesLabel: "The four rules",
-    rules: [
-      "A space between Chinese and Latin or digits: 中文English → 中文 English",
-      "Half-width sentence punctuation → full-width (Chinese context only): , → ，",
-      "Paired half-width brackets → full-width (f(x) is left alone)",
-      "Three dots become an ellipsis: ... → ……",
-    ],
-    featuresLabel: "What is already in place",
-    features: [
-      "Eye-friendly paper background, three appearance token sets (try block 7)",
-      "Body font (seven presets pulled from fonts on your device, plus a Custom preset that uses a font file you upload) and width / size / leading, three steps each (block 8)",
-      "Code highlighting, KaTeX math (incl. \\ce chemistry), five chart types loaded on demand",
-      "Print to a properly typeset PDF (Ctrl+P)",
-      "RSS feed and offline support (Service Worker + offline page)",
-      "Floating table of contents, reading progress and a back-to-top button (article pages)",
-    ],
-  },
-  themes: {
-    lead: "Colour has exactly one source of truth: the three token sets in app/globals.css. “Paper” is the default and what you get without JS; one click applies site-wide.",
-    demo: "Only one thing is indispensable: a man must attain self-fulfilment — whether through poetry or through art — only then is a man worth looking at. Yet self-fulfilment is at most a necessary condition. There are many people in the world who have attained self-fulfilment, and for that very reason they are not worth looking at.",
-  },
-  fonts: {
-    lead: "Font / width / size / leading are the four --reading-* tokens: the body text and the sample below share the same metrics, so changes apply instantly. The seven presets use fonts already on your device; the last, Custom, uses a font file you upload yourself — either way, nothing is downloaded.",
-    sample: "Albert Einstein — E = mc², proposed in 1905 within the framework of special relativity",
-    custom:
-      "The Custom preset needs a font file from you first: pick one (woff2 / woff / ttf / otf) in the settings panel at the bottom-left. It is read and stored inside your browser only — never uploaded.",
-  },
-};
 
-export const HOME_TEXT: Record<Lang, HomeText> = { zh: ZH, en: EN };
+
+export const HOME_TEXT: HomeText = ZH;

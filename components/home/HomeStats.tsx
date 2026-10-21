@@ -1,7 +1,6 @@
 import HomeBlockHead from "./HomeBlockHead";
 import type { ContentStats } from "@/lib/content";
 import { HOME_TEXT } from "@/lib/home";
-import type { Lang } from "@/lib/lang";
 
 /**
  * 第 3 栏：数据统计（第 9 项）
@@ -17,8 +16,8 @@ import type { Lang } from "@/lib/lang";
  * 生产构建里它们不计入「文章 / 字数」，所以这一格显示的是**还没发布的稿子有几篇**；
  * 没有草稿时这一格不出现。
  */
-export default function HomeStats({ lang, stats }: { lang: Lang; stats: ContentStats }) {
-  const t = HOME_TEXT[lang].stats;
+export default function HomeStats({ stats }: { stats: ContentStats }) {
+  const t = HOME_TEXT.stats;
   const built = new Date().toISOString().slice(0, 10);
 
   const cells = [
@@ -32,7 +31,7 @@ export default function HomeStats({ lang, stats }: { lang: Lang; stats: ContentS
 
   return (
     <>
-      <HomeBlockHead id="stats" lang={lang} />
+      <HomeBlockHead id="stats" />
       <div className="home-grid">
         {cells.map((cell) => (
           <div className="home-cell" key={cell.label}>

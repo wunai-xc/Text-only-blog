@@ -10,7 +10,6 @@ import {
   type ChartModule,
 } from "@/lib/charts";
 import { ARTICLE_TEXT } from "@/lib/article";
-import type { Lang } from "@/lib/lang";
 import {
   currentTheme,
   isDarkTheme,
@@ -91,8 +90,6 @@ function fillGitHubCard(card: HTMLElement, user: GitHubUser): void {
 export interface ArticleBodyProps {
   /** lib/markdown.ts 渲染出来的正文 HTML */
   html: string;
-  /** 当前语言：代码块复制按钮的文案（复制 / 已复制 / 复制失败）跟着它走 */
-  lang: Lang;
   className?: string;
 }
 
@@ -108,10 +105,10 @@ export interface ArticleBodyProps {
  *   2. subscribeTheme() 订阅外观变化（设置中心切换、系统深浅色变化），变了就重绘。
  *      重绘 = 清理旧图 → 再跑一遍渲染器，代价只在真的有图表的文章里付。
  */
-export default function ArticleBody({ html, lang, className }: ArticleBodyProps) {
+export default function ArticleBody({ html, className }: ArticleBodyProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [theme, setTheme] = useState<Theme>(() => currentTheme());
-  const t = ARTICLE_TEXT[lang];
+  const t = ARTICLE_TEXT;
 
   useEffect(() => subscribeTheme((detail) => setTheme(detail.theme)), []);
 

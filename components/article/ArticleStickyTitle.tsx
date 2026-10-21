@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import type { TocEntry } from "@/lib/markdown";
 
 import { flattenToc, useActiveHeading } from "./useActiveHeading";
-import { ARTICLE_TEXT, STICKY_TITLE_OFFSET } from "@/lib/article";
-import type { Lang } from "@/lib/lang";
+import { articleTextFor, STICKY_TITLE_OFFSET } from "@/lib/article";
+import type { Collection } from "@/lib/content";
 
 /**
  * 粘性标题（第 12 项）
@@ -38,17 +38,18 @@ import type { Lang } from "@/lib/lang";
  * 目录面板与它可能重叠，那时让目录压在上面（读者正在点的是目录）。
  */
 export default function ArticleStickyTitle({
-  lang,
   title,
   toc,
+  collection = "posts",
 }: {
-  lang: Lang;
   /** 这一篇的标题（正文 `<h1>` 的那串字） */
   title: string;
   /** 正文目录（第 3 项收集的）；当前小节名从它里面查 */
   toc: TocEntry[];
+  /** 内容集合：决定「文章 / 资料」这一层称谓 */
+  collection?: Collection;
 }) {
-  const t = ARTICLE_TEXT[lang];
+  const t = articleTextFor(collection);
   const [visible, setVisible] = useState(false);
   // 与目录 / 进度条同一个判定；toc 为空时恒为 null，右边那一段自然不出现
   const active = useActiveHeading(toc);

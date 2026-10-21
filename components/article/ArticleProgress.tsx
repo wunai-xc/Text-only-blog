@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@iconify/react/offline";
 
+import type { Collection } from "@/lib/content";
 import { flattenToc, useActiveHeading } from "./useActiveHeading";
 import {
-  ARTICLE_TEXT,
+  articleTextFor,
   BACK_TO_TOP_AFTER,
   PROGRESS_KEY_STEP,
   PROGRESS_NEAR_THRESHOLD,
@@ -14,7 +15,6 @@ import {
 import { icons } from "@/lib/icons";
 import { READING_EVENT } from "@/lib/prefs";
 import type { TocEntry } from "@/lib/markdown";
-import type { Lang } from "@/lib/lang";
 
 /**
  * 阅读进度（**可拖动的滑块**）+ 轨道上的**章节节点** + 回到顶部（**带进度环**）（第 12 项）
@@ -80,8 +80,14 @@ interface ProgressMark {
   pos: number;
 }
 
-export default function ArticleProgress({ lang, toc }: { lang: Lang; toc: TocEntry[] }) {
-  const t = ARTICLE_TEXT[lang];
+export default function ArticleProgress({
+  toc,
+  collection = "posts",
+}: {
+  toc: TocEntry[];
+  collection?: Collection;
+}) {
+  const t = articleTextFor(collection);
   const [progress, setProgress] = useState(0);
   const [showTop, setShowTop] = useState(false);
   const [dragging, setDragging] = useState(false);

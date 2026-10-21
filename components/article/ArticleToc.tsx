@@ -5,10 +5,10 @@ import { Icon } from "@iconify/react/offline";
 
 import ArticlePager from "./ArticlePager";
 import { useActiveHeading } from "./useActiveHeading";
-import { ARTICLE_TEXT, TOC_MAX_DEPTH, tocIndent, type PagerTarget } from "@/lib/article";
+import { articleTextFor, TOC_MAX_DEPTH, tocIndent, type PagerTarget } from "@/lib/article";
+import type { Collection } from "@/lib/content";
 import { icons } from "@/lib/icons";
 import type { TocEntry } from "@/lib/markdown";
-import type { Lang } from "@/lib/lang";
 
 /**
  * 悬浮目录（第 12 项）
@@ -41,18 +41,18 @@ import type { Lang } from "@/lib/lang";
 const TOC_BODY_ID = "article-toc-body";
 
 export default function ArticleToc({
-  lang,
+  collection = "posts",
   toc,
   older,
   newer,
 }: {
-  lang: Lang;
+  collection?: Collection;
   toc: TocEntry[];
   /** 上下篇的格子：可能是一篇文章，也可能是「全部文章」出口（见 lib/article.ts） */
   older: PagerTarget | null;
   newer: PagerTarget | null;
 }) {
-  const t = ARTICLE_TEXT[lang];
+  const t = articleTextFor(collection);
   const [open, setOpen] = useState(false);
   const active = useActiveHeading(toc);
   const root = useRef<HTMLElement | null>(null);
@@ -141,7 +141,7 @@ export default function ArticleToc({
         </p>
         {hasHeadings ? renderList(toc) : <p className="article-toc-empty">{t.tocEmpty}</p>}
         {hasHeadings ? <p className="article-toc-note">{t.tocNote}</p> : null}
-        <ArticlePager lang={lang} older={older} newer={newer} variant="compact" />
+        <ArticlePager collection={collection} older={older} newer={newer} variant="compact" />
       </div>
     </nav>
   );

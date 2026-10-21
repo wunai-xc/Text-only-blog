@@ -1,8 +1,8 @@
 import { Icon } from "@iconify/react/offline";
 
-import { ARTICLE_TEXT, type PagerTarget } from "@/lib/article";
+import { articleTextFor, type PagerTarget } from "@/lib/article";
+import type { Collection } from "@/lib/content";
 import { icons } from "@/lib/icons";
-import type { Lang } from "@/lib/lang";
 
 /**
  * 上下篇（第 12 项）
@@ -17,18 +17,18 @@ import type { Lang } from "@/lib/lang";
  * 没有目标就不画那一格（不留空框），`full` 一档在宽屏左右各占一列。
  */
 export default function ArticlePager({
-  lang,
+  collection = "posts",
   older,
   newer,
   variant = "full",
 }: {
-  lang: Lang;
+  collection?: Collection;
   older: PagerTarget | null;
   newer: PagerTarget | null;
   /** full = 文章末尾两栏；compact = 悬浮目录里的窄条 */
   variant?: "full" | "compact";
 }) {
-  const t = ARTICLE_TEXT[lang];
+  const t = articleTextFor(collection);
   if (!older && !newer) return null;
 
   /** 箭头跟着方向走：上一篇在左侧、下一篇在右侧（都在标签文字的外侧） */

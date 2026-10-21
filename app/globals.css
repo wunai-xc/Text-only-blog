@@ -2496,7 +2496,7 @@ html[data-reading="hidden"] {
     letter-spacing: -0.01em;
   }
 
-  /* 组名是可以点的（链到卡组自己的页面：/zh/posts/notes/）。
+  /* 组名是可以点的（链到卡组自己的页面：/posts/notes/）。
      画法沿用全站链接那一套：悬停才出下划线，不喧哗。 */
   .list-group-title a {
     color: inherit;
@@ -2508,7 +2508,7 @@ html[data-reading="hidden"] {
     text-underline-offset: 0.2em;
   }
 
-  /* 卡组页（`/<lang>/posts/<group>/`）的组封面：`_index.md` 写了 cover 才有。
+  /* 卡组页（`/posts/<group>/`）的组封面：`_index.md` 写了 cover 才有。
      与卡片一样是「有就用、没有也不缺一块」的东西，所以固定一个高度、
      居中裁切，别让一张竖图把页头撑到一屏。 */
   .list-group-cover {

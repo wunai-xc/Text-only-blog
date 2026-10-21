@@ -1,8 +1,7 @@
 /**
  * lib/feeds.ts —— RSS 2.0 订阅源（第 5 项：构建产物）
  *
- * 每语言一份：`/zh/feed.xml`、`/en/feed.xml`（app/[lang]/feed.xml/route.ts），
- * 另有 `/feed.xml` 指向默认语言（app/feed.xml/route.ts），方便「一个地址订阅全站」的习惯。
+ * 一份：`/feed.xml`（app/feed.xml/route.ts），订阅全站博客文章。
  *
  * 只输出 RSS 2.0（不另做 Atom / JSON Feed）：对纯文字博客够用，且所有阅读器都认。
  * 每条只给摘要 + 链接，不带全文（`content:encoded`）——
@@ -13,17 +12,13 @@
  */
 
 import { getPosts, type PostMeta } from "./content";
-import type { Lang } from "./lang";
 import { SITE } from "./site";
 
 /** RSS 里最多放多少条 */
 export const FEED_LIMIT = 30;
 
-/** 语言的 RSS 语言标签（channel 的 <language>） */
-const FEED_LANGUAGE: Record<Lang, string> = {
-  zh: "zh-CN",
-  en: "en",
-};
+/** RSS 语言标签（channel 的 <language>） */
+const FEED_LANGUAGE = "zh-CN";
 
 function escapeXml(value: string): string {
   return value
@@ -86,13 +81,13 @@ function renderItems(posts: PostMeta[]): string {
  * 生成一份 RSS 2.0 文档。
  *
  * ```ts
- * buildRssFeed("zh"); // → "<?xml version="1.0" encoding="utf-8"?>…"
+ * buildRssFeed(); // → "<?xml version="1.0" encoding="utf-8"?>…"
  * ```
  */
-export function buildRssFeed(lang: Lang, limit = FEED_LIMIT): string {
-  const posts = getPosts(lang).slice(0, Math.max(0, limit));
-  const self = absolute(`/${lang}/feed.xml`);
-  const home = absolute(`/${lang}/`);
+export function buildRssFeed(limit = FEED_LIMIT): string {
+  const posts = getPosts("posts").slice(0, Math.max(0, limit));
+  const self = absolute("/feed.xml");
+  const home = absolute("/");
 
   const lines = [
     '<?xml version="1.0" encoding="utf-8"?>',
@@ -101,7 +96,7 @@ export function buildRssFeed(lang: Lang, limit = FEED_LIMIT): string {
     `    <title>${escapeXml(SITE.title)}</title>`,
     `    <link>${escapeXml(home)}</link>`,
     `    <description>${escapeXml(sanitize(SITE.description))}</description>`,
-    `    <language>${FEED_LANGUAGE[lang]}</language>`,
+    `    <language>${FEED_LANGUAGE}</language>`,
     `    <lastBuildDate>${channelDate(posts)}</lastBuildDate>`,
     `    <generator>text-only-blog</generator>`,
     `    <atom:link href="${escapeXml(self)}" rel="self" type="application/rss+xml"/>`,

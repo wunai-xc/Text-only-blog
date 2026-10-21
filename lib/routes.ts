@@ -9,11 +9,11 @@
  */
 
 import type { IconName } from "./icons";
-import type { Lang } from "./lang";
 
 export type RouteId =
   | "home"
   | "posts"
+  | "docs"
   | "tags"
   | "categories"
   | "archives"
@@ -23,7 +23,7 @@ export type RouteId =
   | "settings";
 
 export interface SiteRoute {
-  /** 路径模板，`{lang}` 会被替换成 zh / en */
+  /** 站内路径 */
   path: string;
   /** ready = 页面已经存在；pending = 还没做，UI 里渲染成不可点 */
   status: "ready" | "pending";
@@ -40,50 +40,57 @@ export interface SiteRoute {
  * 把对应项的 status 从 "pending" 改成 "ready" 即可（顺序即站内导航顺序）。
  */
 export const ROUTES: Record<RouteId, SiteRoute> = {
-  home: { path: "/{lang}/", status: "ready", item: 1, nav: true, icon: "mdi:home-outline" },
+  home: { path: "/", status: "ready", item: 1, nav: true, icon: "mdi:home-outline" },
   posts: {
-    path: "/{lang}/posts/",
+    path: "/posts/",
     status: "ready",
     item: 10,
     nav: true,
     icon: "mdi:post-outline",
   },
+  docs: {
+    path: "/docs/",
+    status: "ready",
+    item: 10,
+    nav: true,
+    icon: "mdi:book-open-outline",
+  },
   tags: {
-    path: "/{lang}/tags/",
+    path: "/tags/",
     status: "ready",
     item: 13,
     nav: true,
     icon: "mdi:tag-multiple-outline",
   },
   categories: {
-    path: "/{lang}/categories/",
+    path: "/categories/",
     status: "ready",
     item: 13,
     nav: true,
     icon: "mdi:shape-outline",
   },
   archives: {
-    path: "/{lang}/archives/",
+    path: "/archives/",
     status: "ready",
     item: 13,
     nav: true,
     icon: "mdi:archive-outline",
   },
-  search: { path: "/{lang}/search/", status: "ready", item: 13, nav: true, icon: "mdi:magnify" },
+  search: { path: "/search/", status: "ready", item: 13, nav: true, icon: "mdi:magnify" },
   links: {
-    path: "/{lang}/links/",
+    path: "/links/",
     status: "ready",
     item: 13,
     nav: true,
     icon: "mdi:account-multiple-outline",
   },
-  about: { path: "/{lang}/about/", status: "ready", item: 13, icon: "mdi:account-outline" },
-  settings: { path: "/{lang}/settings/", status: "ready", item: 13, icon: "mdi:cog-outline" },
+  about: { path: "/about/", status: "ready", item: 13, icon: "mdi:account-outline" },
+  settings: { path: "/settings/", status: "ready", item: 13, icon: "mdi:cog-outline" },
 };
 
-/** 路径（替换 {lang}）；不保证这一页已经存在 —— 判断用 routeReady() */
-export function routeHref(id: RouteId, lang: Lang): string {
-  return ROUTES[id].path.replace("{lang}", lang);
+/** 路径；不保证这一页已经存在 —— 判断用 routeReady() */
+export function routeHref(id: RouteId): string {
+  return ROUTES[id].path;
 }
 
 export function routeReady(id: RouteId): boolean {

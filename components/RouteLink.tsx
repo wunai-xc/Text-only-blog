@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import type { Lang } from "@/lib/lang";
 import { ROUTES, routeHref, type RouteId } from "@/lib/routes";
 import { SITE } from "@/lib/site";
 
@@ -20,13 +19,11 @@ import { SITE } from "@/lib/site";
  */
 export default function RouteLink({
   route,
-  lang,
   className,
   title,
   children,
 }: {
   route: RouteId;
-  lang: Lang;
   className?: string;
   /** 悬停提示。顶栏的图标 + 小字入口（友链）用它给一个说得清楚的说明 */
   title?: string;
@@ -36,7 +33,7 @@ export default function RouteLink({
 
   if (entry.status === "ready") {
     return (
-      <Link className={className} href={routeHref(route, lang)} {...(title ? { title } : {})}>
+      <Link className={className} href={routeHref(route)} {...(title ? { title } : {})}>
         {children}
       </Link>
     );
@@ -44,7 +41,7 @@ export default function RouteLink({
 
   // pending 时**不吞掉**这个提示，而是两句拼起来：否则顶栏那样「自己带了 title 的入口」
   // 会让读者以为这一页已经做好了、只是点了没反应（提示是 pending 态唯一说理的地方）。
-  const pendingHint = SITE.i18n[lang].navPending(entry.item);
+  const pendingHint = SITE.strings.navPending(entry.item);
 
   return (
     <span

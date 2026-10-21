@@ -1,7 +1,6 @@
 import HomeBlockHead from "./HomeBlockHead";
 import type { ChangelogEntry } from "@/lib/changelog";
 import { HOME_TEXT } from "@/lib/home";
-import type { Lang } from "@/lib/lang";
 
 /**
  * 第 4 栏：更新日志（第 9 项）
@@ -11,7 +10,7 @@ import type { Lang } from "@/lib/lang";
  * 悬停时描边 + 底色浮出来，点开是这条提交在 GitHub 上的页面（新标签页）。
  *
  * 数据是 lib/changelog.ts 在**构建期**取一次（先 GitHub API、再 `git log`；
- * 最多 5 条，不含合并提交；条数由 app/[lang]/page.tsx 的 HOME_CHANGELOG_LIMIT 决定）。
+ * 最多 5 条，不含合并提交；条数由 app/(site)/page.tsx 的 HOME_CHANGELOG_LIMIT 决定）。
  * 两个来源都拿不到时它返回空数组并打一条警告，**不会让构建失败** —— 所以这一栏有明确的空状态。
  *
  * 两条与参考项目一致的判断：
@@ -21,17 +20,15 @@ import type { Lang } from "@/lib/lang";
  *      不是每条都有的装饰。
  */
 export default function HomeChangelog({
-  lang,
   entries,
 }: {
-  lang: Lang;
   entries: ChangelogEntry[];
 }) {
-  const t = HOME_TEXT[lang].changelog;
+  const t = HOME_TEXT.changelog;
 
   return (
     <>
-      <HomeBlockHead id="changelog" lang={lang} />
+      <HomeBlockHead id="changelog" />
       {entries.length > 0 ? (
         <>
           <p className="home-note">{t.limit(entries.length)}</p>

@@ -3,7 +3,6 @@ import { Icon } from "@iconify/react/offline";
 
 import { icons } from "@/lib/icons";
 import { LIST_TEXT, type Density, type ListPost } from "@/lib/list";
-import type { Lang } from "@/lib/lang";
 import { ARTICLE_ROUTE } from "@/lib/routes";
 
 /**
@@ -35,14 +34,12 @@ import { ARTICLE_ROUTE } from "@/lib/routes";
  */
 export default function PostCard({
   post,
-  lang,
   density,
 }: {
   post: ListPost;
-  lang: Lang;
   density: Density;
 }) {
-  const t = LIST_TEXT[lang];
+  const t = LIST_TEXT;
   /** 紧凑档只有一行：标题 + 日期与时长 */
   const compact = density === "compact";
   const full = density === "full";
@@ -55,7 +52,6 @@ export default function PostCard({
     <article
       className="post-card"
       data-density={density}
-      data-lang={post.lang}
       data-kind={note ? "note" : "post"}
     >
       <h3 className="post-card-title">

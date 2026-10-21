@@ -13,19 +13,18 @@
  * 索引格式变了就 +1 `SEARCH_INDEX_VERSION`：列表页据此判断本地缓存的索引是否过期。
  */
 
-import { getPostWithBody, getPosts, stripMarkdown } from "./content";
-import { LANGS, type Lang } from "./lang";
+import { COLLECTIONS, getPostWithBody, getPosts, stripMarkdown, type Collection } from "./content";
 
 /** 索引结构版本；改动 SearchDoc 字段时 +1 */
-export const SEARCH_INDEX_VERSION = 1;
+export const SEARCH_INDEX_VERSION = 2;
 
 /** 每篇正文进索引的最大字符数（去掉 Markdown 标记之后） */
 export const SEARCH_BODY_LIMIT = 1200;
 
 export interface SearchDoc {
-  lang: Lang;
+  collection: Collection;
   slug: string;
-  /** 站内路径，形如 /zh/posts/hello/ */
+  /** 站内路径，形如 /posts/hello/ 或 /docs/atomic-energy-for-military-purposes/01-introduction/ */
   href: string;
   title: string;
   description: string;
@@ -72,15 +71,15 @@ function searchableBody(markdown: string, limit = SEARCH_BODY_LIMIT): string {
   return text.length <= limit ? text : text.slice(0, limit);
 }
 
-/** 某语言的索引条目，时间倒序（getPosts 已经排好） */
-function docsFor(lang: Lang): SearchDoc[] {
+/** 某个集合的索引条目，时间倒序（getPosts 已经排好） */
+function docsFor(collection: Collection): SearchDoc[] {
   const docs: SearchDoc[] = [];
 
-  for (const meta of getPosts(lang)) {
+  for (const meta of getPosts(collection)) {
     // 用 getPostWithBody 而不是再解析一次文件：它复用 lib/content.ts 的缓存
-    const withBody = getPostWithBody(lang, meta.slug);
+    const withBody = getPostWithBody(collection, meta.slug);
     docs.push({
-      lang: meta.lang,
+      collection: meta.collection,
       slug: meta.slug,
       href: meta.href,
       title: meta.title,
@@ -104,11 +103,11 @@ function docsFor(lang: Lang): SearchDoc[] {
 }
 
 /**
- * 全部语言的搜索索引（零文章时是一份合法的空索引：count 0 / docs []）。
+ * 全站搜索索引：博客文章 + 资料（零文章时是一份合法的空索引：count 0 / docs []）。
  * draft 在生产构建里不会出现（lib/content.ts 的默认行为）。
  */
 export function buildSearchIndex(): SearchIndex {
-  const docs = LANGS.flatMap((lang) => docsFor(lang));
+  const docs = COLLECTIONS.flatMap((collection) => docsFor(collection));
 
   return {
     version: SEARCH_INDEX_VERSION,

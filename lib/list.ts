@@ -4,22 +4,21 @@
  * 与 lib/home.ts 是同一个取舍：**这一页的事实来源只有这一个文件**。
  * 放在这里的四样东西：
  *   1. 筛选状态（`ListFilters`）与默认值：搜索词 / 标签 / 分类 / 时间 / AI / 排序 / 密度；
- *   2. 选项表：三档密度、两种排序、时间（年份由数据推出来）—— 中英文案跟着选项走，
+ *   2. 选项表：三档密度、两种排序、时间（年份由数据推出来）—— 文案跟着选项走，
  *      与 lib/theme.ts 的 `THEME_LABELS`、lib/prefs.ts 的 `READING_*` 一致；
  *   3. 纯函数：过滤 / 排序 / 生效筛选计数 / URL 查询串的读写 / 密度的本机记忆；
- *   4. 文案（中英各一份，缺一边 TypeScript 直接报错）。
+ *   4. 文案（博客文章与资料各一份，版面与行为完全共用）。
  *
  * **为什么类型上引了 lib/content.ts 与 lib/search-index.ts，却还能被客户端组件 import**：
  * 这两处都只用 `import type` —— 编译后整条 import 被擦掉，运行时不会把它们（以及背后的
  * node:fs）拉进浏览器包。**别改成值导入**（`import { … } from "./content"`），那样客户端会报错。
- * 需要索引结构版本号的地方，由服务端页面当普通 props 传下来（见 app/[lang]/posts/page.tsx）。
+ * 需要索引结构版本号的地方，由服务端页面当普通 props 传下来（见 app/(site)/posts/page.tsx）。
  *
  * 零运行时依赖：fuse.js 只在列表页里按需动态 import（components/list/PostList.tsx）。
  */
 
-import type { CardGroupMeta, PostMeta } from "./content";
+import type { CardGroupMeta, Collection, PostMeta } from "./content";
 import type { SearchDoc } from "./search-index";
-import type { Lang } from "./lang";
 
 /* ------------------------------ 数据结构 ------------------------------ */
 
@@ -29,10 +28,10 @@ import type { Lang } from "./lang";
  * 于是卡片组件只认一种形状（搜索命中与直接渲染走同一条路）。
  */
 export interface ListPost {
+  collection: Collection;
   slug: string;
-  /** 站内路径，形如 /zh/posts/hello/ */
+  /** 站内路径，形如 /posts/hello/ 或 /docs/atomic-energy-for-military-purposes/01-introduction/ */
   href: string;
-  lang: Lang;
   title: string;
   /** ISO 8601 */
   date: string;
@@ -54,9 +53,9 @@ export interface ListPost {
 /** 直接来自内容管线的一篇（服务端页面用） */
 export function toListPost(meta: PostMeta): ListPost {
   return {
+    collection: meta.collection,
     slug: meta.slug,
     href: meta.href,
-    lang: meta.lang,
     title: meta.title,
     date: meta.date,
     updated: meta.updated,
@@ -79,9 +78,9 @@ export function toListPost(meta: PostMeta): ListPost {
  */
 export function fromSearchDoc(doc: SearchDoc): ListPost {
   return {
+    collection: doc.collection,
     slug: doc.slug,
     href: doc.href,
-    lang: doc.lang,
     title: doc.title,
     date: doc.date,
     updated: doc.updated,
@@ -105,10 +104,11 @@ export function fromSearchDoc(doc: SearchDoc): ListPost {
  *
  * 这是 `lib/content.ts` 的 `CardGroupMeta` 的**投影**：那边带着整组文章、封面与文件路径，
  * 客户端组件只要「有哪些组、叫什么、什么顺序」。投影放在这里，页面上一行 `toListGroup()`
- * 就够 —— 与 `toListPost` 同一个做法（两个语言的页面不各写一遍）。
+ * 就够 —— 与 `toListPost` 同一个做法（文章页与资料页不各写一遍）。
  */
 export interface ListGroup {
-  /** 目录相对路径；"" 表示 posts 顶层（顶层不算卡组，见 groupPosts） */
+  collection: Collection;
+  /** 目录相对路径；"" 表示集合顶层（顶层不算卡组，见 groupPosts） */
   slug: string;
   /** `_index.md` 的 title；空串 = 没写，UI 用目录名兜底（见 groupTitle） */
   title: string;
@@ -128,6 +128,7 @@ export interface ListGroup {
 /** `CardGroupMeta` → `ListGroup`（只挑列表页要用的字段） */
 export function toListGroup(group: CardGroupMeta): ListGroup {
   return {
+    collection: group.collection,
     slug: group.slug,
     title: group.title,
     description: group.description,
@@ -195,34 +196,26 @@ export type Density = "compact" | "cozy" | "full";
 
 export interface DensityOption {
   id: Density;
-  zh: string;
-  en: string;
+  label: string;
   /** 一句话说明这一档显示到什么程度（给悬停提示用） */
-  hintZh: string;
-  hintEn: string;
+  hint: string;
 }
 
 export const DENSITIES: DensityOption[] = [
   {
     id: "compact",
-    zh: "紧凑",
-    en: "Compact",
-    hintZh: "一行一篇：标题 + 日期与时长，扫得最快",
-    hintEn: "One line per post: title plus date and reading time",
+    label: "紧凑",
+    hint: "一行一篇：标题 + 日期与时长，扫得最快",
   },
   {
     id: "cozy",
-    zh: "适中",
-    en: "Cozy",
-    hintZh: "标题 + 日期 + 摘要 + 标签（首页第 2 栏用的就是这一档）",
-    hintEn: "Title, date, summary and tags (the home page uses this one)",
+    label: "适中",
+    hint: "标题 + 日期 + 摘要 + 标签（首页第 2 栏用的就是这一档）",
   },
   {
     id: "full",
-    zh: "内容",
-    en: "Full",
-    hintZh: "把这篇的元信息全展开：摘要、字数、修改时间、标签与分类",
-    hintEn: "Everything: summary, word count, last update, tags and topics",
+    label: "内容",
+    hint: "把这篇的元信息全展开：摘要、字数、修改时间、标签与分类",
   },
 ];
 
@@ -244,15 +237,14 @@ export interface AutoFoldOption {
   id: AutoFoldId;
   /** 组内文章数**超过**这个数就默认收起；0 = 不自动收起 */
   threshold: number;
-  zh: string;
-  en: string;
+  label: string;
 }
 
 export const AUTO_FOLDS: AutoFoldOption[] = [
-  { id: "off", threshold: 0, zh: "不自动", en: "Off" },
-  { id: "3", threshold: 3, zh: "超过 3 篇", en: "Over 3" },
-  { id: "5", threshold: 5, zh: "超过 5 篇", en: "Over 5" },
-  { id: "10", threshold: 10, zh: "超过 10 篇", en: "Over 10" },
+  { id: "off", threshold: 0, label: "不自动" },
+  { id: "3", threshold: 3, label: "超过 3 篇" },
+  { id: "5", threshold: 5, label: "超过 5 篇" },
+  { id: "10", threshold: 10, label: "超过 10 篇" },
 ];
 
 /** 默认：超过 3 篇就收起（站长要的那条） */
@@ -271,13 +263,12 @@ export type ListSort = "newest" | "oldest";
 
 export interface SortOption {
   id: ListSort;
-  zh: string;
-  en: string;
+  label: string;
 }
 
 export const SORTS: SortOption[] = [
-  { id: "newest", zh: "最新优先", en: "Newest first" },
-  { id: "oldest", zh: "最早优先", en: "Oldest first" },
+  { id: "newest", label: "最新优先" },
+  { id: "oldest", label: "最早优先" },
 ];
 
 export function isListSort(value: unknown): value is ListSort {
@@ -418,7 +409,7 @@ export function yearsOf(posts: ListPost[]): number[] {
 
 /* --------------------------- URL 查询串 --------------------------- */
 
-/** 只写**非默认**的项：默认状态的地址就是干净的 /zh/posts/ */
+/** 只写**非默认**的项：默认状态的地址就是干净的 /posts/ 或 /docs/ */
 export function listQueryString(filters: ListFilters): string {
   const params = new URLSearchParams();
   const query = filters.q.trim();
@@ -434,31 +425,32 @@ export function listQueryString(filters: ListFilters): string {
 }
 
 /**
- * 「跳到某一类文章」的地址 —— 就是这一页的筛选状态（`/zh/posts/?tag=…`、`/en/posts/?cat=…`）。
+ * 「跳到某一类文章」的地址 —— 就是文章列表页的筛选状态（`/posts/?tag=…`）。
  *
  * 编解码只有上面 `listQueryString` 一处实现，所以文章页的标签片（第 12 项）、
  * 标签页与分类页（第 13 项）都调这一个函数，**不要各自拼查询串**（约定第 9 条）。
  */
-export function facetHref(lang: Lang, key: "tag" | "cat", name: string): string {
+export function facetHref(key: "tag" | "cat", name: string): string {
   const query = listQueryString({
     ...DEFAULT_FILTERS,
     ...(key === "tag" ? { tags: [name] } : { categories: [name] }),
   });
-  return `/${lang}/posts/${query}`;
+  return `/posts/${query}`;
 }
 
 /**
- * 卡组页的地址（`/zh/posts/notes/`）—— 「这个目录/卡组自己」的页面。
+ * 卡组页的地址（`/posts/notes/`、`/docs/atomic-energy-for-military-purposes/`）——
+ * 「这个目录/卡组自己」的页面。
  *
  * 与 `groupPosts()` 用的是**同一份 slug**（`CardGroupMeta.slug` / `ListGroup.slug`），
  * 所以列表页的组头、卡组页本身、sitemap 三处永远指向同一个地址，不会各拼一份。
- * 页面本体在 app/[lang]/posts/[...slug]/page.tsx 里（与文章页同一个 catch-all：
+ * 页面本体在 app/(site)/<collection>/[...slug]/page.tsx 里（与文章页同一个 catch-all：
  * 先按文章 slug 找，找不到再看是不是一个卡组 —— 路由因此不会与 `notes/index.md` 那种
  * 「目录首页」写法打架）。
  */
-export function groupHref(lang: Lang, slug: string): string {
+export function groupHref(collection: Collection, slug: string): string {
   const path = slug.replace(/^\/+|\/+$/g, "");
-  return `/${lang}/posts/${path}/`;
+  return `/${collection}/${path}/`;
 }
 
 /**
@@ -642,7 +634,7 @@ export interface ListText {
   /**
    * 卡组（content/README.md 第 5 节）：列表页按目录把文章分成几块。
    * `ungrouped` 是「没放进任何目录」那一块（顶层文章）—— 它只在有真卡组时才出现。
-   * 卡组页（`/zh/posts/notes/`）复用 `kicker` / `count`，另有两句它自己的话：
+   * 卡组页（`/posts/notes/`）复用 `kicker` / `count`，另有两句它自己的话：
    * `pageNote`（组里没写 description 时的说明）与 `backAll`（回全部文章）。
    */
   groups: {
@@ -690,7 +682,7 @@ const ZH: ListText = {
   rss: "订阅 RSS",
   empty: "还没有文章 —— 第一篇由你亲笔写。",
   emptyHint:
-    "把 .md 放进 content/zh/posts/ 这一页就会自动出现卡片；写作规范（两种 frontmatter、标签、卡组、缩略图）见 content/README.md。",
+    "把 .md 放进 content/posts/ 这一页就会自动出现卡片；写作规范（两种 frontmatter、标签、卡组、缩略图）见 content/README.md。",
 
   searchLabel: "搜索",
   searchPlaceholder: "标题、标签、分类、正文……",
@@ -730,7 +722,7 @@ const ZH: ListText = {
     kicker: "卡组",
     count: (n) => `${n} 篇`,
     ungrouped: "未分组",
-    ungroupedNote: "没放进任何目录的文章（放在 content/<lang>/posts/ 顶层的那些）。",
+    ungroupedNote: "没放进任何目录的文章（放在 content/posts/ 顶层的那些）。",
     pageNote: "这个卡组（目录）里的文章都列在下面。",
     backAll: "← 全部文章",
     fold: (name) => `收起「${name}」`,
@@ -752,74 +744,26 @@ const ZH: ListText = {
   articlePending: (item) => `文章页还没做（第 ${item} 项落地后可点）`,
 };
 
-const EN: ListText = {
-  title: "Posts",
-  kicker: "All posts",
-  lead: "Filter by tag, topic or year, or search right here. Results stay on this page; the filter state lives in the address bar, so you can share the exact view you are looking at.",
-  total: (n) => `${n} post${n === 1 ? "" : "s"}`,
-  rss: "RSS feed",
-  empty: "No posts yet — the first one is yours to write.",
-  emptyHint:
-    "Drop a .md into content/en/posts/ and cards appear here automatically; the writing guide (both frontmatter styles, tags, card groups, covers) is content/README.md.",
 
-  searchLabel: "Search",
-  searchPlaceholder: "Title, tags, topics, body…",
-  searchClear: "Clear search",
-  searchHint:
-    "Search uses the fields and weights of the build-time index (/search-index.json); it is fetched on your first keystroke (fuse.js loads then too).",
-  searchLoading: "Loading the search index…",
-  searchIndexNote: "Results come from the build-time index, including the first 1200 characters of each post.",
-  searchInlineNote: "The index could not be read — this search only matches title / tags / topics / summary on this page.",
-  searchErrorNote: "The search library failed to load (fuse.js); search is unavailable. The filters below still work.",
-  searchResults: (n) => `${n} match${n === 1 ? "" : "es"}`,
-  searchNoResult: (q) => `Nothing matches “${q}”.`,
 
-  filtersLabel: "Filters",
-  filtered: "filtered",
-  tagsLabel: "Tags",
-  categoriesLabel: "Topics",
-  timeLabel: "Time",
-  timeAll: "All",
-  timeYear: (year) => `${year}`,
-  sortLabel: "Sort",
-  densityLabel: "Density",
-  aiLabel: "AI posts",
-  aiOn: "Hidden (default)",
-  aiOff: "Shown",
-  aiHint:
-    "Posts with isAI: true in frontmatter are hidden from the list by default (and from search matches); turn this on to see them.",
-  clear: "Clear filters",
-  results: (shown, total) => `Showing ${shown} of ${total}`,
-  emptyFiltered: "No posts match these filters — try loosening one, or hit “Clear filters” above.",
+export const LIST_TEXT: ListText = ZH;
 
-  filtersNone: "No filters",
-  filtersShow: "Show search and filters",
-  filtersHide: "Hide search and filters",
-
+/** 资料页的文案：版面与行为完全共用，只换称谓与入口说明 */
+export const DOCS_TEXT: ListText = {
+  ...ZH,
+  title: "资料",
+  kicker: "全部资料",
+  lead: "按标签、分类与时间筛选，或在上面直接搜。所有结果都留在这一页；筛选状态写在地址栏里，可以直接把这一页的地址发给别人。",
+  total: (n) => `共 ${n} 篇`,
+  rss: "",
+  empty: "还没有资料。",
+  emptyHint: "把 .md 放进 content/docs/ 这一页就会自动出现卡片；写作规范见 content/README.md。",
+  searchNoResult: (q) => `没有匹配「${q}」的资料。`,
   groups: {
-    kicker: "Card group",
-    count: (n) => `${n} post${n === 1 ? "" : "s"}`,
-    ungrouped: "Ungrouped",
-    ungroupedNote: "Posts that do not live in a directory of their own (directly under content/<lang>/posts/).",
-    pageNote: "Every post in this card group is listed below.",
-    backAll: "← All posts",
-    fold: (name) => `Collapse “${name}”`,
-    unfold: (name) => `Expand “${name}”`,
+    ...ZH.groups,
+    ungrouped: "未归档",
+    ungroupedNote: "没放进任何目录的资料（放在 content/docs/ 顶层的那些）。",
+    pageNote: "这个资料组（目录）里的文章都列在下面。",
+    backAll: "← 全部资料",
   },
-
-  card: {
-    minutes: (n) => `${n} min`,
-    words: (n) => `${n} words`,
-    updated: (date) => `updated ${date}`,
-    pinned: "Pinned",
-    ai: "AI",
-    draft: "Draft",
-    note: "Note",
-    noteHint: (group) =>
-      `A note that lives in the card group “${group}/” — its card is styled differently from a standalone article (dashed border, canvas background)`,
-    fullNote: "The list stops at the summary — click a title to read the full post.",
-  },
-  articlePending: (item) => `Article pages are not built yet (lands in item ${item})`,
 };
-
-export const LIST_TEXT: Record<Lang, ListText> = { zh: ZH, en: EN };
