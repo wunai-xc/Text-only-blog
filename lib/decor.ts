@@ -94,10 +94,6 @@ export const FIGURE_SATELLITE_DELAY_MS = 160;
 /** 滚动联动的位移上限（vh）：实体任何时刻都要有一大半留在视口里 */
 export const FIGURE_SCROLL_SHIFT_VH = 8;
 
-/** 换页后正文渐入的时长（毫秒）；`components/PageIntro.tsx` 用它决定何时摘掉属性，
-    与 globals.css 里 `page-fade-in` 的那条动画一致 */
-export const PAGE_FADE_MS = 420;
-
 export interface Decor {
   section: DecorSection;
   /** 图纸编号（实体注解上印的两位数字） */

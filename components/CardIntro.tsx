@@ -15,13 +15,15 @@ import { usePathname } from "next/navigation";
  * 所以禁用 JS、JS 报错、或者 `IntersectionObserver` 不存在时，卡片一直都在 ——
  * 绝不出现「内容永远隐形」。`prefers-reduced-motion: reduce` 的人只拿到 `"in"`，一帧到位。
  *
- * 三个决定：
+ * 四个决定：
  *   1. **错开**：同一屏最多错开 8 张（每张 45ms）—— 再多就成了「依次冒出」，扫读时反而慢；
- *      延迟写成 `--card-delay`，样式里读它（组件里不写 transition）；
+ *      延迟写成 `--card-delay`，样式里读它（组件只负责在藏首帧时临时关一次过渡）；
  *   2. **只算当前这一页的首次出现**：换页后（pathname 变）重新扫一遍。客户端筛选换出的新卡片
  *      **不再播动画** —— 每敲一个字都让整屏卡片重新冒一遍，是干扰不是效果；
  *   3. 观察器**一直挂着**（进入视口才 reveal 一次），所以「先藏起来」的卡片一定有观察者，
- *      不会因为筛选把它们挪进视口就永远看不见。
+ *      不会因为筛选把它们挪进视口就永远看不见；
+ *   4. 藏起来的那一下用一次性的行内 `transition: none` 直接落位，避免卡片先可见、
+ *      再慢慢淡出；过渡还回去以后，hidden ↔ in 两个方向都由 CSS 平滑插值。
  */
 export default function CardIntro() {
   const pathname = usePathname();
@@ -40,8 +42,12 @@ export default function CardIntro() {
 
     cards.forEach((card, index) => {
       card.style.setProperty("--card-delay", `${Math.min(index, 7) * 45}ms`);
+      // 先把卡片瞬间放到起点（不要从可见状态淡出去），再把过渡还给样式表
+      card.style.transition = "none";
       card.setAttribute("data-card-ready", "hidden");
     });
+    void document.body.offsetWidth;
+    cards.forEach((card) => card.style.removeProperty("transition"));
 
     const observer = new IntersectionObserver(
       (entries) => {

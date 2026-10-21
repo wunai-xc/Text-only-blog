@@ -214,7 +214,7 @@
   --reading-leading: var(--reading-leading-default);
   --reading-indent: 2em;
   /* 换页动效的两个时长（第 15 项）。**组件里的毫秒数必须与它们一致**：
-     lib/decor.ts 的 FIGURE_SHIFT_MS / PAGE_FADE_MS
+     lib/decor.ts 的 FIGURE_SHIFT_MS 与下面的 --page-fade
      —— 配对关系写在 components/FigureLayer.tsx 与 components/PageIntro.tsx 的文件头。 */
   --figure-shift: 1100ms; /* 实体形变（挪位 / 换形 / 换色） */
   --page-fade: 420ms; /* 换页后正文渐入 */
@@ -681,9 +681,11 @@ html[data-reading="hidden"] {
 
   /* ==========================================================
      5d. 换页渐入（第 8 项扩展）
-     只有一条：换页后 `.site-main` 从 0.3 淡到 1（420ms）。属性由 components/PageIntro.tsx
-     在**布局阶段**挂到 <html> 上（换页那一刻新内容的第一帧就已经是 0.3，不会先全亮再变暗），
-     首帧不播、420ms 后自动摘掉。
+     换页后 `.site-main` 从 0.3 过渡到 1（420ms）。属性由 components/PageIntro.tsx
+     在**布局阶段**挂到 <html> 上，并临时关掉过渡，让新内容第一帧直接落到 0.3；
+     再过两帧摘掉属性，基础规则里的 opacity 过渡把它淡回 1。
+     这里用 transition 而不是一次性 keyframes —— 属性状态回退时，opacity 会从当前值
+     平滑倒放，不会重新从 0.3 跳一下。
 
      为什么只有 opacity、没有位移：`.site-main` 上只要出现 transform，它就成了 fixed 后代的
      包含块 —— 文章页右侧那条可拖的进度轨、左下角的目录挂件会在动画期间跟着它走，
@@ -691,17 +693,12 @@ html[data-reading="hidden"] {
      正文不透明度最低也只到 0.3（不是 0），所以这 420ms 里字一直是看得见的、可读的。
      ========================================================== */
   @media (prefers-reduced-motion: no-preference) {
-    html[data-page-in] .site-main {
-      animation: page-fade-in var(--page-fade) ease-out both;
+    .site-main {
+      transition: opacity var(--page-fade) ease-out;
     }
-  }
 
-  @keyframes page-fade-in {
-    from {
+    html[data-page-in] .site-main {
       opacity: 0.3;
-    }
-    to {
-      opacity: 1;
     }
   }
 
@@ -2607,11 +2604,15 @@ html[data-reading="hidden"] {
     border: 1px solid var(--c-rule);
     border-radius: var(--shape-radius);
     background-color: var(--c-surface);
-    /* 悬停那一下（抬升 / 换描边 / 投影）与入场动画都走合成层，不动布局 */
+    /* 悬停那一下（抬升 / 换描边 / 投影）与入场都走合成层，不动布局。
+       入场用 opacity + `translate`：`translate` 与悬停的 `transform` 是两条独立属性，
+       所以入场可以慢慢走、悬停仍然是 0.22s；状态退回 hidden 时也会按原路淡回去。 */
     transition:
       border-color 0.22s ease-out,
       box-shadow 0.22s ease-out,
-      transform 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
+      transform 0.22s cubic-bezier(0.22, 0.61, 0.36, 1),
+      opacity 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) var(--card-delay, 0ms),
+      translate 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) var(--card-delay, 0ms);
   }
 
   /* 悬停：抬 2px + 描边加深 + 一层很淡的投影。克制到「纸上抬起一张卡片」为止，
@@ -2623,29 +2624,18 @@ html[data-reading="hidden"] {
     box-shadow: 0 8px 20px -16px var(--c-rule-strong);
   }
 
-  /* 入场动画（components/CardIntro.tsx 写 data-card-ready / --card-delay）：
+  /* 入场过渡（components/CardIntro.tsx 写 data-card-ready / --card-delay）：
      **卡片默认可见**，只有观察器认领过的才先藏起来再揭 —— JS 没跑时卡片一直在。
-     用 animation 而不是 transition 的原因：延迟那段时间要「停在起点」（backwards 填充），
-     而动画**跑完就交还控制权**（不用 forwards）—— 否则动画的 transform 会一直压着
-     :hover 的抬升，卡片就再也抬不起来了。 */
+     hidden → in 是两条属性的普通 transition；反向改回 hidden 时也从当前值平滑回去。
+     延迟只挂在 opacity / translate 上，悬停的 transform 不跟着延迟。 */
   .post-card[data-card-ready="hidden"] {
     opacity: 0;
-    transform: translateY(14px);
+    translate: 0 14px;
   }
 
   .post-card[data-card-ready="in"] {
-    animation: card-rise 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) var(--card-delay, 0ms) backwards;
-  }
-
-  @keyframes card-rise {
-    from {
-      opacity: 0;
-      transform: translateY(14px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
+    opacity: 1;
+    translate: 0 0;
   }
 
   .post-card[data-density="compact"] {
@@ -2704,13 +2694,9 @@ html[data-reading="hidden"] {
     font-size: 1.05rem;
   }
 
-  /* 减少动效的人：卡片直接出现（CardIntro 那边只给 `"in"`，但 `"in"` 会触发那条 CSS 动画，
-     所以这里要显式关掉），悬停也不位移 —— 换描边与底色仍然保留（那不是动效） */
+  /* 减少动效的人：卡片直接出现（CardIntro 只给 `"in"`），悬停也不位移 ——
+     换描边与底色仍然保留（那不是动效） */
   @media (prefers-reduced-motion: reduce) {
-    .post-card[data-card-ready="in"] {
-      animation: none;
-    }
-
     .post-card,
     .post-card:hover {
       transition: none;
