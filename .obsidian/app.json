@@ -19,7 +19,6 @@
     "editor:toggle-checklist-status",
     "editor:indent-list",
     "editor:unindent-list",
-    "editor:configure-toolbar",
     "editor:toggle-inline-math",
     "editor:insert-callout",
     "editor:insert-codeblock",
@@ -30,6 +29,8 @@
     "editor:table-col-align-left",
     "editor:table-col-align-center",
     "editor:table-col-align-right",
-    "editor:paste"
-  ]
+    "editor:paste",
+    "editor:configure-toolbar"
+  ],
+  "showLineNumber": true
 }

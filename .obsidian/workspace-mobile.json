@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "content/zh/posts/notes/笔记.md",
+                "file": "content/zh/posts/diary/2026-10-21.md",
                 "mode": "source",
-                "source": false
+                "source": true
               },
               "icon": "lucide-file",
-              "title": "笔记"
+              "title": "2026-10-21"
             }
           }
         ]
@@ -183,10 +183,22 @@
   },
   "active": "1d368ead76692386",
   "lastOpenFiles": [
-    "content/zh/posts/minecraft_notes/微时序笔记1.md",
-    "content/zh/posts/minecraft_notes/红石笔记1.md",
+    "content/zh/posts/notes/smils语法学习.md",
+    "content/zh/posts/notes/笔记.md",
     "content/zh/posts/notes/医药学笔记.md",
-    "content/zh/posts/notes/数学公式.md",
-    "content/zh/posts/notes/笔记.md"
+    "content/zh/posts/diary/2026-10-21.md",
+    "模板.md",
+    "content/zh/posts/diary/_index.md",
+    "content/zh/posts/notes/_index.md",
+    "2026-10-21.md",
+    "content/zh/posts/diary",
+    "content/zh/posts/minecraft_notes/红石笔记1.md",
+    "content/zh/posts/notes/未命名.md",
+    "content/zh/posts/notes/未命名.canvas",
+    "content/README.md",
+    "content/zh/posts/README.md",
+    "content/zh/posts/minecraft_notes/未命名.md",
+    "content/zh/posts/minecraft_notes/微时序笔记1.md",
+    "content/zh/posts/notes/数学公式.md"
   ]
 }
